@@ -1,0 +1,38 @@
+{
+  "experiment_name": "story3_real_cross_oem_failover",
+  "registered_at": "2026-08-16",
+  "model_id": "Qwen/Qwen2.5-1.5B",
+  "dataset_path": "data/story3_dataset.jsonl",
+  "seeds": [11, 17, 29],
+  "steps": {
+    "leg1_step": 30,
+    "leg2_step": 45,
+    "leg3_step": 60
+  },
+  "thresholds": {
+    "min_extra_steps": 10,
+    "max_loss_delta": 2.0,
+    "max_optimizer_norm_delta": 0.0001,
+    "max_trajectory_rmse": 0.5
+  },
+  "failure_definition": {
+    "cross_vendor": [
+      "step handoff mismatch",
+      "min_extra_steps unmet",
+      "loss jump exceeds max_loss_delta",
+      "optimizer exp_avg_sq norm mismatch exceeds max_optimizer_norm_delta",
+      "missing optimizer state files",
+      "checkpoint structure mismatch between Spark and Radeon checkpoint manifests"
+    ],
+    "control": [
+      "Spark->Spark validation fails same thresholds",
+      "cross/control trajectory RMSE exceeds max_trajectory_rmse"
+    ],
+    "reporting": [
+      "any timeout",
+      "any ROCm or CUDA error",
+      "any run with non-zero return code"
+    ]
+  },
+  "scope": "single-GPU, single-node, short-horizon Qwen LoRA failover between one Spark node and one Radeon node"
+}

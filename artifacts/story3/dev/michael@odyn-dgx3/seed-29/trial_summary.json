@@ -1,0 +1,7 @@
+{
+  "trial": "seed-29",
+  "seed": 29,
+  "status": "failed",
+  "error": "remote python on michael@odyn-dgx3 failed\nstdout=\nstderr=ssh: connect to host odyn-dgx3 port 22: Operation timed out\n",
+  "logs": []
+}

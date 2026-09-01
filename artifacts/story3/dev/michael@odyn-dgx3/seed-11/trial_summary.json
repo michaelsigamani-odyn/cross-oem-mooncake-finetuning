@@ -1,0 +1,28 @@
+{
+  "trial": "seed-11",
+  "seed": 11,
+  "status": "failed",
+  "error": "radeon leg2 failed\nstdout=ENV_DIAGNOSTICS {\"cuda_available\": false, \"cuda_version\": \"13.0\", \"gpu_name\": \"cpu\", \"hip_version\": null, \"hostname\": \"odyn-radeon2\", \"model_device\": \"cpu\", \"python_version\": \"3.14.4\", \"torch_version\": \"2.13.0+cu130\", \"trainer_device\": \"cpu\"}\n\nstderr=Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.\n\nMap:   0%|          | 0/64 [00:00<?, ? examples/s]\nMap: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 64/64 [00:00<00:00, 9570.57 examples/s]\n[transformers] `torch_dtype` is deprecated! Use `dtype` instead!\n\nLoading weights:   0%|          | 0/338 [00:00<?, ?it/s]\nLoading weights:  87%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258b | 293/338 [00:00<00:00, 2925.00it/s]\nLoading weights: 100%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588| 338/338 [00:00<00:00, 3141.44it/s]\n[transformers] Warning: The following arguments do not match the ones in the `trainer_state.json` within the checkpoint directory: \n\tsave_steps: 45 (from args) != 30 (from trainer_state.json)\n\n  0%|          | 0/45 [00:00<?, ?it/s]/home/michael/cv-story3-venv/lib/python3.14/site-packages/torch/utils/data/dataloader.py:759: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.\n  super().__init__(loader)\n\n 69%|\u2588\u2588\u2588\u2588\u2588\u2588\u2589   | 31/45 [05:12<02:21, 10.09s/it]\n                                               \n\n 69%|\u2588\u2588\u2588\u2588\u2588\u2588\u2589   | 31/45 [05:12<02:21, 10.09s/it]\n 71%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588   | 32/45 [10:24<05:04, 23.39s/it]\n                                               \n\n 71%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588   | 32/45 [10:24<05:04, 23.39s/it]Read from remote host odyn-radeon2: Operation timed out\nclient_loop: send disconnect: Broken pipe\n",
+  "logs": [
+    {
+      "host": "michael@odyn-dgx3",
+      "env": {
+        "host": "odyn-dgx3",
+        "python": "3.12.3",
+        "torch": "2.13.0+cu130",
+        "cuda": "13.0",
+        "hip": null
+      }
+    },
+    {
+      "host": "michael@odyn-radeon2",
+      "env": {
+        "host": "odyn-radeon2",
+        "python": "3.14.4",
+        "torch": "2.13.0+cu130",
+        "cuda": "13.0",
+        "hip": null
+      }
+    }
+  ]
+}

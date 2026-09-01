@@ -1,0 +1,20 @@
+{
+  "source_saved_step": 10,
+  "resumed_saved_step": 30,
+  "resumed_first_logged_step": 1,
+  "resume_from": "/home/michael/cross-vendor-mooncake-test/checkpoint-10",
+  "resume_loaded_from_step": 10,
+  "source_optimizer_exp_avg_sq_norm_before_save": 0.00010975232909057806,
+  "resumed_optimizer_exp_avg_sq_norm_after_resume_load": 0.00010975234571212028,
+  "optimizer_norm_delta": 1.6621542223106342e-11,
+  "source_state_file_sizes": {
+    "optimizer.pt": 8807883,
+    "scheduler.pt": 1465,
+    "trainer_state.json": 2395
+  },
+  "resumed_state_file_sizes": {
+    "optimizer.pt": 8811019,
+    "scheduler.pt": 1465,
+    "trainer_state.json": 5735
+  }
+}

@@ -1,0 +1,11 @@
+locations:
+  - location_name: basic_portability
+    code_source:
+      python_file: dagster_basic_portability.py
+    build:
+      directory: .
+  - location_name: story3_failover
+    code_source:
+      python_file: dagster_story3_failover.py
+    build:
+      directory: .

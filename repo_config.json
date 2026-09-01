@@ -1,0 +1,62 @@
+{
+  "common": {
+    "local_root_dir": "/Users/michaelsigamani/cross-vendor-mooncake-test",
+    "remote_root_dir": "~/cross-vendor-mooncake-test"
+  },
+  "basic_portability": {
+    "amd_host": "michael@odyn-radeon2",
+    "nvidia_host": "michael@odyn-dgx3",
+    "checkpoint_step": 10,
+    "final_step": 30,
+    "run_id": "amd-to-nvidia-basic",
+    "dataset_path": "data/story3_dataset.jsonl",
+    "ssh_password": "michael",
+    "asset_paths": [
+      "data/story3_dataset.jsonl"
+    ],
+    "command_retries": 3,
+    "amd_use_gpu": false,
+    "min_extra_steps": 5,
+    "max_loss_delta": 2.0,
+    "max_optimizer_norm_delta": 0.0001
+  },
+  "story3": {
+    "plan_path": "./experiments/story3_preregistration.json",
+    "venv_path": "~/cv-story3-venv",
+    "artifact_root": "./artifacts/story3",
+    "ssh_password": "michael",
+    "run_environments": [
+      "dev",
+      "stage",
+      "prod"
+    ],
+    "environments": {
+      "dev": {
+        "radeon_host": "michael@odyn-radeon2",
+        "spark_hosts": [
+          "michael@odyn-dgx3"
+        ]
+      },
+      "stage": {
+        "radeon_host": "michael@odyn-radeon2",
+        "spark_hosts": [
+          "michael@odyn-dgx1",
+          "michael@odyn-dgx3"
+        ]
+      },
+      "prod": {
+        "radeon_host": "michael@odyn-radeon2",
+        "spark_hosts": [
+          "a100-01",
+          "a100-02",
+          "a100-03",
+          "a100-04",
+          "a100-05",
+          "a100-06",
+          "a100-07",
+          "a100-08"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "saved_step": 10,
+  "resume_loaded_from_step": null,
+  "loss_before_migration": 1.8158395290374756,
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 2.2458393573760986
+    },
+    {
+      "step": 2,
+      "loss": 2.076328754425049
+    },
+    {
+      "step": 3,
+      "loss": 2.0799508094787598
+    },
+    {
+      "step": 4,
+      "loss": 2.446551561355591
+    },
+    {
+      "step": 5,
+      "loss": 1.5457020998001099
+    },
+    {
+      "step": 6,
+      "loss": 1.1524105072021484
+    },
+    {
+      "step": 7,
+      "loss": 2.579245090484619
+    },
+    {
+      "step": 8,
+      "loss": 2.1645545959472656
+    },
+    {
+      "step": 9,
+      "loss": 1.992303490638733
+    },
+    {
+      "step": 10,
+      "loss": 1.8158395290374756
+    }
+  ],
+  "first_logged_step": 1,
+  "last_logged_step": 10,
+  "optimizer_exp_avg_sq_norm": 0.00010975232909057806,
+  "optimizer_exp_avg_sq_norm_before_save": 0.00010975232909057806,
+  "optimizer_exp_avg_sq_norm_after_resume_load": null,
+  "seed": 17,
+  "model_id": "Qwen/Qwen2.5-1.5B",
+  "dataset_path": "/home/michael/cross-vendor-mooncake-test/data/story3_dataset.jsonl",
+  "hostname": "odyn-radeon2",
+  "python": "3.14.4",
+  "device": "cpu",
+  "torch": "2.13.0+cu130",
+  "resume_from": null
+}
