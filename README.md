@@ -61,5 +61,8 @@ Serving dagster-webserver on http://127.0.0.1:3000 ...
 
 In a browser, go to: [http://127.0.0.1:3000](http://127.0.0.1:3000)
 
-Click launch runs to run the workflow
+Click launch runs to run the workflow:
+
+<img width="1486" height="820" alt="Screenshot 2026-09-01 at 19 55 41" src="https://github.com/user-attachments/assets/c823144d-528e-4cf0-996e-8c9dc4f8efcc" />
+
 
