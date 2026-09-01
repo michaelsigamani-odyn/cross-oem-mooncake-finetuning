@@ -1,6 +1,14 @@
-# Setup Guide: cross-vendor-mooncake-test
+# Setup Guide: Cross-OEM fine tuning checkpoint resumption 
 
-## Prerequisites (install once)
+## Why? 
+
+This is the simplest test I could think of for integrating fine-tuning with the current GPUs on our demo environment. One aspect I'd like to add is a 2-node A100 test with a data-parallel section. The idea is that if we can resume from checkpoints across different OEMs, we've effectively written a unified compute layer for our current workload.
+There's a custom layer with a transfer schema that's agnostic to the machines available. It's worth noting that this setup demonstrates cross-OEM compute that is inherently sequential — i.e., we cannot split batches of training across machines. One way to work around this is to define many jobs, each of which can run on a single machine. However, that's likely the next step; for now, this repo exists purely for informative purposes, to guide our next steps.
+I've kept the concepts purposefully simple so they're easy to understand and demonstrate. There's a layer of weight transfer that's somewhat custom-built. I've also kept the requirements minimal, since we need to be mindful about avoiding CUDA-specific optimizations right now, just to keep the setup simple. It's essentially built on Hugging Face Transformers, Accelerate, and Safetensors.
+I also used Dagster to see if it's a useful tool for us to integrate into our workflow. The web UI is quite nice, and it can also integrate with Dagster Cloud for team-wide use. For now, just use localhost to test.
+
+
+## Prerequsites 
 
 ```bash
 # Homebrew (macOS) or use your OS package manager
@@ -20,7 +28,7 @@ brew install git                  # macOS
 
 ---
 
-## Setup 
+## Setup
 
 ```bash
 # 1. Ensure Python 3.12 is the default python3
@@ -55,4 +63,5 @@ Serving dagster-webserver on http://127.0.0.1:3000 ...
 
 In a browser, go to: [http://127.0.0.1:3000](http://127.0.0.1:3000)
 
+Click launch runs to run the workflow
 
