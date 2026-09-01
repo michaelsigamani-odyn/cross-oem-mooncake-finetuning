@@ -1,4 +1,4 @@
-# Setup Guide: Cross-OEM fine tuning checkpoint resumption 
+# Setup Guide: Cross-OEM fine-tuning
 
 ## Why? 
 
@@ -21,10 +21,6 @@ brew install --cask miniconda     # macOS
 # Git (optional, for cloning)
 brew install git                  # macOS
 ```
-
-**Connected integrations:**
-- MCP: `perplexity_search` — Connected
-- LSP: disabled
 
 ---
 
