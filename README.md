@@ -1,6 +1,6 @@
 # Setup Guide: cross-vendor-mooncake-test
 
-## 🛠️ Prerequisites (install once)
+## Prerequisites (install once)
 
 ```bash
 # Homebrew (macOS) or use your OS package manager
@@ -20,7 +20,7 @@ brew install git                  # macOS
 
 ---
 
-## 🚀 Setup (≤ 50 lines)
+## Setup (≤ 50 lines)
 
 ```bash
 # 1. Ensure Python 3.12 is the default python3
