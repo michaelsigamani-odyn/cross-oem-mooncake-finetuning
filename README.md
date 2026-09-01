@@ -20,7 +20,7 @@ brew install git                  # macOS
 
 ---
 
-## Setup (≤ 50 lines)
+## Setup 
 
 ```bash
 # 1. Ensure Python 3.12 is the default python3
