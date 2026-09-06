@@ -4,25 +4,54 @@
     "remote_root_dir": "~/cross-vendor-mooncake-test"
   },
   "basic_portability": {
-    "amd_host": "michael@odyn-radeon2",
-    "nvidia_host": "michael@odyn-dgx3",
+    "source_host": "michael@odyn-radeon2",
+    "target_host": "michael@odyn-dgx3",
     "checkpoint_step": 10,
     "final_step": 30,
-    "run_id": "amd-to-nvidia-basic",
-    "dataset_path": "data/story3_dataset.jsonl",
+    "run_id": "amd-to-nvidia-qwen7b-alpaca500-1",
+    "dataset_path": "data/quant_mentor_500_alpaca.jsonl",
+    "source_data_parallel_size": 1,
+    "source_python_cmd": "/home/michael/torch-env/bin/python",
+    "target_python_cmd": "/usr/bin/python3.12",
+    "host_python_cmd_overrides": {
+      "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
+      "michael@odyn-dgx3": "/usr/bin/python3.12"
+    },
     "ssh_password": "michael",
+    "transfer_backend": "mooncake_tcp",
     "asset_paths": [
-      "data/story3_dataset.jsonl"
+      "data/quant_mentor_500_alpaca.jsonl"
     ],
     "command_retries": 3,
-    "amd_use_gpu": false,
+    "source_use_gpu": true,
+    "target_use_gpu": true,
+    "transfer": {
+      "metadata_server": "P2PHANDSHAKE",
+      "protocol": "tcp",
+      "chunk_mb": 64,
+      "max_inflight": 2,
+      "source": {
+        "server_name": "10.6.45.118:55001",
+        "control_host": "10.6.45.118",
+        "control_port": 56000,
+        "python_cmd": "/home/michael/torch-env/bin/python"
+      },
+      "destination": {
+        "server_name": "10.6.45.106:55000",
+        "control_host": "10.6.45.106",
+        "control_port": 56001,
+        "python_cmd": "/usr/bin/python3.12"
+      }
+    },
     "min_extra_steps": 5,
     "max_loss_delta": 2.0,
-    "max_optimizer_norm_delta": 0.0001
+    "max_optimizer_norm_delta": 0.0001,
+    "electricity_price_gbp_per_kwh": 0.27
   },
   "story3": {
     "plan_path": "./experiments/story3_preregistration.json",
     "venv_path": "~/cv-story3-venv",
+    "python_cmd": "python3.12",
     "artifact_root": "./artifacts/story3",
     "ssh_password": "michael",
     "run_environments": [

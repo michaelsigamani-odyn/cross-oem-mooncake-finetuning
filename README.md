@@ -30,6 +30,20 @@ brew install git                  # macOS
 
 ## Setup
 
+## SSH Access
+
+The NVIDIA and AMD machines can be accessed via SSH using the following credentials:
+
+- Username: `michael`
+- Password: `michael`
+
+```bash
+ssh michael@<nvidia-machine-host>
+ssh michael@<amd-machine-host>
+```
+
+Replace `<nvidia-machine-host>` and `<amd-machine-host>` with the appropriate hostnames or IPs (e.g., `dgx-spark` for NVIDIA, `a6000-london` for AMD) as defined in your SSH config.
+
 ```bash
 # 1. Ensure Python 3.12 is the default python3
 python3 --version || { echo "Install Python 3.12 first"; exit 1; }
