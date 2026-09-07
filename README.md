@@ -1,3 +1,4 @@
+<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/65129aca-018a-442a-9abf-f85a555dacf6" />
 # Cross-OEM Checkpoint Resume and Fine-Tuning
 
 This repository demonstrates a controlled cross-OEM training workflow:
@@ -141,3 +142,6 @@ For NVIDIA, sample NVML counters at a fixed interval and integrate power over ti
 - If Dagster cannot load definitions, verify `workspace.yaml` pathing and editable install (`pip install -e .`).
 - If SSH commands hang, check host aliases, key permissions, and timeout settings in `configs/run.json`.
 - If telemetry is sparse, reduce sample interval and verify GPU library availability on each host.
+
+<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/8426355f-8115-4d16-a444-ef70170f92f1" />
+
