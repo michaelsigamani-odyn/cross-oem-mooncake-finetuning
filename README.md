@@ -1,73 +1,81 @@
-# Cross-OEM Migration (refactored)
+# Setup Guide: Cross-OEM fine-tuning
 
-Fine-tunes on one GPU vendor, migrates the checkpoint to another (NVIDIA <-> AMD),
-resumes training, and produces an auditable cross-OEM report. Orchestrated with
-Dagster **software-defined assets** (not the legacy `@op`/`@job` API the original
-repo used).
+## Why? 
 
-Read **MIGRATION_NOTES.md** before relying on this in place of the original repo --
-it documents exactly what was ported at full fidelity vs. simplified.
+This is the simplest test I could think of for integrating fine-tuning with the current GPUs on our demo environment. One aspect I'd like to add is a 2-node A100 test with a data-parallel section. The idea is that if we can resume from checkpoints across different OEMs, we've effectively written a unified compute layer for our current workload.
+There's a custom layer with a transfer schema that's agnostic to the machines available. It's worth noting that this setup demonstrates cross-OEM compute that is inherently sequential — i.e., we cannot split batches of training across machines. One way to work around this is to define many jobs, each of which can run on a single machine. However, that's likely the next step; for now, this repo exists purely for informative purposes, to guide our next steps.
 
-## Layout
+I purposefully kept the flow limited to resumption from checkpoints, since that's the simplest thing to demonstrate and control at this stage, IMO. We could later add disaggregated prefill for inference, plus a data-parallel stage across the two A100s in the demo env, just to show both are feasible.
 
-```
-configs/                      # run.json (parameters) + machines.json (hardware catalog)
-src/cross_oem_migration/
-  config/                     # dataclasses + loader -- no dagster, no subprocess
-  execution/                  # Executor interface: SSHExecutor, LocalExecutor
-  hardware/                   # GpuVendorAdapter interface: NvidiaAdapter, AmdAdapter
-  transfer/                   # TransferBackend interface: scp, mooncake_tcp
-  workloads/                  # Workload interface: FineTuningWorkload, InferenceWorkload (stub)
-  data/                       # DatasetProvider / ArtifactStore / RunMetricsDatabase (sqlite)
-  reporting/                  # pure energy/cost math + formula cross-checks
-  orchestration/dagster/      # the ONLY place that imports `dagster`
-    resources.py
-    assets/                   # @asset graph: preflight -> train -> transfer -> resume -> report -> publish
-    jobs.py, definitions.py   # entry point
-scripts/                      # standalone scripts that actually run ON the remote hosts
-  finetuning/train_lora_migration.py
-  transfer/mooncake_tcp_agent.py
-  validation/{checkpoint_io,validate_resume}.py
-tests/
+I also used Dagster to see if it's a useful tool for us to integrate into our workflow. The web UI is quite nice, and it can also integrate with Dagster Cloud for team-wide use. For now, just use localhost to test.
+
+
+## Prerequsites 
+
+```bash
+# Homebrew (macOS) or use your OS package manager
+brew install python@3.12          # macOS
+sudo apt-get install python3.12   # Ubuntu/Debian
+
+# Conda (Miniconda or Anaconda)
+brew install --cask miniconda     # macOS
+
+# Git (optional, for cloning)
+brew install git                  # macOS
 ```
 
-Every package above `orchestration/` is plain Python with no framework dependency --
-you can `import cross_oem_migration.reporting.metrics` from a notebook, a pytest
-file, or a different orchestrator entirely.
+---
 
 ## Setup
 
-```bash
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+## SSH Access
 
-cp .env.example .env   # only if a host needs password auth -- see below
-export DAGSTER_HOME="${HOME}/.dagster_home"; mkdir -p "$DAGSTER_HOME"
+The NVIDIA and AMD machines can be accessed via SSH using the following credentials:
 
-dagster dev -w workspace.yaml
-```
-
-Open http://127.0.0.1:3000 -- you should see 9 assets in the graph (preflight x2,
-training, transfer, resume x2, reporting x2, published) plus 2 asset checks
-attached to `published_manifest`, not a single opaque job step.
-
-## SSH access
-
-**The original repo's `repo_config.json` and README committed a real SSH
-password in plaintext.** That's fixed here: `configs/run.json` has no
-`ssh_password` field, and if a host genuinely needs password auth, set
-`CROSS_OEM_SSH_PASSWORD` as an environment variable (see `.env.example`), never
-in a committed file. Prefer SSH keys + `~/.ssh/config` over passwords entirely.
-
-## Configuration
-
-- `configs/run.json` -- which two hosts, which model, which dataset, transfer backend.
-- `configs/machines.json` -- the hardware catalog (ask #4): one entry per machine,
-  vendor, architecture, container image, python interpreter. Add a machine by
-  adding an entry here, not by editing pipeline code.
-
-## Tests
+- Username: `michael`
+- Password: `michael`
 
 ```bash
-pytest tests/
+ssh michael@<nvidia-machine-host>
+ssh michael@<amd-machine-host>
 ```
+
+Replace `<nvidia-machine-host>` and `<amd-machine-host>` with the appropriate hostnames or IPs (e.g., `dgx-spark` for NVIDIA, `a6000-london` for AMD) as defined in your SSH config.
+
+```bash
+# 1. Ensure Python 3.12 is the default python3
+python3 --version || { echo "Install Python 3.12 first"; exit 1; }
+
+# 2. Create a dedicated conda env (named after the project)
+conda create -y -n cross-vendor-mooncake-test python=3.12
+conda activate cross-vendor-mooncake-test
+
+# 3. Install Dagster + webserver (add any extra deps required by the pipeline)
+pip install --upgrade pip setuptools wheel
+pip install dagster dagster-webserver
+
+# 4. (Optional) Persist Dagster state across runs
+export DAGSTER_HOME="${HOME}/.dagster_home"
+mkdir -p "$DAGSTER_HOME"
+
+# 5. Clone the repo (skip if already present)
+git clone https://github.com/<your-org>/cross-vendor-mooncake-test.git
+cd cross-vendor-mooncake-test
+
+# 6. Run Dagster — the CLI entry point is provided by the installed package
+dagster dev -f finetuning_sequential.py
+```
+
+**Expected log fragment:**
+```
+Serving dagster-webserver on http://127.0.0.1:3000 ...
+```
+
+## 7. Open the UI
+
+In a browser, go to: [http://127.0.0.1:3000](http://127.0.0.1:3000)
+
+Click launch runs to run the workflow:
+
+<img width="1713" height="935" alt="Screenshot 2026-09-01 at 20 41 11" src="https://github.com/user-attachments/assets/69d5e1fd-6519-4900-b193-25d0b216b93d" />
+
