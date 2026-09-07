@@ -19,7 +19,7 @@
       "michael@odyn-dgx3": "/usr/bin/python3.12",
       "runpod-mi300x-michael": "/workspace/venvs/py312-rocm/bin/python"
     },
-    "ssh_password": "michael",
+    "ssh_password": null,
     "transfer_backend": "scp",
     "asset_paths": [
       "data/quant_mentor_500_alpaca.jsonl"

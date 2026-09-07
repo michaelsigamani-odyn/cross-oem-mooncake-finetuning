@@ -249,6 +249,7 @@ def load_settings() -> PortabilitySettings:
     rendezvous_timeout_seconds = int(basic.get("rendezvous_timeout_seconds", DEFAULT_RDZV_TIMEOUT_SECONDS))
     process_group_timeout_seconds = int(basic.get("process_group_timeout_seconds", DEFAULT_PROCESS_GROUP_TIMEOUT_SECONDS))
     transfer_timeout_seconds = float(basic.get("transfer_timeout_seconds", DEFAULT_TRANSFER_TIMEOUT_SECONDS))
+    ssh_password = nullable(os.environ.get("CROSS_OEM_SSH_PASSWORD"))
     return PortabilitySettings(
         str(common["local_root_dir"]),
         str(common["remote_root_dir"]),
@@ -259,7 +260,7 @@ def load_settings() -> PortabilitySettings:
         str(basic["run_id"]),
         str(basic.get("model_id", "Qwen/Qwen2.5-1.5B")),
         dataset_path,
-        nullable(basic["ssh_password"]),
+        ssh_password,
         list(basic["asset_paths"]),
         int(basic["command_retries"]),
         int(basic["min_extra_steps"]),

@@ -9,8 +9,8 @@ SECURITY FIX vs. the original repo: `repo_config.json` used to contain
 `"ssh_password": "michael"` in plaintext, committed to git, and repeated in
 the README. That is not acceptable for anything beyond a throwaway local
 demo. This loader now reads the password (if any) from the
-CROSS_OEM_SSH_PASSWORD environment variable, or from an SSH key (preferred:
-leave ssh_password unset and rely on `~/.ssh/config` + agent auth). See
+CROSS_OEM_SSH_PASSWORD environment variable only. Preferred auth is SSH keys
+with `~/.ssh/config` + agent auth and no password variable at all. See
 .env.example.
 """
 import json
@@ -90,7 +90,7 @@ def load_settings(config_dir: Optional[Path] = None) -> PortabilitySettings:
     catalog = load_machine_catalog(basic)
     standalone = _standalone_benchmark_config(run, basic, catalog)
 
-    ssh_password = os.environ.get("CROSS_OEM_SSH_PASSWORD") or nullable(basic.get("ssh_password"))
+    ssh_password = nullable(os.environ.get("CROSS_OEM_SSH_PASSWORD"))
 
     return PortabilitySettings(
         local_root=str(common["local_root_dir"]),
