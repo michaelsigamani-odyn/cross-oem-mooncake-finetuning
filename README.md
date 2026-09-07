@@ -68,6 +68,9 @@ Serving dagster-webserver on http://127.0.0.1:3000
 
 Open `http://127.0.0.1:3000`, materialize the job/assets, and inspect run metadata.
 
+<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/8426355f-8115-4d16-a444-ef70170f92f1" />
+
+
 ## Configuration model
 
 `configs/run.json` contains run-level concerns:
@@ -143,5 +146,4 @@ For NVIDIA, sample NVML counters at a fixed interval and integrate power over ti
 - If SSH commands hang, check host aliases, key permissions, and timeout settings in `configs/run.json`.
 - If telemetry is sparse, reduce sample interval and verify GPU library availability on each host.
 
-<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/8426355f-8115-4d16-a444-ef70170f92f1" />
 
