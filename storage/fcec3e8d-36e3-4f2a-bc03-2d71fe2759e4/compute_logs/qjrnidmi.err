@@ -1,0 +1,56 @@
+[32m2026-09-07 10:37:29 +0100[0m - dagster - [34mDEBUG[0m - finetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - 9413 - LOGS_CAPTURED - Capturing logs for process (pid: 9413).
+[32m2026-09-07 10:37:29 +0100[0m - dagster - [34mDEBUG[0m - finetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - 9413 - sync_and_install - STEP_START - Started execution of step "sync_and_install".
+[32m2026-09-07 10:37:29 +0100[0m - dagster - [34mDEBUG[0m - finetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - sync_and_install - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4/settings_op/result using PickledObjectFilesystemIOManager...
+[32m2026-09-07 10:37:29 +0100[0m - dagster - [34mDEBUG[0m - finetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - 9413 - sync_and_install - LOADED_INPUT - Loaded input "settings" using input manager "io_manager", from output "result" of step "settings_op"
+[32m2026-09-07 10:37:29 +0100[0m - dagster - [34mDEBUG[0m - finetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - 9413 - sync_and_install - STEP_INPUT - Got input "settings" of type "PortabilitySettings". (Type check passed).
+[32m2026-09-07 10:37:45 +0100[0m - dagster - [34mERROR[0m - [31mfinetuning_sequential_job - fcec3e8d-36e3-4f2a-bc03-2d71fe2759e4 - 9413 - sync_and_install - STEP_FAILURE - Execution of step "sync_and_install" failed.
+
+dagster._core.errors.DagsterExecutionInterruptedError
+
+Stack Trace:
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_plan.py", line 243, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 505, in core_dagster_event_sequence_for_step
+    for user_event in _step_output_error_checked_user_event_sequence(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 184, in _step_output_error_checked_user_event_sequence
+    for user_event in user_event_sequence:
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 88, in _process_asset_results_to_events
+    for user_event in user_event_sequence:
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute.py", line 188, in execute_core_compute
+    for step_output in _yield_compute_results(step_context, inputs, compute_fn, compute_context):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute.py", line 157, in _yield_compute_results
+    for event in iterate_with_context(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_utils/__init__.py", line 394, in iterate_with_context
+    next_output = next(iterator)
+                  ^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 136, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+             ^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 116, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 1489, in sync_and_install
+    run_shell(
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 471, in run_shell
+    result = subprocess.run(command, check=False, text=True, capture_output=True, env=env, timeout=timeout_seconds)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/subprocess.py", line 2115, in _communicate
+    ready = selector.select(timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/.local/share/uv/python/cpython-3.12.11-macos-aarch64-none/lib/python3.12/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_utils/interrupts.py", line 81, in _new_signal_handler
+    raise error_cls()
+[0m

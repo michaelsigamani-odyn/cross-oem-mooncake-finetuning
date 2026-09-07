@@ -1,0 +1,87 @@
+{
+  "saved_step": 10,
+  "resume_loaded_from_step": null,
+  "loss_before_migration": 2.8466310501098633,
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 3.107754707336426
+    },
+    {
+      "step": 2,
+      "loss": 3.09525465965271
+    },
+    {
+      "step": 3,
+      "loss": 3.0651774406433105
+    },
+    {
+      "step": 4,
+      "loss": 3.025347948074341
+    },
+    {
+      "step": 5,
+      "loss": 2.9872522354125977
+    },
+    {
+      "step": 6,
+      "loss": 2.942279577255249
+    },
+    {
+      "step": 7,
+      "loss": 2.9127933979034424
+    },
+    {
+      "step": 8,
+      "loss": 2.8847718238830566
+    },
+    {
+      "step": 9,
+      "loss": 2.861151695251465
+    },
+    {
+      "step": 10,
+      "loss": 2.8466310501098633
+    }
+  ],
+  "first_logged_step": 1,
+  "last_logged_step": 10,
+  "optimizer_exp_avg_sq_norm": 2.1140164620498877e-05,
+  "optimizer_exp_avg_sq_norm_before_save": 2.1140164620498877e-05,
+  "optimizer_exp_avg_sq_norm_after_resume_load": null,
+  "seed": 17,
+  "model_id": "Qwen/Qwen2.5-7B",
+  "dataset_path": "/home/michael/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl",
+  "hostname": "odyn-dgx3",
+  "python": "3.12.3",
+  "device": "NVIDIA GB10",
+  "vendor": "nvidia",
+  "gpu_architecture": "sm_121",
+  "torch": "2.13.0+cu130",
+  "torch_version": "2.13.0+cu130",
+  "resume_from": null,
+  "runtime_seconds": 3.250052714953199,
+  "useful_training_tokens": 1280,
+  "tokens_per_second": 393.83976577082444,
+  "final_loss": 2.8466310501098633,
+  "mean_gpu_utilization_percent": 57.90909090909091,
+  "peak_gpu_utilization_percent": 94.0,
+  "peak_accelerator_memory_bytes": 16280275456,
+  "mean_power_watts": 26.474545454545456,
+  "peak_power_watts": 42.89,
+  "min_power_watts": 11.16,
+  "gpu_energy_joules": 78.45934043459012,
+  "gpu_energy_kwh": 2.179426123183059e-05,
+  "tokens_per_joule": 16.31418251682996,
+  "energy_kwh_per_million_tokens": 0.017026766587367646,
+  "power_sample_count": 11,
+  "power_telemetry_available": true,
+  "power_telemetry_source": "nvidia-smi",
+  "power_telemetry_reason": null,
+  "sampling_interval_seconds": 0.25,
+  "telemetry_duration_seconds": 3.250052714953199,
+  "telemetry_sample_count": 11,
+  "raw_telemetry_sample_count": 11,
+  "gpu_runtime_verified": true,
+  "max_sequence_length": 128
+}

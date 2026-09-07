@@ -1,0 +1,7 @@
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - LOGS_CAPTURED - Capturing logs for process (pid: 12168).
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - settings_op - STEP_START - Started execution of step "settings_op".
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - settings_op - ASSET_MATERIALIZATION - Portability run settings captured.
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - settings_op - STEP_OUTPUT - Yielded output "result" of type "PortabilitySettings". (Type check passed).
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - settings_op - Writing file at: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/75feee88-84f0-4c8d-94de-711950591672/settings_op/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - settings_op - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2026-09-07 11:00:19 +0100 - dagster - DEBUG - finetuning_sequential_job - 75feee88-84f0-4c8d-94de-711950591672 - 12168 - settings_op - STEP_SUCCESS - Finished execution of step "settings_op" in 34ms.

@@ -1,0 +1,252 @@
+2026-09-07T10:02:28Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl'
+timeout_seconds=600.0
+2026-09-07T10:02:29Z END command
+duration=0.342
+returncode=0
+2026-09-07T10:02:29Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl'
+timeout_seconds=600.0
+2026-09-07T10:02:29Z END command
+duration=0.289
+returncode=1
+2026-09-07T10:02:29Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/data/quant_mentor_500_alpaca.jsonl
+timeout_seconds=600.0
+2026-09-07T10:02:30Z END command
+duration=0.490
+returncode=0
+2026-09-07T10:02:30Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:02:30Z END command
+duration=0.215
+returncode=1
+2026-09-07T10:02:30Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:02:30Z END command
+duration=0.391
+returncode=0
+2026-09-07T10:02:30Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -d ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:02:31Z END command
+duration=0.376
+returncode=1
+2026-09-07T10:02:31Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json
+timeout_seconds=600.0
+2026-09-07T10:02:31Z END command
+duration=0.529
+returncode=0
+2026-09-07T10:02:31Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T10:02:31Z END command
+duration=0.185
+returncode=1
+2026-09-07T10:02:31Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T10:02:32Z END command
+duration=0.359
+returncode=1
+2026-09-07T10:02:32Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T10:02:32Z END command
+duration=0.198
+returncode=1
+2026-09-07T10:02:32Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T10:02:32Z END command
+duration=0.393
+returncode=1
+2026-09-07T10:02:32Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:02:32Z END command
+duration=0.184
+returncode=0
+2026-09-07T10:02:32Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:02:33Z END command
+duration=0.181
+returncode=1
+2026-09-07T10:02:33Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json
+timeout_seconds=600.0
+2026-09-07T10:02:33Z END command
+duration=0.308
+returncode=0
+2026-09-07T10:02:33Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/resume_validation_proof.json'
+timeout_seconds=600.0
+2026-09-07T10:02:33Z END command
+duration=0.186
+returncode=0
+2026-09-07T10:02:33Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/resume_validation_proof.json'
+timeout_seconds=600.0
+2026-09-07T10:02:33Z END command
+duration=0.192
+returncode=1
+2026-09-07T10:02:33Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/resume_validation_proof.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/resume_validation_proof.json
+timeout_seconds=600.0
+2026-09-07T10:02:34Z END command
+duration=0.326
+returncode=0
+2026-09-07T10:02:34Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-30/trainer_state.json'
+timeout_seconds=600.0
+2026-09-07T10:02:34Z END command
+duration=0.210
+returncode=0
+2026-09-07T10:02:34Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-30/trainer_state.json'
+timeout_seconds=600.0
+2026-09-07T10:02:34Z END command
+duration=0.186
+returncode=1
+2026-09-07T10:02:34Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-30/trainer_state.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-30/trainer_state.json
+timeout_seconds=600.0
+2026-09-07T10:02:34Z END command
+duration=0.313
+returncode=0
+2026-09-07T10:02:34Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T10:02:35Z END command
+duration=0.200
+returncode=1
+2026-09-07T10:02:35Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -e ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T10:02:35Z END command
+duration=0.381
+returncode=0
+2026-09-07T10:02:35Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'test -d ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T10:02:35Z END command
+duration=0.392
+returncode=1
+2026-09-07T10:02:35Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/checkpoint_meta.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/checkpoint_meta.json
+timeout_seconds=600.0
+2026-09-07T10:02:36Z END command
+duration=0.527
+returncode=0
+2026-09-07T10:02:36Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'
+timeout_seconds=600.0
+2026-09-07T10:02:36Z END command
+duration=0.172
+returncode=0
+2026-09-07T10:02:36Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'
+timeout_seconds=600.0
+2026-09-07T10:02:36Z END command
+duration=0.205
+returncode=1
+2026-09-07T10:02:36Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json
+timeout_seconds=600.0
+2026-09-07T10:02:37Z END command
+duration=0.297
+returncode=0
+2026-09-07T10:02:37Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'
+timeout_seconds=600.0
+2026-09-07T10:02:37Z END command
+duration=0.203
+returncode=0
+2026-09-07T10:02:37Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'
+timeout_seconds=600.0
+2026-09-07T10:02:37Z END command
+duration=0.188
+returncode=1
+2026-09-07T10:02:37Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json
+timeout_seconds=600.0
+2026-09-07T10:02:37Z END command
+duration=0.331
+returncode=0
+2026-09-07T10:02:37Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'
+timeout_seconds=600.0
+2026-09-07T10:02:38Z END command
+duration=0.189
+returncode=0
+2026-09-07T10:02:38Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'
+timeout_seconds=600.0
+2026-09-07T10:02:38Z END command
+duration=0.189
+returncode=1
+2026-09-07T10:02:38Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json
+timeout_seconds=600.0
+2026-09-07T10:02:38Z END command
+duration=0.337
+returncode=0
+2026-09-07T10:02:38Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json'
+timeout_seconds=600.0
+2026-09-07T10:02:38Z END command
+duration=0.184
+returncode=0
+2026-09-07T10:02:38Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json'
+timeout_seconds=600.0
+2026-09-07T10:02:38Z END command
+duration=0.183
+returncode=1
+2026-09-07T10:02:38Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/radeon2-to-dgxspark-qwen25-05b/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json
+timeout_seconds=600.0
+2026-09-07T10:02:39Z END command
+duration=0.308
+returncode=0

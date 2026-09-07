@@ -1,0 +1,42 @@
+2026-09-07T09:57:55Z START checkpoint_scp_source_to_local
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10' /tmp/radeon2-to-dgxspark-qwen25-05b
+timeout_seconds=2400.0
+2026-09-07T09:57:58Z END checkpoint_scp_source_to_local
+duration=3.274
+returncode=0
+2026-09-07T09:57:58Z START checkpoint_scp_local_to_target
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r /tmp/radeon2-to-dgxspark-qwen25-05b/checkpoint-10 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=2400.0
+2026-09-07T09:58:03Z END checkpoint_scp_local_to_target
+duration=4.219
+returncode=0
+2026-09-07T09:58:03Z START manifest_source
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 '/home/michael/torch-env/bin/python ~/cross-vendor-mooncake-test/checkpoint_io.py --mode manifest --checkpoint-a ~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10 --output /tmp/source_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json'
+timeout_seconds=2400.0
+2026-09-07T09:58:03Z END manifest_source
+duration=0.436
+returncode=0
+2026-09-07T09:58:03Z START manifest_destination
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 ~/cross-vendor-mooncake-test/checkpoint_io.py --mode manifest --checkpoint-a ~/cross-vendor-mooncake-test/checkpoint-10 --output /tmp/destination_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json'
+timeout_seconds=2400.0
+2026-09-07T09:58:03Z END manifest_destination
+duration=0.257
+returncode=0
+2026-09-07T09:58:03Z START manifest_pull_source
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2:/tmp/source_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json /tmp/source_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json
+timeout_seconds=2400.0
+2026-09-07T09:58:04Z END manifest_pull_source
+duration=0.672
+returncode=0
+2026-09-07T09:58:04Z START manifest_pull_destination
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3:/tmp/destination_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json /tmp/destination_manifest_radeon2-to-dgxspark-qwen25-05b_10_1788775083.json
+timeout_seconds=2400.0
+2026-09-07T09:58:04Z END manifest_pull_destination
+duration=0.315
+returncode=0

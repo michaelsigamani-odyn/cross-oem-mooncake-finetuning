@@ -1,0 +1,252 @@
+2026-09-07T11:49:41Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl'
+timeout_seconds=600.0
+2026-09-07T11:49:41Z END command
+duration=0.840
+returncode=0
+2026-09-07T11:49:41Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl'
+timeout_seconds=600.0
+2026-09-07T11:49:42Z END command
+duration=0.795
+returncode=1
+2026-09-07T11:49:42Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/data/quant_mentor_500_alpaca.jsonl
+timeout_seconds=600.0
+2026-09-07T11:49:44Z END command
+duration=1.681
+returncode=0
+2026-09-07T11:49:44Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T11:49:45Z END command
+duration=0.850
+returncode=1
+2026-09-07T11:49:45Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T11:49:45Z END command
+duration=0.183
+returncode=0
+2026-09-07T11:49:45Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T11:49:45Z END command
+duration=0.198
+returncode=1
+2026-09-07T11:49:45Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json
+timeout_seconds=600.0
+2026-09-07T11:49:46Z END command
+duration=0.325
+returncode=0
+2026-09-07T11:49:46Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T11:49:46Z END command
+duration=0.801
+returncode=1
+2026-09-07T11:49:46Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T11:49:47Z END command
+duration=0.199
+returncode=1
+2026-09-07T11:49:47Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T11:49:47Z END command
+duration=0.848
+returncode=1
+2026-09-07T11:49:47Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/gpu_telemetry_raw.json'
+timeout_seconds=600.0
+2026-09-07T11:49:48Z END command
+duration=0.173
+returncode=1
+2026-09-07T11:49:48Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T11:49:48Z END command
+duration=0.848
+returncode=0
+2026-09-07T11:49:48Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T11:49:49Z END command
+duration=0.852
+returncode=1
+2026-09-07T11:49:49Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/run_summary.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/run_summary.json
+timeout_seconds=600.0
+2026-09-07T11:49:51Z END command
+duration=1.244
+returncode=0
+2026-09-07T11:49:51Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/resume_validation_proof.json'
+timeout_seconds=600.0
+2026-09-07T11:49:51Z END command
+duration=0.825
+returncode=0
+2026-09-07T11:49:51Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/resume_validation_proof.json'
+timeout_seconds=600.0
+2026-09-07T11:49:52Z END command
+duration=0.837
+returncode=1
+2026-09-07T11:49:52Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/resume_validation_proof.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/resume_validation_proof.json
+timeout_seconds=600.0
+2026-09-07T11:49:54Z END command
+duration=1.309
+returncode=0
+2026-09-07T11:49:54Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/checkpoint-30/trainer_state.json'
+timeout_seconds=600.0
+2026-09-07T11:49:54Z END command
+duration=0.816
+returncode=0
+2026-09-07T11:49:54Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/checkpoint-30/trainer_state.json'
+timeout_seconds=600.0
+2026-09-07T11:49:55Z END command
+duration=0.864
+returncode=1
+2026-09-07T11:49:55Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/checkpoint-30/trainer_state.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/checkpoint-30/trainer_state.json
+timeout_seconds=600.0
+2026-09-07T11:49:57Z END command
+duration=1.340
+returncode=0
+2026-09-07T11:49:57Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T11:49:58Z END command
+duration=0.874
+returncode=1
+2026-09-07T11:49:58Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T11:49:58Z END command
+duration=0.190
+returncode=0
+2026-09-07T11:49:58Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -d ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T11:49:58Z END command
+duration=0.212
+returncode=1
+2026-09-07T11:49:58Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json
+timeout_seconds=600.0
+2026-09-07T11:49:58Z END command
+duration=0.340
+returncode=0
+2026-09-07T11:49:58Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'
+timeout_seconds=600.0
+2026-09-07T11:49:59Z END command
+duration=0.904
+returncode=0
+2026-09-07T11:49:59Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'
+timeout_seconds=600.0
+2026-09-07T11:50:00Z END command
+duration=0.792
+returncode=1
+2026-09-07T11:50:00Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json
+timeout_seconds=600.0
+2026-09-07T11:50:01Z END command
+duration=1.273
+returncode=0
+2026-09-07T11:50:01Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'
+timeout_seconds=600.0
+2026-09-07T11:50:02Z END command
+duration=0.823
+returncode=0
+2026-09-07T11:50:02Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'
+timeout_seconds=600.0
+2026-09-07T11:50:03Z END command
+duration=0.843
+returncode=1
+2026-09-07T11:50:03Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json
+timeout_seconds=600.0
+2026-09-07T11:50:04Z END command
+duration=1.312
+returncode=0
+2026-09-07T11:50:04Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'
+timeout_seconds=600.0
+2026-09-07T11:50:05Z END command
+duration=0.849
+returncode=0
+2026-09-07T11:50:05Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'
+timeout_seconds=600.0
+2026-09-07T11:50:06Z END command
+duration=0.822
+returncode=1
+2026-09-07T11:50:06Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json
+timeout_seconds=600.0
+2026-09-07T11:50:07Z END command
+duration=1.296
+returncode=0
+2026-09-07T11:50:07Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -e ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/transfer_test_matrix.json'
+timeout_seconds=600.0
+2026-09-07T11:50:08Z END command
+duration=0.862
+returncode=0
+2026-09-07T11:50:08Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -d ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/transfer_test_matrix.json'
+timeout_seconds=600.0
+2026-09-07T11:50:09Z END command
+duration=0.821
+returncode=1
+2026-09-07T11:50:09Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/transfer_test_matrix.json' /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/artifacts/dgx3-to-mi300x-qwen25-05b/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/transfer_test_matrix.json
+timeout_seconds=600.0
+2026-09-07T11:50:10Z END command
+duration=1.323
+returncode=0

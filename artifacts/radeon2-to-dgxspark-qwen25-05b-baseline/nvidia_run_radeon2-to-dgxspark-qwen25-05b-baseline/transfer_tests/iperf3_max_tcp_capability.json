@@ -1,0 +1,10 @@
+{
+  "test": "iperf3",
+  "path": "Maximum TCP capability",
+  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b-baseline/transfer_tests/iperf3_max_tcp_capability.json",
+  "details": {
+    "success": true,
+    "elapsed_seconds": 10.004154,
+    "throughput_bits_per_second": 941335075.009841
+  }
+}

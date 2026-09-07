@@ -1,0 +1,45 @@
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - LOGS_CAPTURED - Capturing logs for process (pid: 15668).
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - STEP_START - Started execution of step "build_cross_oem_report".
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - build_cross_oem_report - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/c9825f54-3e7e-4cb8-b79d-35b3eddbdf73/preflight_gpu_kernel_execution/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - LOADED_INPUT - Loaded input "gpu_preflight" using input manager "io_manager", from output "result" of step "preflight_gpu_kernel_execution"
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - build_cross_oem_report - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/c9825f54-3e7e-4cb8-b79d-35b3eddbdf73/settings_op/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - LOADED_INPUT - Loaded input "settings" using input manager "io_manager", from output "result" of step "settings_op"
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - build_cross_oem_report - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/c9825f54-3e7e-4cb8-b79d-35b3eddbdf73/verify_transfer/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - LOADED_INPUT - Loaded input "verified_transfer" using input manager "io_manager", from output "result" of step "verify_transfer"
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - STEP_INPUT - Got input "gpu_preflight" of type "dict". (Type check passed).
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - STEP_INPUT - Got input "settings" of type "PortabilitySettings". (Type check passed).
+2026-09-07 11:49:36 +0100 - dagster - DEBUG - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - STEP_INPUT - Got input "verified_transfer" of type "TransferResult". (Type check passed).
+2026-09-07 11:49:40 +0100 - dagster - ERROR - finetuning_sequential_job - c9825f54-3e7e-4cb8-b79d-35b3eddbdf73 - 15668 - build_cross_oem_report - STEP_FAILURE - Execution of step "build_cross_oem_report" failed.
+
+dagster._core.definitions.events.Failure: cross_oem_gpu_benchmark_valid=false: missing=[] errors=[]
+
+Stack Trace:
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_plan.py", line 243, in dagster_event_sequence_for_step
+    yield from check.generator(step_events)
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 505, in core_dagster_event_sequence_for_step
+    for user_event in _step_output_error_checked_user_event_sequence(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 184, in _step_output_error_checked_user_event_sequence
+    for user_event in user_event_sequence:
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/execute_step.py", line 88, in _process_asset_results_to_events
+    for user_event in user_event_sequence:
+                      ^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute.py", line 188, in execute_core_compute
+    for step_output in _yield_compute_results(step_context, inputs, compute_fn, compute_context):
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute.py", line 157, in _yield_compute_results
+    for event in iterate_with_context(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_utils/__init__.py", line 394, in iterate_with_context
+    next_output = next(iterator)
+                  ^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 136, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+             ^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 116, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 3457, in build_cross_oem_report
+    raise Failure(description=f"cross_oem_gpu_benchmark_valid=false: missing={validation.get('required_metrics_missing')} errors={validation.get('validation_errors')}")
+

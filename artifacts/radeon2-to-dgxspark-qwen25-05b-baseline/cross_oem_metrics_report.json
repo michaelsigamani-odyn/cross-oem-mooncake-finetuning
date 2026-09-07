@@ -1,0 +1,975 @@
+{
+  "run": {
+    "run_id": "radeon2-to-dgxspark-qwen25-05b-baseline",
+    "benchmark_schema_version": "cross_oem_benchmark.v2",
+    "model_id": "Qwen/Qwen2.5-0.5B",
+    "training_type": "lora",
+    "dataset_path": "data/quant_mentor_500_alpaca.jsonl",
+    "checkpoint_step": 10,
+    "final_step": 30,
+    "electricity_price_gbp_per_kwh": 0.27,
+    "economic_scope": "energy-only break-even; excludes hardware, CPU/system energy, networking, storage, cooling, and operations",
+    "environment": {
+      "git_commit_sha": "d3cea76fc0426bcb9eab92315572157a020ac563",
+      "source_host": "odyn-radeon2",
+      "target_host": "odyn-dgx3",
+      "source_vendor": "amd",
+      "target_vendor": "nvidia",
+      "source_gpu_model": "AMD Radeon 8060S Graphics",
+      "target_gpu_model": "NVIDIA GB10",
+      "source_gpu_architecture": "gfx1151",
+      "target_gpu_architecture": "sm_121",
+      "source_torch_version": "2.14.0+rocm10.1.0a20260906",
+      "target_torch_version": "2.13.0+cu130",
+      "source_cuda_version": null,
+      "target_cuda_version": "13.0",
+      "source_rocm_version": "7.16.26354",
+      "target_rocm_version": null
+    },
+    "cross_oem_gpu_benchmark_valid": true
+  },
+  "source_training": {
+    "hostname": "odyn-radeon2",
+    "vendor": "amd",
+    "device_name": "AMD Radeon 8060S Graphics",
+    "gpu_architecture": "gfx1151",
+    "torch_version": "2.14.0+rocm10.1.0a20260906",
+    "gpu_requested": true,
+    "gpu_detected": true,
+    "gpu_kernel_test_passed": true,
+    "gpu_execution_verified": true,
+    "gpu_runtime_verified": true,
+    "start_step": 0,
+    "end_step": 10,
+    "steps_executed": 10,
+    "first_step": 0,
+    "last_step": 10,
+    "useful_training_tokens": 1280,
+    "training_runtime_seconds": 2.163069078931585,
+    "tokens_per_second": 591.7517902998441,
+    "mean_gpu_utilization_percent": 12.5,
+    "peak_gpu_utilization_percent": 26.0,
+    "peak_accelerator_memory_bytes": 1553249792,
+    "mean_gpu_power_watts": 45.04966666666667,
+    "peak_gpu_power_watts": 55.087,
+    "gpu_energy_joules": 79.6236989235275,
+    "gpu_energy_wh": 0.022117694145424305,
+    "gpu_energy_kwh": 2.2117694145424305e-05,
+    "tokens_per_joule": 16.075615894576092,
+    "electricity_price_per_kwh": 0.27,
+    "energy_cost_gbp": 5.971777419264563e-06,
+    "energy_cost_per_million_tokens_gbp": 0.004665451108800439,
+    "gpu_energy_cost_gbp": 5.971777419264563e-06,
+    "gpu_energy_cost_per_million_tokens_gbp": 0.004665451108800439,
+    "system_energy_kwh": null,
+    "system_energy_source": "not_measured",
+    "final_loss": 3.1541666984558105,
+    "learning_rate": 0.0,
+    "optimizer_learning_rate_before_save": 0.0,
+    "optimizer_learning_rate_after_resume_load": null,
+    "optimizer_exp_avg_sq_norm_before_save": 0.00015503313328619177,
+    "optimizer_exp_avg_sq_norm_after_resume_load": null,
+    "loss_trace": [
+      {
+        "step": 1,
+        "loss": 3.4082555770874023
+      },
+      {
+        "step": 2,
+        "loss": 3.3796608448028564
+      },
+      {
+        "step": 3,
+        "loss": 3.343294382095337
+      },
+      {
+        "step": 4,
+        "loss": 3.3006978034973145
+      },
+      {
+        "step": 5,
+        "loss": 3.2659664154052734
+      },
+      {
+        "step": 6,
+        "loss": 3.2297539710998535
+      },
+      {
+        "step": 7,
+        "loss": 3.197890281677246
+      },
+      {
+        "step": 8,
+        "loss": 3.1909737586975098
+      },
+      {
+        "step": 9,
+        "loss": 3.1606340408325195
+      },
+      {
+        "step": 10,
+        "loss": 3.1541666984558105
+      }
+    ],
+    "telemetry_source": "amd_smi",
+    "power_telemetry_reason": null,
+    "telemetry_errors": [],
+    "telemetry_start_timestamp": "2026-09-07T06:59:19.328254+00:00",
+    "telemetry_end_timestamp": "2026-09-07T06:59:21.491335+00:00",
+    "telemetry_duration_seconds": 2.163069078931585,
+    "telemetry_sample_count": 6,
+    "sampling_interval_seconds": 0.25,
+    "checkpoint_size_bytes": 18037069,
+    "checkpoint_save_seconds": 0.25600087782368064,
+    "hip_version": "7.16.26354",
+    "energy_validation": {
+      "telemetry_start_timestamp": "2026-09-07T06:59:19.328254+00:00",
+      "telemetry_end_timestamp": "2026-09-07T06:59:21.491335+00:00",
+      "telemetry_duration_seconds": 2.163069078931585,
+      "training_runtime_seconds": 2.163069078931585,
+      "telemetry_sample_count": 6,
+      "sampling_interval_seconds": 0.25,
+      "telemetry_coverage_percent": 100.0,
+      "mean_gpu_power_watts": 45.04966666666667,
+      "expected_energy_from_mean_power_joules": 97.44554098284159,
+      "integrated_gpu_energy_joules": 79.6236989235275,
+      "energy_consistency_error_percent": 18.289027778553972,
+      "minimum_telemetry_coverage_percent": 90.0,
+      "maximum_energy_consistency_error_percent": 25.0,
+      "minimum_power_samples": 5,
+      "coverage_check_passed": true,
+      "sample_count_check_passed": true,
+      "energy_consistency_check_passed": true,
+      "passed": true
+    },
+    "system_energy_cost_gbp": null,
+    "system_energy_cost_per_million_tokens_gbp": null,
+    "system_energy_break_even_per_million_tokens_gbp": null,
+    "system_energy_cost_estimated": false
+  },
+  "destination_training": {
+    "hostname": "odyn-dgx3",
+    "vendor": "nvidia",
+    "device_name": "NVIDIA GB10",
+    "gpu_architecture": "sm_121",
+    "torch_version": "2.13.0+cu130",
+    "gpu_requested": true,
+    "gpu_detected": true,
+    "gpu_kernel_test_passed": true,
+    "gpu_execution_verified": true,
+    "gpu_runtime_verified": true,
+    "start_step": 10,
+    "end_step": 30,
+    "steps_executed": 20,
+    "first_step": 10,
+    "last_step": 30,
+    "useful_training_tokens": 2560,
+    "training_runtime_seconds": 2.614079436985776,
+    "tokens_per_second": 979.3122442185103,
+    "mean_gpu_utilization_percent": 28.22222222222222,
+    "peak_gpu_utilization_percent": 63.0,
+    "peak_accelerator_memory_bytes": 1460975104,
+    "mean_gpu_power_watts": 15.13888888888889,
+    "peak_gpu_power_watts": 21.48,
+    "gpu_energy_joules": 34.932613378033274,
+    "gpu_energy_wh": 0.009703503716120354,
+    "gpu_energy_kwh": 9.703503716120354e-06,
+    "tokens_per_joule": 73.28395308693992,
+    "electricity_price_per_kwh": 0.27,
+    "energy_cost_gbp": 2.6199460033524955e-06,
+    "energy_cost_per_million_tokens_gbp": 0.0010234164075595684,
+    "gpu_energy_cost_gbp": 2.6199460033524955e-06,
+    "gpu_energy_cost_per_million_tokens_gbp": 0.0010234164075595684,
+    "system_energy_kwh": null,
+    "system_energy_source": "not_measured",
+    "final_loss": 2.677119255065918,
+    "learning_rate": 0.0,
+    "optimizer_learning_rate_before_save": 0.0,
+    "optimizer_learning_rate_after_resume_load": 0.0,
+    "optimizer_exp_avg_sq_norm_before_save": 0.0004369183839317176,
+    "optimizer_exp_avg_sq_norm_after_resume_load": 0.00015503313001478497,
+    "loss_trace": [
+      {
+        "step": 1,
+        "loss": 3.4082555770874023
+      },
+      {
+        "step": 2,
+        "loss": 3.3796608448028564
+      },
+      {
+        "step": 3,
+        "loss": 3.343294382095337
+      },
+      {
+        "step": 4,
+        "loss": 3.3006978034973145
+      },
+      {
+        "step": 5,
+        "loss": 3.2659664154052734
+      },
+      {
+        "step": 6,
+        "loss": 3.2297539710998535
+      },
+      {
+        "step": 7,
+        "loss": 3.197890281677246
+      },
+      {
+        "step": 8,
+        "loss": 3.1909737586975098
+      },
+      {
+        "step": 9,
+        "loss": 3.1606340408325195
+      },
+      {
+        "step": 10,
+        "loss": 3.1541666984558105
+      },
+      {
+        "step": 11,
+        "loss": 3.141880750656128
+      },
+      {
+        "step": 12,
+        "loss": 3.1443769931793213
+      },
+      {
+        "step": 13,
+        "loss": 3.0997474193573
+      },
+      {
+        "step": 14,
+        "loss": 3.0658586025238037
+      },
+      {
+        "step": 15,
+        "loss": 3.0233981609344482
+      },
+      {
+        "step": 16,
+        "loss": 2.9927337169647217
+      },
+      {
+        "step": 17,
+        "loss": 2.958963632583618
+      },
+      {
+        "step": 18,
+        "loss": 2.9284698963165283
+      },
+      {
+        "step": 19,
+        "loss": 2.9045095443725586
+      },
+      {
+        "step": 20,
+        "loss": 2.854039192199707
+      },
+      {
+        "step": 21,
+        "loss": 2.8315963745117188
+      },
+      {
+        "step": 22,
+        "loss": 2.8059544563293457
+      },
+      {
+        "step": 23,
+        "loss": 2.7756764888763428
+      },
+      {
+        "step": 24,
+        "loss": 2.754460096359253
+      },
+      {
+        "step": 25,
+        "loss": 2.7365965843200684
+      },
+      {
+        "step": 26,
+        "loss": 2.722527265548706
+      },
+      {
+        "step": 27,
+        "loss": 2.7030465602874756
+      },
+      {
+        "step": 28,
+        "loss": 2.69584321975708
+      },
+      {
+        "step": 29,
+        "loss": 2.6793689727783203
+      },
+      {
+        "step": 30,
+        "loss": 2.677119255065918
+      }
+    ],
+    "telemetry_source": "nvml",
+    "power_telemetry_reason": null,
+    "telemetry_errors": [],
+    "telemetry_start_timestamp": "2026-09-07T06:59:36.918906+00:00",
+    "telemetry_end_timestamp": "2026-09-07T06:59:39.532996+00:00",
+    "telemetry_duration_seconds": 2.614079436985776,
+    "telemetry_sample_count": 9,
+    "sampling_interval_seconds": 0.25,
+    "checkpoint_load_seconds": 0.1801932519301772,
+    "resume_to_first_step_seconds": 0.9857151799369603,
+    "cuda_version": "13.0",
+    "energy_validation": {
+      "telemetry_start_timestamp": "2026-09-07T06:59:36.918906+00:00",
+      "telemetry_end_timestamp": "2026-09-07T06:59:39.532996+00:00",
+      "telemetry_duration_seconds": 2.614079436985776,
+      "training_runtime_seconds": 2.614079436985776,
+      "telemetry_sample_count": 9,
+      "sampling_interval_seconds": 0.25,
+      "telemetry_coverage_percent": 100.0,
+      "mean_gpu_power_watts": 15.13888888888889,
+      "expected_energy_from_mean_power_joules": 39.574258143256884,
+      "integrated_gpu_energy_joules": 34.932613378033274,
+      "energy_consistency_error_percent": 11.728949531842346,
+      "minimum_telemetry_coverage_percent": 90.0,
+      "maximum_energy_consistency_error_percent": 25.0,
+      "minimum_power_samples": 5,
+      "coverage_check_passed": true,
+      "sample_count_check_passed": true,
+      "energy_consistency_check_passed": true,
+      "passed": true
+    },
+    "system_energy_cost_gbp": null,
+    "system_energy_cost_per_million_tokens_gbp": null,
+    "system_energy_break_even_per_million_tokens_gbp": null,
+    "system_energy_cost_estimated": false
+  },
+  "end_to_end": {
+    "backend": "AMD -> NVIDIA",
+    "start_step": 0,
+    "end_step": 30,
+    "steps_executed": 30,
+    "useful_training_tokens": 3840,
+    "training_runtime_seconds": 4.777148515917361,
+    "wall_clock_runtime_seconds": 6.452619260409847,
+    "training_tokens_per_second": 803.8267990214662,
+    "wall_clock_tokens_per_second": 595.1071719914398,
+    "gpu_energy_joules": 114.55631230156078,
+    "gpu_energy_wh": 0.031821197861544664,
+    "gpu_energy_kwh": 3.182119786154466e-05,
+    "tokens_per_joule": 33.52063210529588,
+    "source_energy_cost_gbp": 5.971777419264563e-06,
+    "target_energy_cost_gbp": 2.6199460033524955e-06,
+    "total_energy_cost_gbp": 8.591723422617057e-06,
+    "energy_cost_per_million_tokens_gbp": 0.0022374279746398586
+  },
+  "migration": {
+    "checkpoint_logical_size_bytes": 18037069,
+    "transfer_payload_bytes": 18039859,
+    "checkpoint_save_seconds": 0.25600087782368064,
+    "iperf3": {
+      "success": true,
+      "throughput_bits_per_second": 941335075.009841
+    },
+    "rsync": {
+      "success": true,
+      "bytes_transferred": 18039859,
+      "elapsed_seconds": 0.6435582499834709,
+      "throughput_bytes_per_second": 28031431.49895652
+    },
+    "mooncake": {
+      "success": true,
+      "bytes_transferred": 18039859,
+      "elapsed_seconds": 0.25356143480166793,
+      "throughput_bytes_per_second": 71145909.92163503
+    },
+    "mooncake_vs_iperf_percent": 60.46,
+    "mooncake_vs_rsync_percent": 253.81,
+    "checkpoint_load_seconds": 0.1801932519301772,
+    "resume_to_first_step_seconds": 0.9857151799369603,
+    "transfer_seconds": 0.25356143480166793,
+    "checksum_verified": true,
+    "transfer_to_first_step_seconds": 1.4194698666688055,
+    "migration_to_first_step_seconds": 1.6754707444924861,
+    "migration_overhead_percent": 35.07261159894552
+  },
+  "continuity": {
+    "last_source_step": 10,
+    "first_destination_step": 11,
+    "loss_before_checkpoint": 3.1541666984558105,
+    "loss_after_resume": 3.141880750656128,
+    "optimizer_state_before_save": 0.00015503313328619177,
+    "optimizer_state_after_load": 0.00015503313001478497,
+    "learning_rate_before": 0.0,
+    "learning_rate_after": 0.0,
+    "continuity_verification_result": "pass",
+    "continuity_policy": {
+      "step_rule": "first_step_after_handoff == source_saved_step + 1",
+      "optimizer_norm_delta_max": 0.0001,
+      "learning_rate_delta_max": 1e-12
+    },
+    "step_continuity_verified": true,
+    "optimizer_state_verified": true,
+    "learning_rate_continuity_verified": true,
+    "resume_continuity_verified": true
+  },
+  "system_energy": {
+    "source": {
+      "energy_joules": null,
+      "energy_kwh": null,
+      "type": "not_measured",
+      "method": null,
+      "assumptions": null,
+      "confidence": null
+    },
+    "target": {
+      "energy_joules": null,
+      "energy_kwh": null,
+      "type": "not_measured",
+      "method": null,
+      "assumptions": null,
+      "confidence": null
+    }
+  },
+  "comparison": {
+    "higher_tokens_per_second": "destination_training",
+    "higher_tokens_per_joule": "destination_training",
+    "lower_energy_cost_per_million_tokens": "destination_training",
+    "tokens_per_second_ratio_destination_vs_source": 1.654937526631372,
+    "tokens_per_joule_ratio_destination_vs_source": 4.558702669156577,
+    "energy_cost_per_million_tokens_ratio_destination_vs_source": 0.21936065424179418
+  },
+  "validation": {
+    "benchmark_complete": true,
+    "cross_oem_gpu_benchmark_valid": true,
+    "functional_benchmark_complete": true,
+    "cross_oem_resume_valid": true,
+    "transfer_benchmark_valid": true,
+    "energy_benchmark_valid": true,
+    "telemetry_integrity_valid": true,
+    "economic_comparison_valid": true,
+    "formula_validation": {
+      "relative_tolerance": 1e-06,
+      "absolute_tolerance": 1e-09,
+      "checks": [
+        {
+          "name": "source.steps_executed",
+          "passed": true
+        },
+        {
+          "name": "target.steps_executed",
+          "passed": true
+        },
+        {
+          "name": "end_to_end.total_useful_tokens",
+          "passed": true
+        },
+        {
+          "name": "source.tokens_per_second",
+          "passed": true
+        },
+        {
+          "name": "target.tokens_per_second",
+          "passed": true
+        },
+        {
+          "name": "source.tokens_per_joule",
+          "passed": true
+        },
+        {
+          "name": "target.tokens_per_joule",
+          "passed": true
+        },
+        {
+          "name": "source.gpu_energy_kwh",
+          "passed": true
+        },
+        {
+          "name": "target.gpu_energy_kwh",
+          "passed": true
+        },
+        {
+          "name": "source.energy_cost_per_million_tokens",
+          "passed": true
+        },
+        {
+          "name": "target.energy_cost_per_million_tokens",
+          "passed": true
+        },
+        {
+          "name": "migration_overhead_percent",
+          "passed": true
+        },
+        {
+          "name": "end_to_end.cross_oem_energy",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "telemetry_integrity": {
+      "source": {
+        "checks": {
+          "sample_count_positive": true,
+          "timestamps_present": true,
+          "timestamps_monotonic": true,
+          "mean_power_non_negative": true,
+          "duration_within_runtime": true
+        },
+        "passed": true
+      },
+      "destination": {
+        "checks": {
+          "sample_count_positive": true,
+          "timestamps_present": true,
+          "timestamps_monotonic": true,
+          "mean_power_non_negative": true,
+          "duration_within_runtime": true
+        },
+        "passed": true
+      }
+    },
+    "controls": {
+      "checks": [
+        {
+          "name": "control_present_amd",
+          "passed": true
+        },
+        {
+          "name": "control_present_nvidia",
+          "passed": true
+        },
+        {
+          "name": "standalone_errors_empty",
+          "passed": true
+        }
+      ],
+      "passed": true,
+      "dgx_only": {
+        "machine_key": "nvidia_control",
+        "machine": "DGX Spark (single)",
+        "hostname": "michael@odyn-dgx3",
+        "backend": "CUDA",
+        "vendor": "nvidia",
+        "device_name": "NVIDIA GB10",
+        "expected_gpu_architecture": "gb10",
+        "detected_gpu_architecture": "NVIDIA GB10",
+        "container_image": null,
+        "execution_mode": "host",
+        "data_parallel_size": 1,
+        "electricity_price_per_kwh": 0.27,
+        "currency": "GBP",
+        "training_tokens_processed": 1280,
+        "runtime_seconds": 1.7453920859843493,
+        "tokens_per_second": 733.359575924809,
+        "average_power_watts": 12.174999999999999,
+        "total_energy_joules": 17.17833249583782,
+        "tokens_per_joule": 60.23487276589807,
+        "energy_kwh_per_million_tokens": 0.0037279367395481383,
+        "energy_cost_per_million_tokens": 0.0010065429196779974,
+        "gpu_detected": true,
+        "gpu_kernel_test_passed": true,
+        "gpu_runtime_verified": true,
+        "power_telemetry_available": true,
+        "power_telemetry_source": "nvml",
+        "power_sample_count": 6,
+        "power_telemetry_reason": null,
+        "power_telemetry_environment": null,
+        "metric_unavailable_reasons": {},
+        "required_field_reasons": {}
+      },
+      "radeon_only": {
+        "machine_key": "amd_existing",
+        "machine": "Radeon",
+        "hostname": "michael@odyn-radeon2",
+        "backend": "ROCm",
+        "vendor": "amd",
+        "device_name": "AMD Radeon 8060S Graphics",
+        "expected_gpu_architecture": "gfx1151",
+        "detected_gpu_architecture": "gfx1151",
+        "container_image": null,
+        "execution_mode": "host",
+        "data_parallel_size": 1,
+        "electricity_price_per_kwh": 0.27,
+        "currency": "GBP",
+        "training_tokens_processed": 1280,
+        "runtime_seconds": 2.1538246229756624,
+        "tokens_per_second": 594.2916551077351,
+        "average_power_watts": 45.71083333333333,
+        "total_energy_joules": 80.57056529607402,
+        "tokens_per_joule": 13.001111810279877,
+        "energy_kwh_per_million_tokens": 0.017484931704877173,
+        "energy_cost_per_million_tokens": 0.004720931560316837,
+        "gpu_detected": true,
+        "gpu_kernel_test_passed": true,
+        "gpu_runtime_verified": true,
+        "power_telemetry_available": true,
+        "power_telemetry_source": "amd_smi",
+        "power_sample_count": 6,
+        "power_telemetry_reason": null,
+        "power_telemetry_environment": null,
+        "metric_unavailable_reasons": {},
+        "required_field_reasons": {}
+      },
+      "required_vendors": [
+        "amd",
+        "nvidia"
+      ]
+    },
+    "required_metrics_missing": [],
+    "required_metrics_non_finite": [],
+    "validation_errors": [],
+    "validation_warnings": [
+      "Whole-system energy is not measured"
+    ],
+    "field_classification": {
+      "source_training.hostname": "REQUIRED",
+      "source_training.vendor": "REQUIRED",
+      "source_training.device_name": "REQUIRED",
+      "source_training.gpu_architecture": "REQUIRED",
+      "source_training.torch_version": "REQUIRED",
+      "source_training.gpu_requested": "REQUIRED",
+      "source_training.gpu_detected": "REQUIRED",
+      "source_training.gpu_kernel_test_passed": "REQUIRED",
+      "source_training.gpu_execution_verified": "REQUIRED",
+      "source_training.start_step": "REQUIRED",
+      "source_training.end_step": "REQUIRED",
+      "source_training.steps_executed": "REQUIRED",
+      "source_training.useful_training_tokens": "REQUIRED",
+      "source_training.training_runtime_seconds": "REQUIRED",
+      "source_training.tokens_per_second": "REQUIRED",
+      "source_training.mean_gpu_utilization_percent": "REQUIRED",
+      "source_training.peak_gpu_utilization_percent": "REQUIRED",
+      "source_training.peak_accelerator_memory_bytes": "REQUIRED",
+      "source_training.mean_gpu_power_watts": "REQUIRED",
+      "source_training.peak_gpu_power_watts": "REQUIRED",
+      "source_training.gpu_energy_joules": "REQUIRED",
+      "source_training.gpu_energy_wh": "REQUIRED",
+      "source_training.gpu_energy_kwh": "REQUIRED",
+      "source_training.tokens_per_joule": "REQUIRED",
+      "source_training.electricity_price_per_kwh": "REQUIRED",
+      "source_training.energy_cost_gbp": "REQUIRED",
+      "source_training.energy_cost_per_million_tokens_gbp": "REQUIRED",
+      "source_training.final_loss": "REQUIRED",
+      "source_training.checkpoint_size_bytes": "REQUIRED",
+      "source_training.checkpoint_save_seconds": "REQUIRED",
+      "destination_training.hostname": "REQUIRED",
+      "destination_training.vendor": "REQUIRED",
+      "destination_training.device_name": "REQUIRED",
+      "destination_training.gpu_architecture": "REQUIRED",
+      "destination_training.torch_version": "REQUIRED",
+      "destination_training.gpu_requested": "REQUIRED",
+      "destination_training.gpu_detected": "REQUIRED",
+      "destination_training.gpu_kernel_test_passed": "REQUIRED",
+      "destination_training.gpu_execution_verified": "REQUIRED",
+      "destination_training.start_step": "REQUIRED",
+      "destination_training.end_step": "REQUIRED",
+      "destination_training.steps_executed": "REQUIRED",
+      "destination_training.useful_training_tokens": "REQUIRED",
+      "destination_training.training_runtime_seconds": "REQUIRED",
+      "destination_training.tokens_per_second": "REQUIRED",
+      "destination_training.mean_gpu_utilization_percent": "REQUIRED",
+      "destination_training.peak_gpu_utilization_percent": "REQUIRED",
+      "destination_training.peak_accelerator_memory_bytes": "REQUIRED",
+      "destination_training.mean_gpu_power_watts": "REQUIRED",
+      "destination_training.peak_gpu_power_watts": "REQUIRED",
+      "destination_training.gpu_energy_joules": "REQUIRED",
+      "destination_training.gpu_energy_wh": "REQUIRED",
+      "destination_training.gpu_energy_kwh": "REQUIRED",
+      "destination_training.tokens_per_joule": "REQUIRED",
+      "destination_training.electricity_price_per_kwh": "REQUIRED",
+      "destination_training.energy_cost_gbp": "REQUIRED",
+      "destination_training.energy_cost_per_million_tokens_gbp": "REQUIRED",
+      "destination_training.final_loss": "REQUIRED",
+      "destination_training.checkpoint_load_seconds": "REQUIRED",
+      "destination_training.resume_to_first_step_seconds": "REQUIRED",
+      "source_training.system_energy_kwh": "OPTIONAL_UNAVAILABLE",
+      "destination_training.system_energy_kwh": "OPTIONAL_UNAVAILABLE",
+      "source_training.cuda_version": "NOT_APPLICABLE",
+      "destination_training.hip_version": "NOT_APPLICABLE"
+    },
+    "optional_unavailable_reasons": {
+      "source_training.system_energy_kwh": "not_measured",
+      "destination_training.system_energy_kwh": "not_measured",
+      "system_energy.source": "not_measured",
+      "system_energy.target": "not_measured"
+    }
+  },
+  "standalone_benchmark": {
+    "enabled": true,
+    "rows": [
+      {
+        "machine_key": "amd_existing",
+        "machine": "Radeon",
+        "hostname": "michael@odyn-radeon2",
+        "backend": "ROCm",
+        "vendor": "amd",
+        "device_name": "AMD Radeon 8060S Graphics",
+        "expected_gpu_architecture": "gfx1151",
+        "detected_gpu_architecture": "gfx1151",
+        "container_image": null,
+        "execution_mode": "host",
+        "data_parallel_size": 1,
+        "electricity_price_per_kwh": 0.27,
+        "currency": "GBP",
+        "training_tokens_processed": 1280,
+        "runtime_seconds": 2.1538246229756624,
+        "tokens_per_second": 594.2916551077351,
+        "average_power_watts": 45.71083333333333,
+        "total_energy_joules": 80.57056529607402,
+        "tokens_per_joule": 13.001111810279877,
+        "energy_kwh_per_million_tokens": 0.017484931704877173,
+        "energy_cost_per_million_tokens": 0.004720931560316837,
+        "gpu_detected": true,
+        "gpu_kernel_test_passed": true,
+        "gpu_runtime_verified": true,
+        "power_telemetry_available": true,
+        "power_telemetry_source": "amd_smi",
+        "power_sample_count": 6,
+        "power_telemetry_reason": null,
+        "power_telemetry_environment": null,
+        "metric_unavailable_reasons": {},
+        "required_field_reasons": {}
+      },
+      {
+        "machine_key": "nvidia_control",
+        "machine": "DGX Spark (single)",
+        "hostname": "michael@odyn-dgx3",
+        "backend": "CUDA",
+        "vendor": "nvidia",
+        "device_name": "NVIDIA GB10",
+        "expected_gpu_architecture": "gb10",
+        "detected_gpu_architecture": "NVIDIA GB10",
+        "container_image": null,
+        "execution_mode": "host",
+        "data_parallel_size": 1,
+        "electricity_price_per_kwh": 0.27,
+        "currency": "GBP",
+        "training_tokens_processed": 1280,
+        "runtime_seconds": 1.7453920859843493,
+        "tokens_per_second": 733.359575924809,
+        "average_power_watts": 12.174999999999999,
+        "total_energy_joules": 17.17833249583782,
+        "tokens_per_joule": 60.23487276589807,
+        "energy_kwh_per_million_tokens": 0.0037279367395481383,
+        "energy_cost_per_million_tokens": 0.0010065429196779974,
+        "gpu_detected": true,
+        "gpu_kernel_test_passed": true,
+        "gpu_runtime_verified": true,
+        "power_telemetry_available": true,
+        "power_telemetry_source": "nvml",
+        "power_sample_count": 6,
+        "power_telemetry_reason": null,
+        "power_telemetry_environment": null,
+        "metric_unavailable_reasons": {},
+        "required_field_reasons": {}
+      }
+    ],
+    "preflight": [
+      {
+        "machine_key": "amd_existing",
+        "hostname": "odyn-radeon2",
+        "container_image": null,
+        "expected_gpu_architecture": "gfx1151",
+        "verify_command": "/home/michael/torch-env/bin/python -c '\nimport json,math,os,platform,re,shutil,socket,subprocess,torch\nrun=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True)\nnum=lambda text: (lambda m: (None if not m else float(m.group(0))))(re.search(r'\"'\"'-?\\d+(?:\\.\\d+)?'\"'\"', str(text or '\"'\"''\"'\"')))\nver=lambda text: (lambda m: (m.group(0) if m else None))(re.search(r'\"'\"'\\d+(?:\\.\\d+)+'\"'\"', str(text or '\"'\"''\"'\"')))\nok=lambda value: (value is not None and math.isfinite(value) and value>0)\ngpu_detected=bool(torch.cuda.is_available())\nhip=getattr(torch.version,'\"'\"'hip'\"'\"',None)\ncuda=getattr(torch.version,'\"'\"'cuda'\"'\"',None)\nvendor=('\"'\"'amd'\"'\"' if hip else ('\"'\"'nvidia'\"'\"' if cuda else '\"'\"'unknown'\"'\"'))\nhostname=socket.gethostname()\ndevice_name=torch.cuda.get_device_name(0) if gpu_detected else None\nruntime='\"'\"''\"'\"'\nroc_text='\"'\"''\"'\"'\ntry:\n roc=run(['\"'\"'rocminfo'\"'\"']); roc_text=roc.stdout or '\"'\"''\"'\"'\nexcept Exception:\n roc_text='\"'\"''\"'\"'\nm=re.search(r'\"'\"'(gfx[0-9a-zA-Z]+)'\"'\"', roc_text)\nruntime=(m.group(1) if m else runtime)\nif (not runtime) and gpu_detected:\n try:\n  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'\"'\"'gcnArchName'\"'\"','\"'\"''\"'\"')).split('\"'\"':'\"'\"',1)[0]\n except Exception:\n  runtime=runtime\nif (not runtime) and gpu_detected and cuda:\n try:\n  cap=torch.cuda.get_device_capability(0); runtime='\"'\"'sm_%s%s'\"'\"' % (cap[0], cap[1])\n except Exception:\n  runtime=runtime\ntotal_memory=None\nif gpu_detected:\n try:\n  total_memory=int(getattr(torch.cuda.get_device_properties(0),'\"'\"'total_memory'\"'\"',0)) or None\n except Exception:\n  total_memory=None\ndef probe(cmd):\n try:\n  out=run(cmd)\n  return {'\"'\"'command'\"'\"':'\"'\"' '\"'\"'.join(cmd),'\"'\"'returncode'\"'\"':out.returncode,'\"'\"'stdout'\"'\"':(out.stdout or '\"'\"''\"'\"').strip(),'\"'\"'stderr'\"'\"':(out.stderr or '\"'\"''\"'\"').strip()}\n except Exception as exc:\n  return {'\"'\"'command'\"'\"':'\"'\"' '\"'\"'.join(cmd),'\"'\"'returncode'\"'\"':127,'\"'\"'stdout'\"'\"':'\"'\"''\"'\"','\"'\"'stderr'\"'\"':str(exc)}\nrocm_driver=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'--showdriverversion'\"'\"'])\nrocm_version_tool=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'-v'\"'\"'])\nrocm_power=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'--showpower'\"'\"','\"'\"'--json'\"'\"'])\nrocm_payload={}\ntry:\n rocm_payload=json.loads(rocm_power['\"'\"'stdout'\"'\"']) if rocm_power['\"'\"'stdout'\"'\"'] else {}\nexcept Exception:\n rocm_payload={}\ncards=[v for k,v in rocm_payload.items() if str(k).startswith('\"'\"'card'\"'\"') and isinstance(v,dict)]\ncard=(cards[0] if cards else {})\nrocm_values=[num(v) for k,v in card.items() if '\"'\"'Power'\"'\"' in str(k)]\nrocm_watts=next((v for v in rocm_values if ok(v)),None)\namd_bin=next((p for p in [shutil.which('\"'\"'amd-smi'\"'\"'),'\"'\"'/opt/rocm/bin/amd-smi'\"'\"','\"'\"'/opt/rocm-5.7.0/bin/amd-smi'\"'\"'] if p and os.path.exists(p)),None)\namd_version=probe([amd_bin,'\"'\"'version'\"'\"','\"'\"'--json'\"'\"']) if amd_bin else {'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':'\"'\"'amd-smi binary not found'\"'\"'}\namd_power=probe([amd_bin,'\"'\"'metric'\"'\"','\"'\"'--power'\"'\"','\"'\"'--json'\"'\"']) if amd_bin else {'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':'\"'\"'amd-smi binary not found'\"'\"'}\namd_payload={}\ntry:\n amd_payload=json.loads(amd_power.get('\"'\"'stdout'\"'\"','\"'\"''\"'\"') or '\"'\"'{}'\"'\"')\nexcept Exception:\n amd_payload={}\namd_fields=[amd_payload.get('\"'\"'power'\"'\"',{}),amd_payload]\namd_values=[num(item.get(k)) for item in amd_fields if isinstance(item,dict) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'power'\"'\"']]\namd_cli_watts=next((v for v in amd_values if ok(v)),None)\napi={'\"'\"'tested'\"'\"':False,'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':None,'\"'\"'driver_version'\"'\"':None,'\"'\"'power_info'\"'\"':None,'\"'\"'gpu_metrics_info'\"'\"':None,'\"'\"'current_socket_power_watts'\"'\"':None}\nif vendor=='\"'\"'amd'\"'\"':\n try:\n  import amdsmi\n  amdsmi.amdsmi_init(); hs=amdsmi.amdsmi_get_processor_handles(); h=(hs[0] if hs else None)\n  api['\"'\"'tested'\"'\"']=True; api['\"'\"'available'\"'\"']=bool(h)\n  if h is not None:\n   api['\"'\"'driver_version'\"'\"']=str(amdsmi.amdsmi_get_gpu_driver_version(h))\n   try: api['\"'\"'power_info'\"'\"']=amdsmi.amdsmi_get_power_info(h)\n   except Exception as exc: api['\"'\"'power_info'\"'\"']=f'\"'\"'error:{exc}'\"'\"'\n   try: api['\"'\"'gpu_metrics_info'\"'\"']=amdsmi.amdsmi_get_gpu_metrics_info(h)\n   except Exception as exc: api['\"'\"'gpu_metrics_info'\"'\"']=f'\"'\"'error:{exc}'\"'\"'\n   values=[num(str((api.get('\"'\"'power_info'\"'\"') or {}).get(k,'\"'\"''\"'\"'))) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'power'\"'\"'] if isinstance(api.get('\"'\"'power_info'\"'\"'),dict)]\n   values+= [num(str((api.get('\"'\"'gpu_metrics_info'\"'\"') or {}).get(k,'\"'\"''\"'\"'))) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'gfx_power'\"'\"'] if isinstance(api.get('\"'\"'gpu_metrics_info'\"'\"'),dict)]\n   api['\"'\"'current_socket_power_watts'\"'\"']=next((v for v in values if ok(v)),None)\n  if api['\"'\"'current_socket_power_watts'\"'\"'] is None: api['\"'\"'reason'\"'\"']='\"'\"'amdsmi API returned no numeric socket power'\"'\"'\n except Exception as exc:\n  api={'\"'\"'tested'\"'\"':True,'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':str(exc),'\"'\"'driver_version'\"'\"':None,'\"'\"'power_info'\"'\"':None,'\"'\"'gpu_metrics_info'\"'\"':None,'\"'\"'current_socket_power_watts'\"'\"':None}\npower_source=None\npower_reason=None\npower_watts=None\nif vendor=='\"'\"'nvidia'\"'\"':\n p=run(['\"'\"'nvidia-smi'\"'\"','\"'\"'--query-gpu=power.draw'\"'\"','\"'\"'--format=csv,noheader,nounits'\"'\"'])\n value=num((p.stdout or '\"'\"''\"'\"').strip())\n power_watts=value if ok(value) else None\n power_source='\"'\"'nvidia_smi_power_draw'\"'\"' if power_watts is not None else None\n power_reason=(None if power_watts is not None else (p.stderr.strip() or p.stdout.strip() or '\"'\"'nvidia-smi unavailable'\"'\"'))\nelif vendor=='\"'\"'amd'\"'\"':\n if ok(api.get('\"'\"'current_socket_power_watts'\"'\"')):\n  power_watts=api.get('\"'\"'current_socket_power_watts'\"'\"'); power_source='\"'\"'amdsmi_api_current_socket_power'\"'\"'\n elif ok(amd_cli_watts):\n  power_watts=amd_cli_watts; power_source='\"'\"'amd_smi_cli_current_power'\"'\"'\n elif ok(rocm_watts):\n  power_watts=rocm_watts; power_source='\"'\"'rocm_smi_average_graphics_package_power'\"'\"'\n if power_watts is None:\n  power_reason='\"'\"'AMD SMI API, amd-smi and rocm-smi returned no numeric MI300X power telemetry'\"'\"'\nelse:\n power_reason='\"'\"'vendor not detected'\"'\"'\npayload={'\"'\"'hostname'\"'\"':hostname,'\"'\"'gpu_vendor'\"'\"':vendor,'\"'\"'gpu_model'\"'\"':device_name,'\"'\"'gpu_architecture'\"'\"':runtime or None,'\"'\"'gpu_device_count'\"'\"':(int(torch.cuda.device_count()) if gpu_detected else 0),'\"'\"'total_gpu_memory_bytes'\"'\"':total_memory,'\"'\"'rocm_version'\"'\"':hip,'\"'\"'amd_driver_version'\"'\"':api.get('\"'\"'driver_version'\"'\"') or ver(str(rocm_driver.get('\"'\"'stdout'\"'\"','\"'\"''\"'\"'))),'\"'\"'amd_smi_version'\"'\"':amd_version,'\"'\"'rocm_smi_version'\"'\"':rocm_version_tool,'\"'\"'torch_version'\"'\"':torch.__version__,'\"'\"'python_version'\"'\"':platform.python_version(),'\"'\"'gpu_detected'\"'\"':gpu_detected,'\"'\"'power_telemetry_available'\"'\"':bool(power_watts is not None),'\"'\"'power_telemetry_reason'\"'\"':power_reason,'\"'\"'power_telemetry_source'\"'\"':power_source,'\"'\"'power_telemetry_value_watts'\"'\"':power_watts,'\"'\"'amd_smi_api_test'\"'\"':api,'\"'\"'amd_smi_cli_test'\"'\"':amd_power,'\"'\"'rocm_smi_test'\"'\"':rocm_power,'\"'\"'hip_version'\"'\"':hip,'\"'\"'cuda_version'\"'\"':cuda,'\"'\"'torch_arch_list'\"'\"':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]}\nif not gpu_detected:\n payload.update({'\"'\"'kernel_execution_test'\"'\"':False,'\"'\"'training_allowed'\"'\"':False,'\"'\"'gpu_kernel_reason'\"'\"':'\"'\"'torch.cuda.is_available() is false'\"'\"'}); print(json.dumps(payload)); raise SystemExit(0)\ntry:\n x=torch.ones(1024, device='\"'\"'cuda'\"'\"'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'\"'\"'kernel_execution_test'\"'\"':True,'\"'\"'training_allowed'\"'\"':True,'\"'\"'kernel_result'\"'\"':y,'\"'\"'gpu_kernel_reason'\"'\"':None})\nexcept Exception as exc:\n payload.update({'\"'\"'kernel_execution_test'\"'\"':False,'\"'\"'training_allowed'\"'\"':False,'\"'\"'gpu_kernel_reason'\"'\"':str(exc).splitlines()[0]})\nprint(json.dumps(payload))\n'",
+        "gpu_vendor": "amd",
+        "gpu_model": "AMD Radeon 8060S Graphics",
+        "gpu_architecture": "gfx1151",
+        "gpu_device_count": 1,
+        "total_gpu_memory_bytes": 68719476736,
+        "rocm_version": "7.16.26354",
+        "amd_driver_version": "7.0.0",
+        "amd_smi_version": {
+          "available": false,
+          "reason": "amd-smi binary not found"
+        },
+        "rocm_smi_version": {
+          "command": "rocm-smi -v",
+          "returncode": 0,
+          "stdout": "============================ ROCm System Management Interface ============================\n========================================= VBIOS ==========================================\nGPU[0]\t\t: VBIOS version: 113-STRXLGEN-001\n==========================================================================================\n================================== End of ROCm SMI Log ===================================",
+          "stderr": "WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status"
+        },
+        "torch_version": "2.14.0+rocm10.1.0a20260906",
+        "python_version": "3.12.10",
+        "gpu_detected": true,
+        "power_telemetry_available": true,
+        "power_telemetry_reason": null,
+        "power_telemetry_source": "rocm_smi_average_graphics_package_power",
+        "power_telemetry_value_watts": 39.03,
+        "amd_smi_api_test": {
+          "tested": true,
+          "available": false,
+          "reason": "module 'amdsmi' has no attribute 'amdsmi_get_gpu_driver_version'",
+          "driver_version": null,
+          "power_info": null,
+          "gpu_metrics_info": null,
+          "current_socket_power_watts": null
+        },
+        "amd_smi_cli_test": {
+          "available": false,
+          "reason": "amd-smi binary not found"
+        },
+        "rocm_smi_test": {
+          "command": "rocm-smi --showpower --json",
+          "returncode": 0,
+          "stdout": "{\"card0\": {\"Current Socket Graphics Package Power (W)\": \"39.03\"}}",
+          "stderr": "WARNING: AMD GPU device(s) is/are in a low-power state. Check power control/runtime_status"
+        },
+        "hip_version": "7.16.26354",
+        "cuda_version": null,
+        "torch_arch_list": [
+          "gfx942",
+          "gfx1100",
+          "gfx1101",
+          "gfx1102",
+          "gfx1103",
+          "gfx1151",
+          "gfx1200",
+          "gfx1201",
+          "gfx90a",
+          "gfx950",
+          "gfx900",
+          "gfx906",
+          "gfx908",
+          "gfx1010",
+          "gfx1011",
+          "gfx1012",
+          "gfx1030",
+          "gfx1031",
+          "gfx1032",
+          "gfx1033",
+          "gfx1034",
+          "gfx1035",
+          "gfx1036",
+          "gfx1150",
+          "gfx1152",
+          "gfx1153",
+          "gfx1250"
+        ],
+        "kernel_execution_test": true,
+        "training_allowed": true,
+        "kernel_result": 2048.0,
+        "gpu_kernel_reason": null,
+        "missing_reasons": {},
+        "architecture_match": true,
+        "architecture_reason": null
+      },
+      {
+        "machine_key": "nvidia_control",
+        "hostname": "odyn-dgx3",
+        "container_image": null,
+        "expected_gpu_architecture": "gb10",
+        "verify_command": "/usr/bin/python3.12 -c '\nimport json,math,os,platform,re,shutil,socket,subprocess,torch\nrun=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True)\nnum=lambda text: (lambda m: (None if not m else float(m.group(0))))(re.search(r'\"'\"'-?\\d+(?:\\.\\d+)?'\"'\"', str(text or '\"'\"''\"'\"')))\nver=lambda text: (lambda m: (m.group(0) if m else None))(re.search(r'\"'\"'\\d+(?:\\.\\d+)+'\"'\"', str(text or '\"'\"''\"'\"')))\nok=lambda value: (value is not None and math.isfinite(value) and value>0)\ngpu_detected=bool(torch.cuda.is_available())\nhip=getattr(torch.version,'\"'\"'hip'\"'\"',None)\ncuda=getattr(torch.version,'\"'\"'cuda'\"'\"',None)\nvendor=('\"'\"'amd'\"'\"' if hip else ('\"'\"'nvidia'\"'\"' if cuda else '\"'\"'unknown'\"'\"'))\nhostname=socket.gethostname()\ndevice_name=torch.cuda.get_device_name(0) if gpu_detected else None\nruntime='\"'\"''\"'\"'\nroc_text='\"'\"''\"'\"'\ntry:\n roc=run(['\"'\"'rocminfo'\"'\"']); roc_text=roc.stdout or '\"'\"''\"'\"'\nexcept Exception:\n roc_text='\"'\"''\"'\"'\nm=re.search(r'\"'\"'(gfx[0-9a-zA-Z]+)'\"'\"', roc_text)\nruntime=(m.group(1) if m else runtime)\nif (not runtime) and gpu_detected:\n try:\n  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'\"'\"'gcnArchName'\"'\"','\"'\"''\"'\"')).split('\"'\"':'\"'\"',1)[0]\n except Exception:\n  runtime=runtime\nif (not runtime) and gpu_detected and cuda:\n try:\n  cap=torch.cuda.get_device_capability(0); runtime='\"'\"'sm_%s%s'\"'\"' % (cap[0], cap[1])\n except Exception:\n  runtime=runtime\ntotal_memory=None\nif gpu_detected:\n try:\n  total_memory=int(getattr(torch.cuda.get_device_properties(0),'\"'\"'total_memory'\"'\"',0)) or None\n except Exception:\n  total_memory=None\ndef probe(cmd):\n try:\n  out=run(cmd)\n  return {'\"'\"'command'\"'\"':'\"'\"' '\"'\"'.join(cmd),'\"'\"'returncode'\"'\"':out.returncode,'\"'\"'stdout'\"'\"':(out.stdout or '\"'\"''\"'\"').strip(),'\"'\"'stderr'\"'\"':(out.stderr or '\"'\"''\"'\"').strip()}\n except Exception as exc:\n  return {'\"'\"'command'\"'\"':'\"'\"' '\"'\"'.join(cmd),'\"'\"'returncode'\"'\"':127,'\"'\"'stdout'\"'\"':'\"'\"''\"'\"','\"'\"'stderr'\"'\"':str(exc)}\nrocm_driver=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'--showdriverversion'\"'\"'])\nrocm_version_tool=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'-v'\"'\"'])\nrocm_power=probe(['\"'\"'rocm-smi'\"'\"','\"'\"'--showpower'\"'\"','\"'\"'--json'\"'\"'])\nrocm_payload={}\ntry:\n rocm_payload=json.loads(rocm_power['\"'\"'stdout'\"'\"']) if rocm_power['\"'\"'stdout'\"'\"'] else {}\nexcept Exception:\n rocm_payload={}\ncards=[v for k,v in rocm_payload.items() if str(k).startswith('\"'\"'card'\"'\"') and isinstance(v,dict)]\ncard=(cards[0] if cards else {})\nrocm_values=[num(v) for k,v in card.items() if '\"'\"'Power'\"'\"' in str(k)]\nrocm_watts=next((v for v in rocm_values if ok(v)),None)\namd_bin=next((p for p in [shutil.which('\"'\"'amd-smi'\"'\"'),'\"'\"'/opt/rocm/bin/amd-smi'\"'\"','\"'\"'/opt/rocm-5.7.0/bin/amd-smi'\"'\"'] if p and os.path.exists(p)),None)\namd_version=probe([amd_bin,'\"'\"'version'\"'\"','\"'\"'--json'\"'\"']) if amd_bin else {'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':'\"'\"'amd-smi binary not found'\"'\"'}\namd_power=probe([amd_bin,'\"'\"'metric'\"'\"','\"'\"'--power'\"'\"','\"'\"'--json'\"'\"']) if amd_bin else {'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':'\"'\"'amd-smi binary not found'\"'\"'}\namd_payload={}\ntry:\n amd_payload=json.loads(amd_power.get('\"'\"'stdout'\"'\"','\"'\"''\"'\"') or '\"'\"'{}'\"'\"')\nexcept Exception:\n amd_payload={}\namd_fields=[amd_payload.get('\"'\"'power'\"'\"',{}),amd_payload]\namd_values=[num(item.get(k)) for item in amd_fields if isinstance(item,dict) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'power'\"'\"']]\namd_cli_watts=next((v for v in amd_values if ok(v)),None)\napi={'\"'\"'tested'\"'\"':False,'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':None,'\"'\"'driver_version'\"'\"':None,'\"'\"'power_info'\"'\"':None,'\"'\"'gpu_metrics_info'\"'\"':None,'\"'\"'current_socket_power_watts'\"'\"':None}\nif vendor=='\"'\"'amd'\"'\"':\n try:\n  import amdsmi\n  amdsmi.amdsmi_init(); hs=amdsmi.amdsmi_get_processor_handles(); h=(hs[0] if hs else None)\n  api['\"'\"'tested'\"'\"']=True; api['\"'\"'available'\"'\"']=bool(h)\n  if h is not None:\n   api['\"'\"'driver_version'\"'\"']=str(amdsmi.amdsmi_get_gpu_driver_version(h))\n   try: api['\"'\"'power_info'\"'\"']=amdsmi.amdsmi_get_power_info(h)\n   except Exception as exc: api['\"'\"'power_info'\"'\"']=f'\"'\"'error:{exc}'\"'\"'\n   try: api['\"'\"'gpu_metrics_info'\"'\"']=amdsmi.amdsmi_get_gpu_metrics_info(h)\n   except Exception as exc: api['\"'\"'gpu_metrics_info'\"'\"']=f'\"'\"'error:{exc}'\"'\"'\n   values=[num(str((api.get('\"'\"'power_info'\"'\"') or {}).get(k,'\"'\"''\"'\"'))) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'power'\"'\"'] if isinstance(api.get('\"'\"'power_info'\"'\"'),dict)]\n   values+= [num(str((api.get('\"'\"'gpu_metrics_info'\"'\"') or {}).get(k,'\"'\"''\"'\"'))) for k in ['\"'\"'current_socket_power'\"'\"','\"'\"'average_socket_power'\"'\"','\"'\"'socket_power'\"'\"','\"'\"'gfx_power'\"'\"'] if isinstance(api.get('\"'\"'gpu_metrics_info'\"'\"'),dict)]\n   api['\"'\"'current_socket_power_watts'\"'\"']=next((v for v in values if ok(v)),None)\n  if api['\"'\"'current_socket_power_watts'\"'\"'] is None: api['\"'\"'reason'\"'\"']='\"'\"'amdsmi API returned no numeric socket power'\"'\"'\n except Exception as exc:\n  api={'\"'\"'tested'\"'\"':True,'\"'\"'available'\"'\"':False,'\"'\"'reason'\"'\"':str(exc),'\"'\"'driver_version'\"'\"':None,'\"'\"'power_info'\"'\"':None,'\"'\"'gpu_metrics_info'\"'\"':None,'\"'\"'current_socket_power_watts'\"'\"':None}\npower_source=None\npower_reason=None\npower_watts=None\nif vendor=='\"'\"'nvidia'\"'\"':\n p=run(['\"'\"'nvidia-smi'\"'\"','\"'\"'--query-gpu=power.draw'\"'\"','\"'\"'--format=csv,noheader,nounits'\"'\"'])\n value=num((p.stdout or '\"'\"''\"'\"').strip())\n power_watts=value if ok(value) else None\n power_source='\"'\"'nvidia_smi_power_draw'\"'\"' if power_watts is not None else None\n power_reason=(None if power_watts is not None else (p.stderr.strip() or p.stdout.strip() or '\"'\"'nvidia-smi unavailable'\"'\"'))\nelif vendor=='\"'\"'amd'\"'\"':\n if ok(api.get('\"'\"'current_socket_power_watts'\"'\"')):\n  power_watts=api.get('\"'\"'current_socket_power_watts'\"'\"'); power_source='\"'\"'amdsmi_api_current_socket_power'\"'\"'\n elif ok(amd_cli_watts):\n  power_watts=amd_cli_watts; power_source='\"'\"'amd_smi_cli_current_power'\"'\"'\n elif ok(rocm_watts):\n  power_watts=rocm_watts; power_source='\"'\"'rocm_smi_average_graphics_package_power'\"'\"'\n if power_watts is None:\n  power_reason='\"'\"'AMD SMI API, amd-smi and rocm-smi returned no numeric MI300X power telemetry'\"'\"'\nelse:\n power_reason='\"'\"'vendor not detected'\"'\"'\npayload={'\"'\"'hostname'\"'\"':hostname,'\"'\"'gpu_vendor'\"'\"':vendor,'\"'\"'gpu_model'\"'\"':device_name,'\"'\"'gpu_architecture'\"'\"':runtime or None,'\"'\"'gpu_device_count'\"'\"':(int(torch.cuda.device_count()) if gpu_detected else 0),'\"'\"'total_gpu_memory_bytes'\"'\"':total_memory,'\"'\"'rocm_version'\"'\"':hip,'\"'\"'amd_driver_version'\"'\"':api.get('\"'\"'driver_version'\"'\"') or ver(str(rocm_driver.get('\"'\"'stdout'\"'\"','\"'\"''\"'\"'))),'\"'\"'amd_smi_version'\"'\"':amd_version,'\"'\"'rocm_smi_version'\"'\"':rocm_version_tool,'\"'\"'torch_version'\"'\"':torch.__version__,'\"'\"'python_version'\"'\"':platform.python_version(),'\"'\"'gpu_detected'\"'\"':gpu_detected,'\"'\"'power_telemetry_available'\"'\"':bool(power_watts is not None),'\"'\"'power_telemetry_reason'\"'\"':power_reason,'\"'\"'power_telemetry_source'\"'\"':power_source,'\"'\"'power_telemetry_value_watts'\"'\"':power_watts,'\"'\"'amd_smi_api_test'\"'\"':api,'\"'\"'amd_smi_cli_test'\"'\"':amd_power,'\"'\"'rocm_smi_test'\"'\"':rocm_power,'\"'\"'hip_version'\"'\"':hip,'\"'\"'cuda_version'\"'\"':cuda,'\"'\"'torch_arch_list'\"'\"':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]}\nif not gpu_detected:\n payload.update({'\"'\"'kernel_execution_test'\"'\"':False,'\"'\"'training_allowed'\"'\"':False,'\"'\"'gpu_kernel_reason'\"'\"':'\"'\"'torch.cuda.is_available() is false'\"'\"'}); print(json.dumps(payload)); raise SystemExit(0)\ntry:\n x=torch.ones(1024, device='\"'\"'cuda'\"'\"'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'\"'\"'kernel_execution_test'\"'\"':True,'\"'\"'training_allowed'\"'\"':True,'\"'\"'kernel_result'\"'\"':y,'\"'\"'gpu_kernel_reason'\"'\"':None})\nexcept Exception as exc:\n payload.update({'\"'\"'kernel_execution_test'\"'\"':False,'\"'\"'training_allowed'\"'\"':False,'\"'\"'gpu_kernel_reason'\"'\"':str(exc).splitlines()[0]})\nprint(json.dumps(payload))\n'",
+        "gpu_vendor": "nvidia",
+        "gpu_model": "NVIDIA GB10",
+        "gpu_architecture": "NVIDIA GB10",
+        "gpu_device_count": 1,
+        "total_gpu_memory_bytes": 130662940672,
+        "rocm_version": null,
+        "amd_driver_version": null,
+        "amd_smi_version": {
+          "available": false,
+          "reason": "amd-smi binary not found"
+        },
+        "rocm_smi_version": {
+          "command": "rocm-smi -v",
+          "returncode": 127,
+          "stdout": "",
+          "stderr": "[Errno 2] No such file or directory: 'rocm-smi'"
+        },
+        "torch_version": "2.13.0+cu130",
+        "python_version": "3.12.3",
+        "gpu_detected": true,
+        "power_telemetry_available": true,
+        "power_telemetry_reason": null,
+        "power_telemetry_source": "nvidia_smi_power_draw",
+        "power_telemetry_value_watts": 4.82,
+        "amd_smi_api_test": {
+          "tested": false,
+          "available": false,
+          "reason": null,
+          "driver_version": null,
+          "power_info": null,
+          "gpu_metrics_info": null,
+          "current_socket_power_watts": null
+        },
+        "amd_smi_cli_test": {
+          "available": false,
+          "reason": "amd-smi binary not found"
+        },
+        "rocm_smi_test": {
+          "command": "rocm-smi --showpower --json",
+          "returncode": 127,
+          "stdout": "",
+          "stderr": "[Errno 2] No such file or directory: 'rocm-smi'"
+        },
+        "hip_version": null,
+        "cuda_version": "13.0",
+        "torch_arch_list": [
+          "sm_80",
+          "sm_90",
+          "sm_100",
+          "sm_110",
+          "sm_120"
+        ],
+        "kernel_execution_test": true,
+        "training_allowed": true,
+        "kernel_result": 2048.0,
+        "gpu_kernel_reason": null,
+        "missing_reasons": {},
+        "architecture_match": true,
+        "architecture_reason": null
+      }
+    ],
+    "validation_errors": [],
+    "table": "| Machine | DP | Backend | Training tokens | Runtime | tok/s | Avg W | tok/J | kWh/M tokens | Energy cost/M tokens | Power source | Power samples |\n|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---:|\n| Radeon | 1 | ROCm | 1280 | 2.15 | 594.29 | 45.71 | 13.0011 | 0.017485 | 0.004721 GBP | amd_smi | 6 |\n| DGX Spark (single) | 1 | CUDA | 1280 | 1.75 | 733.36 | 12.17 | 60.2349 | 0.003728 | 0.001007 GBP | nvml | 6 |",
+    "validation_matrix": [
+      {
+        "check": "DGX control detected",
+        "result": "PASS"
+      },
+      {
+        "check": "Radeon control detected",
+        "result": "PASS"
+      },
+      {
+        "check": "CUDA version captured",
+        "result": "PASS"
+      },
+      {
+        "check": "ROCm version captured",
+        "result": "PASS"
+      },
+      {
+        "check": "DGX power sampled",
+        "result": "PASS"
+      },
+      {
+        "check": "Radeon power sampled",
+        "result": "PASS"
+      },
+      {
+        "check": "DGX tokens/J calculated",
+        "result": "PASS"
+      },
+      {
+        "check": "Radeon tokens/J calculated",
+        "result": "PASS"
+      },
+      {
+        "check": "DGX energy cost/M calculated",
+        "result": "PASS"
+      },
+      {
+        "check": "Radeon energy cost/M calculated",
+        "result": "PASS"
+      },
+      {
+        "check": "Full Dagster run completed",
+        "result": "PASS"
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "common": {
+    "local_root_dir": "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning",
+    "remote_root_dir": "~/cross-vendor-mooncake-test"
+  },
+  "finetuning_sequential": {
+    "source_host": "michael@odyn-dgx3",
+    "target_host": "runpod-mi300x-michael",
+    "model_id": "Qwen/Qwen2.5-0.5B",
+    "checkpoint_step": 10,
+    "final_step": 30,
+    "run_id": "dgx3-to-mi300x-qwen25-05b",
+    "dataset_path": "data/quant_mentor_500_alpaca.jsonl",
+    "source_data_parallel_size": 1,
+    "source_python_cmd": "/usr/bin/python3.12",
+    "target_python_cmd": "/workspace/venvs/py312-rocm/bin/python",
+    "host_python_cmd_overrides": {
+      "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
+      "michael@odyn-dgx3": "/usr/bin/python3.12",
+      "runpod-mi300x-michael": "/workspace/venvs/py312-rocm/bin/python"
+    },
+    "transfer_backend": "scp",
+    "asset_paths": [
+      "data/quant_mentor_500_alpaca.jsonl"
+    ],
+    "command_retries": 3,
+    "source_use_gpu": true,
+    "target_use_gpu": true,
+    "transfer": {
+      "metadata_server": "P2PHANDSHAKE",
+      "protocol": "tcp",
+      "chunk_mb": 64,
+      "max_inflight": 2,
+      "source": {
+        "server_name": "10.6.45.106:55000",
+        "control_host": "10.6.45.106",
+        "control_port": 56001,
+        "python_cmd": "/usr/bin/python3.12"
+      },
+      "destination": {
+        "server_name": "10.6.45.118:55001",
+        "control_host": "10.6.45.118",
+        "control_port": 56000,
+        "python_cmd": "/workspace/venvs/py312-rocm/bin/python"
+      }
+    },
+    "min_extra_steps": 5,
+    "max_loss_delta": 2.0,
+    "max_optimizer_norm_delta": 0.0001,
+    "electricity_price_gbp_per_kwh": 0.27,
+    "minimum_power_samples": 5,
+    "maximum_energy_consistency_error_percent": 25.0,
+    "recommended_minimum_energy_benchmark_seconds": 2.0,
+    "command_timeout_seconds": 2400,
+    "torchrun_timeout_seconds": 2400,
+    "transfer_timeout_seconds": 2400
+  },
+  "standalone_benchmark": {
+    "enabled": true,
+    "machine_keys": [
+      "amd_existing",
+      "nvidia_control",
+      "mi300x"
+    ],
+    "run_id_suffix": "baseline",
+    "steps": 10,
+    "max_steps": 10,
+    "max_length": 128,
+    "per_device_batch_size": 1,
+    "learning_rate": 0.0002,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "telemetry_interval_seconds": 0.25,
+    "model_id": "Qwen/Qwen2.5-0.5B"
+  }
+}

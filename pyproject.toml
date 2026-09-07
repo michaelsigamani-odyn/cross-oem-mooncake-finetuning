@@ -1,0 +1,26 @@
+[project]
+name = "cross-oem-migration"
+version = "0.2.0"
+description = "Cross-OEM (NVIDIA/AMD) checkpoint migration + fine-tuning pipeline, orchestrated with Dagster software-defined assets."
+requires-python = ">=3.12"
+dependencies = [
+    "dagster>=1.8",
+    "dagster-webserver>=1.8",
+    "transformers",
+    "datasets",
+    "peft",
+    "accelerate",
+    "safetensors",
+    "torch",
+    "numpy",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

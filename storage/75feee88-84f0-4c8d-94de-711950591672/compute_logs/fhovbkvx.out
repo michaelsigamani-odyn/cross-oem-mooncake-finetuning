@@ -1,0 +1,28 @@
+2026-09-07T10:02:25Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json' /tmp/finetuning_pull_radeon2-to-dgxspark-qwen25-05b_1788775345991.json
+timeout_seconds=600.0
+2026-09-07T10:02:26Z END command
+duration=0.542
+returncode=0
+2026-09-07T10:02:26Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/run_summary.json' /tmp/finetuning_pull_radeon2-to-dgxspark-qwen25-05b_1788775346534.json
+timeout_seconds=600.0
+2026-09-07T10:02:26Z END command
+duration=0.317
+returncode=0
+2026-09-07T10:02:26Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3:/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json /tmp/finetuning_pull_radeon2-to-dgxspark-qwen25-05b_1788775346851.json
+timeout_seconds=600.0
+2026-09-07T10:02:27Z END command
+duration=0.329
+returncode=0
+2026-09-07T10:02:27Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/resume_validation_proof.json' /tmp/finetuning_pull_radeon2-to-dgxspark-qwen25-05b_1788775347180.json
+timeout_seconds=600.0
+2026-09-07T10:02:27Z END command
+duration=0.321
+returncode=0

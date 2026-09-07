@@ -1,0 +1,77 @@
+2026-09-07T10:02:10Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'nohup iperf3 -s -1 -J >/tmp/iperf3_server_radeon2-to-dgxspark-qwen25-05b_10_1788775330444.json 2>&1 & echo $! > /tmp/iperf3_server_radeon2-to-dgxspark-qwen25-05b_10_1788775330444.pid'
+timeout_seconds=600.0
+2026-09-07T10:02:10Z END command
+duration=0.305
+returncode=0
+2026-09-07T10:02:11Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'iperf3 -c 10.6.45.106 -J -t 10'
+timeout_seconds=600.0
+2026-09-07T10:02:22Z END command
+duration=10.414
+returncode=0
+2026-09-07T10:02:22Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -f /tmp/iperf3_server_radeon2-to-dgxspark-qwen25-05b_10_1788775330444.pid && kill $(cat /tmp/iperf3_server_radeon2-to-dgxspark-qwen25-05b_10_1788775330444.pid) >/dev/null 2>&1 || true'
+timeout_seconds=600.0
+2026-09-07T10:02:22Z END command
+duration=0.213
+returncode=0
+2026-09-07T10:02:22Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p /home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/rsync_benchmark_radeon2-to-dgxspark-qwen25-05b_10_1788775342378'
+timeout_seconds=600.0
+2026-09-07T10:02:22Z END command
+duration=0.194
+returncode=0
+2026-09-07T10:02:22Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && touch "$HOME/.ssh/known_hosts" && chmod 600 "$HOME/.ssh/known_hosts" && (ssh-keygen -F odyn-dgx3 -f "$HOME/.ssh/known_hosts" >/dev/null || ssh-keyscan -H odyn-dgx3 >> "$HOME/.ssh/known_hosts")'
+timeout_seconds=600.0
+2026-09-07T10:02:22Z END command
+duration=0.406
+returncode=0
+2026-09-07T10:02:22Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'rsync -a --stats -e '"'"'ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1'"'"' /home/michael/cross-vendor-mooncake-test/amd_run_radeon2-to-dgxspark-qwen25-05b/checkpoint-10/ michael@odyn-dgx3:/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/rsync_benchmark_radeon2-to-dgxspark-qwen25-05b_10_1788775342378/'
+timeout_seconds=600.0
+2026-09-07T10:02:23Z END command
+duration=0.719
+returncode=0
+2026-09-07T10:02:23Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'rm -rf /home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/rsync_benchmark_radeon2-to-dgxspark-qwen25-05b_10_1788775342378'
+timeout_seconds=600.0
+2026-09-07T10:02:23Z END command
+duration=0.205
+returncode=0
+2026-09-07T10:02:23Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "iperf3",\n  "path": "Maximum TCP capability",\n  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",\n  "details": {\n    "success": true,\n    "elapsed_seconds": 10.004265,\n    "throughput_bits_per_second": 941324630.64503,\n    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:02:24Z END command
+duration=0.224
+returncode=0
+2026-09-07T10:02:24Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "SCP/rsync",\n  "path": "File-transfer baseline",\n  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",\n  "details": {\n    "success": true,\n    "bytes_transferred": 18039874,\n    "elapsed_seconds": 0.7192495829949621,\n    "throughput_bytes_per_second": 25081521.667182334,\n    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:02:24Z END command
+duration=0.215
+returncode=0
+2026-09-07T10:02:24Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "Mooncake TCP",\n  "path": "Mooncake application path",\n  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",\n  "details": {\n    "backend": "scp",\n    "success": true,\n    "bytes_transferred": 18039874,\n    "elapsed_seconds": 7.821297999995295,\n    "throughput_bytes_per_second": 2306506.413642704,\n    "manifest_path": "",\n    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:02:24Z END command
+duration=0.214
+returncode=0
+2026-09-07T10:02:24Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/transfer_test_matrix.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "tests": [\n    {\n      "test": "iperf3",\n      "path": "Maximum TCP capability",\n      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",\n      "details": {\n        "success": true,\n        "elapsed_seconds": 10.004265,\n        "throughput_bits_per_second": 941324630.64503,\n        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n      }\n    },\n    {\n      "test": "SCP/rsync",\n      "path": "File-transfer baseline",\n      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",\n      "details": {\n        "success": true,\n        "bytes_transferred": 18039874,\n        "elapsed_seconds": 0.7192495829949621,\n        "throughput_bytes_per_second": 25081521.667182334,\n        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n      }\n    },\n    {\n      "test": "Mooncake TCP",\n      "path": "Mooncake application path",\n      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",\n      "details": {\n        "backend": "scp",\n        "success": true,\n        "bytes_transferred": 18039874,\n        "elapsed_seconds": 7.821297999995295,\n        "throughput_bytes_per_second": 2306506.413642704,\n        "manifest_path": "",\n        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n      }\n    }\n  ],\n  "comparison": {\n    "mooncake_vs_iperf_percent": 1.96,\n    "mooncake_vs_rsync_percent": 9.2\n  },\n  "machines": {\n    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",\n    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:02:24Z END command
+duration=0.258
+returncode=0

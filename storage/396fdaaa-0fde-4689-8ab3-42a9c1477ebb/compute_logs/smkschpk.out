@@ -1,0 +1,15 @@
+2026-09-07T16:05:18Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T16:05:18Z END command
+duration=0.331
+returncode=0
+2026-09-07T16:05:18Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T16:05:19Z INTERRUPTED command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+elapsed=0.539

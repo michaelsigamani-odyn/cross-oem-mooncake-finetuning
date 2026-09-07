@@ -1,0 +1,34 @@
+"""Transfer asset. Ports `copy_checkpoint` + `verify_transfer` (original
+lines 2829-2879): moves the checkpoint from source to target host via
+whichever TransferBackend is configured (scp or mooncake_tcp) and
+verifies it. Swapping backends is a one-line config change
+(configs/run.json `transfer_backend`), not a code change.
+"""
+from dataclasses import asdict
+from typing import Any, Dict
+
+from dagster import AssetExecutionContext, asset
+
+from ..resources import ExecutorResource, SettingsResource, TransferResource
+from .training import source_checkpoint
+
+
+@asset(group_name="transfer", deps=[source_checkpoint], description="Transfers the checkpoint from source_host to target_host and verifies it.")
+def transferred_checkpoint(context: AssetExecutionContext, settings: SettingsResource, executor: ExecutorResource, transfer: TransferResource) -> Dict[str, Any]:
+    cfg = settings.get()
+    backend = transfer.get(cfg, executor.get(cfg))
+    source_path = f"{cfg.remote_root}/amd_run_{cfg.run_id}/checkpoint-{cfg.checkpoint_step}"
+    destination_path = f"{cfg.remote_root}/checkpoint-{cfg.checkpoint_step}"
+
+    result = backend.transfer(source_host=cfg.source_host, source_path=source_path,
+                               destination_host=cfg.target_host, destination_path=destination_path)
+    result = backend.verify(result)
+    if not result.success or not result.checksum_ok:
+        raise RuntimeError(f"Checkpoint transfer failed or checksum mismatch: {result.details}")
+
+    context.add_output_metadata({
+        "backend": result.backend, "bytes_transferred": result.bytes_transferred,
+        "throughput_mb_s": round(result.throughput_bytes_per_second / (1024 * 1024), 2),
+        "checksum_ok": result.checksum_ok,
+    })
+    return asdict(result)
