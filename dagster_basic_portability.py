@@ -1,14 +1,16 @@
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
+import math
 import os
 import re
 import shlex
 import subprocess
 import time
 
-from dagster import AssetCheckResult, AssetKey, AssetMaterialization, In, MetadataValue, Nothing, OpExecutionContext, Out, TableColumn, TableSchema, asset_check, job, op
+from dagster import AssetCheckResult, AssetKey, AssetMaterialization, Failure, In, MetadataValue, Nothing, OpExecutionContext, Out, TableColumn, TableSchema, asset_check, job, op
 
 
 @dataclass
@@ -20,6 +22,7 @@ class PortabilitySettings:
     checkpoint_step: int
     final_step: int
     run_id: str
+    model_id: str
     dataset_path: str
     ssh_password: Optional[str]
     asset_paths: List[str]
@@ -45,6 +48,12 @@ class PortabilitySettings:
     transfer: "TransferSettings"
     machine_catalog: Dict[str, "MachineSpec"]
     standalone_benchmark: "StandaloneBenchmarkConfig"
+    ssh_connect_timeout_seconds: int
+    command_timeout_seconds: float
+    torchrun_timeout_seconds: float
+    rendezvous_timeout_seconds: int
+    process_group_timeout_seconds: int
+    transfer_timeout_seconds: float
 
 
 @dataclass
@@ -105,6 +114,10 @@ class MachineSpec:
     electricity_price_per_kwh: float
     currency: str
     python_cmd: str
+    data_parallel_size: int
+    distributed_hosts: List[str]
+    ddp_master_addr: Optional[str]
+    nccl_socket_ifname: Optional[str]
     transfer: MachineTransferInfo
 
 
@@ -150,8 +163,9 @@ REQUIRED_PHASE_FIELDS = [
     "gpu_detected",
     "gpu_kernel_test_passed",
     "gpu_execution_verified",
-    "first_step",
-    "last_step",
+    "start_step",
+    "end_step",
+    "steps_executed",
     "useful_training_tokens",
     "training_runtime_seconds",
     "tokens_per_second",
@@ -161,15 +175,46 @@ REQUIRED_PHASE_FIELDS = [
     "mean_gpu_power_watts",
     "peak_gpu_power_watts",
     "gpu_energy_joules",
+    "gpu_energy_wh",
     "gpu_energy_kwh",
     "tokens_per_joule",
+    "electricity_price_per_kwh",
     "energy_cost_gbp",
     "energy_cost_per_million_tokens_gbp",
-    "energy_break_even_gbp_per_million_tokens",
     "final_loss",
 ]
 SOURCE_PHASE_REQUIRED_FIELDS = [*REQUIRED_PHASE_FIELDS, "checkpoint_size_bytes", "checkpoint_save_seconds"]
 DESTINATION_PHASE_REQUIRED_FIELDS = [*REQUIRED_PHASE_FIELDS, "checkpoint_load_seconds", "resume_to_first_step_seconds"]
+NUMERIC_REQUIRED_PHASE_FIELDS = {
+    "start_step",
+    "end_step",
+    "steps_executed",
+    "useful_training_tokens",
+    "training_runtime_seconds",
+    "tokens_per_second",
+    "mean_gpu_utilization_percent",
+    "peak_gpu_utilization_percent",
+    "peak_accelerator_memory_bytes",
+    "mean_gpu_power_watts",
+    "peak_gpu_power_watts",
+    "gpu_energy_joules",
+    "gpu_energy_wh",
+    "gpu_energy_kwh",
+    "tokens_per_joule",
+    "electricity_price_per_kwh",
+    "energy_cost_gbp",
+    "energy_cost_per_million_tokens_gbp",
+    "final_loss",
+}
+FORMULA_RELATIVE_TOLERANCE = 1e-6
+FORMULA_ABSOLUTE_TOLERANCE = 1e-9
+DEFAULT_SSH_CONNECT_TIMEOUT_SECONDS = 15
+DEFAULT_COMMAND_TIMEOUT_SECONDS = 600.0
+DEFAULT_TORCHRUN_TIMEOUT_SECONDS = 1800.0
+DEFAULT_RDZV_TIMEOUT_SECONDS = 180
+DEFAULT_PROCESS_GROUP_TIMEOUT_SECONDS = 300
+DEFAULT_TRANSFER_TIMEOUT_SECONDS = 1200.0
+DEFAULT_PROBE_TIMEOUT_SECONDS = 180.0
 
 
 def load_settings() -> PortabilitySettings:
@@ -188,6 +233,12 @@ def load_settings() -> PortabilitySettings:
     transfer = build_transfer_settings(basic)
     catalog = machine_catalog(config, basic)
     standalone = standalone_benchmark_config(config, basic, catalog)
+    ssh_connect_timeout_seconds = int(basic.get("ssh_connect_timeout_seconds", DEFAULT_SSH_CONNECT_TIMEOUT_SECONDS))
+    command_timeout_seconds = float(basic.get("command_timeout_seconds", DEFAULT_COMMAND_TIMEOUT_SECONDS))
+    torchrun_timeout_seconds = float(basic.get("torchrun_timeout_seconds", DEFAULT_TORCHRUN_TIMEOUT_SECONDS))
+    rendezvous_timeout_seconds = int(basic.get("rendezvous_timeout_seconds", DEFAULT_RDZV_TIMEOUT_SECONDS))
+    process_group_timeout_seconds = int(basic.get("process_group_timeout_seconds", DEFAULT_PROCESS_GROUP_TIMEOUT_SECONDS))
+    transfer_timeout_seconds = float(basic.get("transfer_timeout_seconds", DEFAULT_TRANSFER_TIMEOUT_SECONDS))
     return PortabilitySettings(
         str(common["local_root_dir"]),
         str(common["remote_root_dir"]),
@@ -196,6 +247,7 @@ def load_settings() -> PortabilitySettings:
         int(basic["checkpoint_step"]),
         int(basic["final_step"]),
         str(basic["run_id"]),
+        str(basic.get("model_id", "Qwen/Qwen2.5-1.5B")),
         dataset_path,
         nullable(basic["ssh_password"]),
         list(basic["asset_paths"]),
@@ -221,6 +273,12 @@ def load_settings() -> PortabilitySettings:
         transfer,
         catalog,
         standalone,
+        ssh_connect_timeout_seconds,
+        command_timeout_seconds,
+        torchrun_timeout_seconds,
+        rendezvous_timeout_seconds,
+        process_group_timeout_seconds,
+        transfer_timeout_seconds,
     )
 
 
@@ -266,9 +324,13 @@ def default_machine_catalog(basic: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
 
 def machine_spec(key: str, payload: Dict[str, Any]) -> MachineSpec:
     transfer = payload.get("transfer", {}) if isinstance(payload, dict) else {}
+    hostname = str(payload.get("hostname", "")).strip()
+    raw_hosts = list(payload.get("distributed_hosts", [])) if isinstance(payload.get("distributed_hosts", []), list) else []
+    hosts = [str(item).strip() for item in raw_hosts if str(item).strip()]
+    distributed_hosts = hosts if hosts else ([hostname] if hostname else [])
     return MachineSpec(
         key,
-        str(payload.get("hostname", "")).strip(),
+        hostname,
         str(payload.get("vendor", "unknown")).strip().lower(),
         str(payload.get("device_name", "unknown")).strip(),
         str(payload.get("expected_gpu_architecture", "unknown")).strip(),
@@ -280,6 +342,10 @@ def machine_spec(key: str, payload: Dict[str, Any]) -> MachineSpec:
         float(payload.get("electricity_price_per_kwh", payload.get("electricity_price_gbp_per_kwh", 0.27))),
         str(payload.get("currency", "GBP")).strip().upper(),
         str(payload.get("python_cmd", "/usr/bin/python3.12")).strip(),
+        int(payload.get("data_parallel_size", 1)),
+        distributed_hosts,
+        nullable(payload.get("ddp_master_addr")),
+        nullable(payload.get("nccl_socket_ifname")),
         MachineTransferInfo(nullable(transfer.get("control_host")), as_int(transfer.get("control_port"))),
     )
 
@@ -357,18 +423,64 @@ def sshpass_env(settings: PortabilitySettings) -> Optional[dict]:
 
 def ssh_options(settings: PortabilitySettings) -> List[str]:
     batch = "no" if settings.ssh_password else "yes"
-    base = ["-o", "IdentitiesOnly=yes", "-o", f"BatchMode={batch}", "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=120"]
+    base = ["-o", "IdentitiesOnly=yes", "-o", f"BatchMode={batch}", "-o", f"ConnectTimeout={settings.ssh_connect_timeout_seconds}", "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=8"]
     auth = ["-o", "PreferredAuthentications=publickey,password,keyboard-interactive", "-o", "NumberOfPasswordPrompts=1"]
     return base + auth if settings.ssh_password else base
 
 
-def run_shell(command: List[str], retries: int, env: Optional[dict] = None, allow_failure: bool = False) -> subprocess.CompletedProcess:
+def utc_now() -> str:
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
+def shell_text(command: List[str]) -> str:
+    return " ".join(shlex.quote(part) for part in command)
+
+
+def text_excerpt(value: object, lines: int = 20) -> str:
+    text = value.decode("utf-8", errors="replace") if isinstance(value, bytes) else str(value)
+    rows = [line for line in text.splitlines() if line.strip()]
+    return "\n".join(rows[-lines:]) if rows else ""
+
+
+def inferred_host(command: List[str], host: Optional[str]) -> Optional[str]:
+    if host:
+        return host
+    if "ssh" in command:
+        idx = command.index("ssh")
+        return command[-2] if len(command) > idx + 2 else None
+    if "scp" in command:
+        target = command[-1]
+        return target.split(":", 1)[0] if ":" in target else None
+    return None
+
+
+def start_blocking_log(operation: str, host: Optional[str], command: List[str], timeout_seconds: float) -> None:
+    print(f"{utc_now()} START {operation}\nhost={host or 'local'}\ncommand={shell_text(command)}\ntimeout_seconds={timeout_seconds}")
+
+
+def end_blocking_log(operation: str, duration_seconds: float, returncode: int) -> None:
+    print(f"{utc_now()} END {operation}\nduration={duration_seconds:.3f}\nreturncode={returncode}")
+
+
+def run_shell(command: List[str], retries: int, env: Optional[dict] = None, allow_failure: bool = False, timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS, operation: str = "command", host: Optional[str] = None) -> subprocess.CompletedProcess:
+    active_host = inferred_host(command, host)
     for attempt in range(retries + 1):
-        result = subprocess.run(command, check=False, text=True, capture_output=True, env=env)
+        start = time.perf_counter()
+        start_blocking_log(operation, active_host, command, timeout_seconds)
+        try:
+            result = subprocess.run(command, check=False, text=True, capture_output=True, env=env, timeout=timeout_seconds)
+        except subprocess.TimeoutExpired as exc:
+            elapsed = time.perf_counter() - start
+            stdout_tail = text_excerpt(exc.stdout or "")
+            stderr_tail = text_excerpt(exc.stderr or "")
+            raise RuntimeError(
+                f"HANG/TIMEOUT DETECTED\n\nstage: {operation}\nhost: {active_host or 'local'}\ncommand: {shell_text(command)}\nelapsed: {elapsed:.3f}\n\nlast stdout: {stdout_tail or '[empty]'}\nlast stderr: {stderr_tail or '[empty]'}"
+            ) from exc
+        end_blocking_log(operation, time.perf_counter() - start, result.returncode)
         if result.returncode == 0 or allow_failure:
             return result
         if attempt == retries:
-            joined = " ".join(shlex.quote(part) for part in command)
+            joined = shell_text(command)
             raise RuntimeError(f"command failed: {joined}\nexit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}")
         if result.returncode != 0:
             time.sleep(2)
@@ -682,8 +794,24 @@ def safe_ratio(numerator: Optional[float], denominator: Optional[float]) -> Opti
     return numerator / denominator
 
 
+def almost_equal(left: Optional[float], right: Optional[float]) -> bool:
+    if left is None or right is None:
+        return False
+    return math.isclose(left, right, rel_tol=FORMULA_RELATIVE_TOLERANCE, abs_tol=FORMULA_ABSOLUTE_TOLERANCE)
+
+
+def finite_number(value: Any) -> bool:
+    numeric = as_float(value)
+    return bool(numeric is not None and math.isfinite(numeric))
+
+
 def energy_cost_gbp(energy_kwh: Optional[float], price: float) -> Optional[float]:
     return None if energy_kwh is None else energy_kwh * price
+
+
+def git_commit_sha() -> Optional[str]:
+    result = subprocess.run(["git", "rev-parse", "HEAD"], text=True, capture_output=True, check=False)
+    return result.stdout.strip() if result.returncode == 0 else None
 
 
 def cost_per_million_tokens(cost: Optional[float], useful_tokens: Optional[int]) -> Optional[float]:
@@ -707,21 +835,51 @@ def migration_transfer_seconds(settings: PortabilitySettings, transfer_payload: 
     return rsync_seconds
 
 
+def machine_electricity_price(settings: PortabilitySettings, host: str) -> float:
+    machine = machine_for_host(settings, host)
+    return settings.electricity_price_gbp_per_kwh if machine is None else machine.electricity_price_per_kwh
+
+
+def phase_start_step(summary: Dict[str, Any], role: str) -> Optional[int]:
+    resumed = as_int(summary.get("resume_loaded_from_step"))
+    first_logged = as_int(summary.get("first_logged_step"))
+    if role == "target":
+        return resumed if resumed is not None else first_logged
+    return 0 if resumed is None else resumed
+
+
+def phase_end_step(summary: Dict[str, Any]) -> Optional[int]:
+    return as_int(summary.get("saved_step") or summary.get("last_logged_step"))
+
+
+def phase_steps_executed(start_step: Optional[int], end_step: Optional[int]) -> Optional[int]:
+    if start_step is None or end_step is None or end_step < start_step:
+        return None
+    return end_step - start_step
+
+
 def normalize_machine_summary(settings: PortabilitySettings, summary: Dict[str, Any], preflight: Dict[str, Any], gpu_requested: bool, role: str) -> Dict[str, Any]:
+    host = settings.source_host if role == "source" else settings.target_host
+    electricity_price = machine_electricity_price(settings, host)
     useful_tokens = as_int(summary.get("useful_training_tokens"))
     runtime_seconds = as_float(summary.get("runtime_seconds"))
     gpu_energy_joules = as_float(summary.get("gpu_energy_joules"))
+    gpu_energy_wh = None if gpu_energy_joules is None else gpu_energy_joules / 3600.0
     gpu_energy_kwh = as_float(summary.get("gpu_energy_kwh"))
-    tokens_per_second = as_float(summary.get("tokens_per_second")) or safe_ratio(as_float(useful_tokens), runtime_seconds)
-    tokens_per_joule = as_float(summary.get("tokens_per_joule")) or safe_ratio(as_float(useful_tokens), gpu_energy_joules)
-    energy_cost = energy_cost_gbp(gpu_energy_kwh, settings.electricity_price_gbp_per_kwh)
+    if gpu_energy_kwh is None and gpu_energy_joules is not None:
+        gpu_energy_kwh = gpu_energy_joules / 3_600_000.0
+    tokens_per_second = safe_ratio(as_float(useful_tokens), runtime_seconds)
+    tokens_per_joule = safe_ratio(as_float(useful_tokens), gpu_energy_joules)
+    start_step = phase_start_step(summary, role)
+    end_step = phase_end_step(summary)
+    energy_cost = energy_cost_gbp(gpu_energy_kwh, electricity_price)
     cost_per_m = cost_per_million_tokens(energy_cost, useful_tokens)
     kernel_test = as_bool(preflight.get("kernel_execution_test"))
     gpu_detected = as_bool(preflight.get("gpu_detected"))
     runtime_verified = as_bool(summary.get("gpu_runtime_verified"))
     gpu_execution_verified = bool(gpu_requested and kernel_test and gpu_detected and runtime_verified is not False) if gpu_requested else bool(runtime_verified)
     vendor = str(summary.get("vendor") or detected_vendor_from_versions(summary) or preflight_vendor(preflight) or "").strip().lower() or None
-    first_step = phase_first_step(summary)
+    steps_executed = phase_steps_executed(start_step, end_step)
     payload = {
         "hostname": summary.get("hostname") or preflight.get("host") or role,
         "vendor": vendor,
@@ -733,8 +891,11 @@ def normalize_machine_summary(settings: PortabilitySettings, summary: Dict[str, 
         "gpu_kernel_test_passed": kernel_test if gpu_requested else None,
         "gpu_execution_verified": gpu_execution_verified,
         "gpu_runtime_verified": runtime_verified,
-        "first_step": first_step,
-        "last_step": as_int(summary.get("saved_step")),
+        "start_step": start_step,
+        "end_step": end_step,
+        "steps_executed": steps_executed,
+        "first_step": start_step,
+        "last_step": end_step,
         "useful_training_tokens": useful_tokens,
         "training_runtime_seconds": runtime_seconds,
         "tokens_per_second": tokens_per_second,
@@ -744,14 +905,14 @@ def normalize_machine_summary(settings: PortabilitySettings, summary: Dict[str, 
         "mean_gpu_power_watts": as_float(summary.get("mean_power_watts")),
         "peak_gpu_power_watts": as_float(summary.get("peak_power_watts")),
         "gpu_energy_joules": gpu_energy_joules,
+        "gpu_energy_wh": gpu_energy_wh,
         "gpu_energy_kwh": gpu_energy_kwh,
         "tokens_per_joule": tokens_per_joule,
+        "electricity_price_per_kwh": electricity_price,
         "energy_cost_gbp": energy_cost,
         "energy_cost_per_million_tokens_gbp": cost_per_m,
-        "energy_break_even_gbp_per_million_tokens": cost_per_m,
         "gpu_energy_cost_gbp": energy_cost,
         "gpu_energy_cost_per_million_tokens_gbp": cost_per_m,
-        "gpu_energy_break_even_per_million_tokens_gbp": cost_per_m,
         "system_energy_kwh": None,
         "system_energy_source": "not_measured",
         "final_loss": as_float(summary.get("final_loss")),
@@ -762,6 +923,7 @@ def normalize_machine_summary(settings: PortabilitySettings, summary: Dict[str, 
         "optimizer_exp_avg_sq_norm_after_resume_load": as_float(summary.get("optimizer_exp_avg_sq_norm_after_resume_load")),
         "loss_trace": summary.get("loss_trace", []),
         "telemetry_source": summary.get("telemetry_source"),
+        "power_telemetry_reason": summary.get("power_telemetry_reason") or preflight.get("power_telemetry_reason"),
         "telemetry_errors": summary.get("telemetry_errors", []),
         "telemetry_start_timestamp": summary.get("telemetry_start_timestamp"),
         "telemetry_end_timestamp": summary.get("telemetry_end_timestamp"),
@@ -841,6 +1003,16 @@ def metrics_missing_paths(prefix: str, payload: Dict[str, Any], required_fields:
     return [f"{prefix}.{field}" for field in missing_required_fields(payload, required_fields)]
 
 
+def metrics_non_finite_paths(prefix: str, payload: Dict[str, Any], required_fields: List[str]) -> List[str]:
+    paths: List[str] = []
+    for field in required_fields:
+        if field not in NUMERIC_REQUIRED_PHASE_FIELDS:
+            continue
+        if not finite_number(payload.get(field)):
+            paths.append(f"{prefix}.{field}")
+    return paths
+
+
 def truthy(value: Any) -> bool:
     return bool(as_bool(value))
 
@@ -866,7 +1038,7 @@ def energy_validation_payload(settings: PortabilitySettings, phase: Dict[str, An
     samples = as_int(phase.get("telemetry_sample_count"))
     mean_power = as_float(phase.get("mean_gpu_power_watts"))
     integrated = as_float(phase.get("gpu_energy_joules"))
-    expected = None if mean_power is None or runtime is None else mean_power * runtime
+    expected = None if mean_power is None or telemetry_duration is None else mean_power * telemetry_duration
     coverage = percent_ratio(telemetry_duration, runtime)
     consistency = energy_consistency_error(expected, integrated)
     coverage_passed = coverage is not None and coverage >= settings.minimum_telemetry_coverage_percent
@@ -893,6 +1065,32 @@ def energy_validation_payload(settings: PortabilitySettings, phase: Dict[str, An
         "energy_consistency_check_passed": consistency_passed,
         "passed": passed,
     }
+
+
+def parse_iso_timestamp(value: Any) -> Optional[datetime]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def telemetry_integrity_payload(phase: Dict[str, Any]) -> Dict[str, Any]:
+    samples = as_int(phase.get("telemetry_sample_count"))
+    start = parse_iso_timestamp(phase.get("telemetry_start_timestamp"))
+    end = parse_iso_timestamp(phase.get("telemetry_end_timestamp"))
+    runtime = as_float(phase.get("training_runtime_seconds"))
+    duration = as_float(phase.get("telemetry_duration_seconds"))
+    checks = {
+        "sample_count_positive": bool(samples is not None and samples > 0),
+        "timestamps_present": bool(start is not None and end is not None),
+        "timestamps_monotonic": bool(start is not None and end is not None and end >= start),
+        "mean_power_non_negative": bool(as_float(phase.get("mean_gpu_power_watts")) is not None and (as_float(phase.get("mean_gpu_power_watts")) or 0.0) >= 0),
+        "duration_within_runtime": bool(duration is not None and runtime is not None and duration >= runtime),
+    }
+    return {"checks": checks, "passed": all(checks.values())}
 
 
 def phase_energy_inputs_valid(phase: Dict[str, Any]) -> bool:
@@ -942,54 +1140,81 @@ def metric_winner(left: Dict[str, Any], right: Dict[str, Any], key: str, lower_i
 
 def format_value(value: Any, suffix: str = "", digits: int = 2) -> str:
     if value is None:
-        return "N/A"
+        return "UNAVAILABLE"
     if isinstance(value, (int, float)):
         return f"{value:.{digits}f}{suffix}" if isinstance(value, float) else f"{value}{suffix}"
     return f"{value}{suffix}"
 
 
+def format_energy(value: Any, unit: str) -> str:
+    numeric = as_float(value)
+    if numeric is None:
+        return "UNAVAILABLE"
+    digits = 6 if abs(numeric) < 0.001 else (4 if abs(numeric) < 1 else 2)
+    return f"{numeric:.{digits}f} {unit}"
+
+
+def format_steps(value: Any) -> str:
+    numeric = as_int(value)
+    return "UNAVAILABLE" if numeric is None else str(numeric)
+
+
 def render_side_by_side(report: Dict[str, Any]) -> str:
     source = report["source_training"]
     target = report["destination_training"]
+    end_to_end = report.get("end_to_end", {})
     migration = report["migration"]
     continuity = report["continuity"]
     run = report["run"]
     validation = report.get("validation", {})
-    source_steps = step_span(source.get("first_step"), source.get("last_step"))
-    target_steps = step_span(target.get("first_step"), target.get("last_step"))
-    source_energy_kj = kj_value(source.get("gpu_energy_joules"))
-    target_energy_kj = kj_value(target.get("gpu_energy_joules"))
+    controls = validation.get("controls", {})
+    dgx = controls.get("dgx_only", {})
+    amd = controls.get("radeon_only", {})
     iperf_mbps = mbps_from_bits(migration.get("iperf3", {}).get("throughput_bits_per_second"))
     rsync_mbps = mbps_from_bytes(migration.get("rsync", {}).get("throughput_bytes_per_second"))
     mooncake_mbps = mbps_from_bytes(migration.get("mooncake", {}).get("throughput_bytes_per_second"))
     lines = [
-        "Cross-OEM LoRA Benchmark",
-        "========================",
+        "Cross-OEM LoRA Migration Benchmark",
+        "=================================",
         "",
         f"Model: {run.get('model_id')}",
-        f"Path: {source.get('hostname')} -> Mooncake -> {target.get('hostname')}",
+        f"Path: {source.get('hostname')} -> migration -> {target.get('hostname')}",
         "",
-        f"{'':24}{'Source':>16}{'Destination':>16}",
-        "------------------------------------------------",
-        f"{'GPU execution':24}{'PASS' if source.get('gpu_execution_verified') else 'FAIL':>16}{'PASS' if target.get('gpu_execution_verified') else 'FAIL':>16}",
-        f"{'Training steps':24}{source_steps:>16}{target_steps:>16}",
-        f"{'Useful tokens':24}{format_value(source.get('useful_training_tokens')):>16}{format_value(target.get('useful_training_tokens')):>16}",
-        f"{'Runtime':24}{format_value(source.get('training_runtime_seconds'), ' s'):>16}{format_value(target.get('training_runtime_seconds'), ' s'):>16}",
-        f"{'Tokens/sec':24}{format_value(source.get('tokens_per_second')):>16}{format_value(target.get('tokens_per_second')):>16}",
-        f"{'Mean GPU util':24}{format_value(source.get('mean_gpu_utilization_percent'), '%'):>16}{format_value(target.get('mean_gpu_utilization_percent'), '%'):>16}",
-        f"{'Peak accel memory':24}{format_value(gb_value(source.get('peak_accelerator_memory_bytes')), ' GB'):>16}{format_value(gb_value(target.get('peak_accelerator_memory_bytes')), ' GB'):>16}",
-        f"{'Mean GPU power':24}{format_value(source.get('mean_gpu_power_watts'), ' W'):>16}{format_value(target.get('mean_gpu_power_watts'), ' W'):>16}",
-        f"{'GPU energy':24}{format_value(source_energy_kj, ' kJ'):>16}{format_value(target_energy_kj, ' kJ'):>16}",
-        f"{'Tokens/joule':24}{format_value(source.get('tokens_per_joule')):>16}{format_value(target.get('tokens_per_joule')):>16}",
-        f"{'Energy GBP / 1M':24}{format_value(source.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>16}{format_value(target.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>16}",
-        f"{'Energy break-even /1M':24}{format_value(source.get('energy_break_even_gbp_per_million_tokens'), ' GBP'):>16}{format_value(target.get('energy_break_even_gbp_per_million_tokens'), ' GBP'):>16}",
+        "TRAINING",
+        f"{'':26}{'NVIDIA SOURCE':>16}{'AMD TARGET':>16}{'END-TO-END':>16}",
+        f"{'':26}{str(source.get('hostname')):>16}{str(target.get('hostname')):>16}{'MIGRATED':>16}",
+        "--------------------------------------------------------------------------",
+        f"{'Backend':26}{str(source.get('vendor', '')).upper():>16}{str(target.get('vendor', '')).upper():>16}{str(end_to_end.get('backend', '')):>16}",
+        f"{'Start step':26}{format_steps(source.get('start_step')):>16}{format_steps(target.get('start_step')):>16}{format_steps(end_to_end.get('start_step')):>16}",
+        f"{'End step':26}{format_steps(source.get('end_step')):>16}{format_steps(target.get('end_step')):>16}{format_steps(end_to_end.get('end_step')):>16}",
+        f"{'Steps executed':26}{format_steps(source.get('steps_executed')):>16}{format_steps(target.get('steps_executed')):>16}{format_steps(end_to_end.get('steps_executed')):>16}",
+        f"{'Useful tokens':26}{format_value(source.get('useful_training_tokens')):>16}{format_value(target.get('useful_training_tokens')):>16}{format_value(end_to_end.get('useful_training_tokens')):>16}",
+        f"{'Training runtime':26}{format_value(source.get('training_runtime_seconds'), ' s'):>16}{format_value(target.get('training_runtime_seconds'), ' s'):>16}{format_value(end_to_end.get('training_runtime_seconds'), ' s'):>16}",
+        f"{'Training tokens/sec':26}{format_value(source.get('tokens_per_second')):>16}{format_value(target.get('tokens_per_second')):>16}{format_value(end_to_end.get('training_tokens_per_second')):>16}",
+        f"{'Wall-clock tokens/sec':26}{'':>16}{'':>16}{format_value(end_to_end.get('wall_clock_tokens_per_second')):>16}",
+        "",
+        "GPU / ENERGY",
+        f"{'':26}{str(source.get('hostname')):>16}{str(target.get('hostname')):>16}{'END-TO-END':>16}",
+        "--------------------------------------------------------------------------",
+        f"{'Mean GPU util':26}{format_value(source.get('mean_gpu_utilization_percent'), '%'):>16}{format_value(target.get('mean_gpu_utilization_percent'), '%'):>16}{'':>16}",
+        f"{'Peak GPU util':26}{format_value(source.get('peak_gpu_utilization_percent'), '%'):>16}{format_value(target.get('peak_gpu_utilization_percent'), '%'):>16}{'':>16}",
+        f"{'Peak accel memory':26}{format_value(gb_value(source.get('peak_accelerator_memory_bytes')), ' GB'):>16}{format_value(gb_value(target.get('peak_accelerator_memory_bytes')), ' GB'):>16}{'':>16}",
+        f"{'Mean GPU power':26}{format_value(source.get('mean_gpu_power_watts'), ' W'):>16}{format_value(target.get('mean_gpu_power_watts'), ' W'):>16}{'':>16}",
+        f"{'GPU energy (J)':26}{format_energy(source.get('gpu_energy_joules'), 'J'):>16}{format_energy(target.get('gpu_energy_joules'), 'J'):>16}{format_energy(end_to_end.get('gpu_energy_joules'), 'J'):>16}",
+        f"{'GPU energy (Wh)':26}{format_energy(source.get('gpu_energy_wh'), 'Wh'):>16}{format_energy(target.get('gpu_energy_wh'), 'Wh'):>16}{format_energy(end_to_end.get('gpu_energy_wh'), 'Wh'):>16}",
+        f"{'GPU energy (kWh)':26}{format_energy(source.get('gpu_energy_kwh'), 'kWh'):>16}{format_energy(target.get('gpu_energy_kwh'), 'kWh'):>16}{format_energy(end_to_end.get('gpu_energy_kwh'), 'kWh'):>16}",
+        f"{'Tokens/joule':26}{format_value(source.get('tokens_per_joule')):>16}{format_value(target.get('tokens_per_joule')):>16}{format_value(end_to_end.get('tokens_per_joule')):>16}",
+        f"{'Electricity GBP/kWh':26}{format_value(source.get('electricity_price_per_kwh')):>16}{format_value(target.get('electricity_price_per_kwh')):>16}{'':>16}",
+        f"{'Energy cost / 1M tokens':26}{format_value(source.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>16}{format_value(target.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>16}{format_value(end_to_end.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>16}",
         "",
         "Migration",
-        "------------------------------------------------",
+        "--------------------------------------------------------------------------",
         f"Checkpoint size           {format_value(gb_value(migration.get('checkpoint_logical_size_bytes')), ' GB')}",
         f"iperf3 ceiling            {format_value(iperf_mbps, ' Mbit/s')}",
         f"rsync                     {format_value(rsync_mbps, ' Mbit/s')}",
         f"Mooncake                  {format_value(mooncake_mbps, ' Mbit/s')}",
+        f"Bytes transferred         {format_value(migration.get('transfer_payload_bytes'), ' B')}",
+        f"Effective bandwidth       {format_value(mbps_from_bytes(migration.get('mooncake', {}).get('throughput_bytes_per_second')), ' Mbit/s')}",
         f"Mooncake / TCP ceiling    {format_value(migration.get('mooncake_vs_iperf_percent'), '%')}",
         f"Mooncake / rsync          {format_value(migration.get('mooncake_vs_rsync_percent'), '%')}",
         "",
@@ -998,15 +1223,36 @@ def render_side_by_side(report: Dict[str, Any]) -> str:
         f"Load checkpoint           {format_value(migration.get('checkpoint_load_seconds'), ' s')}",
         f"Resume -> first step      {format_value(migration.get('resume_to_first_step_seconds'), ' s')}",
         f"Total migration           {format_value(migration.get('migration_to_first_step_seconds'), ' s')}",
+        f"Migration overhead        {format_value(migration.get('migration_overhead_percent'), '%')}",
         "",
-        f"Checksum                  {'PASS' if migration.get('checksum_verified') else 'FAIL'}",
-        f"Optimizer continuity      {'PASS' if continuity.get('optimizer_state_verified') else 'FAIL'}",
-        f"Training continuity       {'PASS' if continuity.get('resume_continuity_verified') else 'FAIL'}",
+        "VALIDATION",
+        "--------------------------------------------------------------------------",
+        f"Checkpoint continuity     {'PASS' if continuity.get('step_continuity_verified') else 'FAIL'}",
+        f"{str(source.get('vendor', 'source')).upper()} -> {str(target.get('vendor', 'target')).upper()} resume       {'PASS' if continuity.get('resume_continuity_verified') else 'FAIL'}",
+        f"Expected final step       {format_steps(report.get('run', {}).get('final_step'))}",
+        f"Actual final step         {format_steps(target.get('end_step'))}",
+        f"Metrics complete          {'PASS' if not validation.get('required_metrics_missing') else 'FAIL'}",
+        f"Formula validation        {'PASS' if validation.get('formula_validation', {}).get('passed') else 'FAIL'}",
+        f"Control runs              {'PASS' if controls.get('passed') else 'FAIL'}",
+        f"Benchmark valid           {'PASS' if validation.get('cross_oem_gpu_benchmark_valid') else 'FAIL'}",
+        f"Source power reason       {source.get('power_telemetry_reason') or 'AVAILABLE'}",
+        f"Target power reason       {target.get('power_telemetry_reason') or 'AVAILABLE'}",
         "",
-        f"Functional benchmark      {'PASS' if validation.get('functional_benchmark_complete') else 'FAIL'}",
-        f"Transfer benchmark        {'PASS' if validation.get('transfer_benchmark_valid') else 'FAIL'}",
-        f"GPU energy benchmark      {'PASS' if validation.get('energy_benchmark_valid') else 'FAIL'}",
-        f"Economic comparison       {'PASS' if validation.get('economic_comparison_valid') else 'FAIL'}",
+        "CONTROL COMPARISON",
+        "--------------------------------------------------------------------------",
+        "Metric                         DGX only    Radeon only    DGX -> Radeon",
+        "--------------------------------------------------------------------------",
+        f"Useful tokens                  {format_value(dgx.get('training_tokens_processed')):>10}    {format_value(amd.get('training_tokens_processed')):>11}    {format_value(end_to_end.get('useful_training_tokens')):>13}",
+        f"Training runtime               {format_value(dgx.get('runtime_seconds'), ' s'):>10}    {format_value(amd.get('runtime_seconds'), ' s'):>11}    {format_value(end_to_end.get('training_runtime_seconds'), ' s'):>13}",
+        f"Migration runtime              {'0.00 s':>10}    {'0.00 s':>11}    {format_value(migration.get('migration_to_first_step_seconds'), ' s'):>13}",
+        f"Wall-clock runtime             {format_value(dgx.get('runtime_seconds'), ' s'):>10}    {format_value(amd.get('runtime_seconds'), ' s'):>11}    {format_value(end_to_end.get('wall_clock_runtime_seconds'), ' s'):>13}",
+        f"Training tok/s                 {format_value(dgx.get('tokens_per_second')):>10}    {format_value(amd.get('tokens_per_second')):>11}    {format_value(end_to_end.get('training_tokens_per_second')):>13}",
+        f"Wall-clock tok/s               {format_value(dgx.get('tokens_per_second')):>10}    {format_value(amd.get('tokens_per_second')):>11}    {format_value(end_to_end.get('wall_clock_tokens_per_second')):>13}",
+        f"Energy J                       {format_value(dgx.get('total_energy_joules')):>10}    {format_value(amd.get('total_energy_joules')):>11}    {format_value(end_to_end.get('gpu_energy_joules')):>13}",
+        f"Tokens/J                       {format_value(dgx.get('tokens_per_joule')):>10}    {format_value(amd.get('tokens_per_joule')):>11}    {format_value(end_to_end.get('tokens_per_joule')):>13}",
+        f"Energy cost / 1M tokens        {format_value(dgx.get('energy_cost_per_million_tokens'), ' GBP'):>10}    {format_value(amd.get('energy_cost_per_million_tokens'), ' GBP'):>11}    {format_value(end_to_end.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>13}",
+        f"Migration overhead             {'0.00%':>10}    {'0.00%':>11}    {format_value(migration.get('migration_overhead_percent'), '%'):>13}",
+        f"Training continuity            {'PASS':>10}    {'PASS':>11}    {'PASS' if continuity.get('resume_continuity_verified') else 'FAIL':>13}",
     ]
     standalone = report.get("standalone_benchmark", {})
     if standalone.get("enabled"):
@@ -1204,7 +1450,14 @@ def sync_and_install(context: OpExecutionContext, settings: PortabilitySettings)
             sync_asset_to_host(settings, host, asset_path)
     install_hosts = [host for host in hosts if not machine_uses_container(settings, host)]
     for host in install_hosts:
-        run_shell(ssh_cmd(settings, host, requirements_install_command(settings, host)), settings.command_retries, env=sshpass_env(settings))
+        run_shell(
+            ssh_cmd(settings, host, requirements_install_command(settings, host)),
+            settings.command_retries,
+            env=sshpass_env(settings),
+            timeout_seconds=settings.command_timeout_seconds,
+            operation="sync_install",
+            host=host,
+        )
     ensure_mooncake_dependency(settings, settings.source_host)
     ensure_mooncake_dependency(settings, settings.target_host)
     emit_materialization(
@@ -1269,7 +1522,14 @@ def train_on_source(context: OpExecutionContext, settings: PortabilitySettings, 
 def source_train_command(settings: PortabilitySettings) -> str:
     python_cmd = execution_python_cmd(settings, settings.source_host)
     script = f"{settings.remote_root}/train_lora_migration.py"
-    args = f"--dataset-path {remote_dataset_path(settings)} --output-dir {settings.remote_root}/amd_run_{settings.run_id} --stop-step {settings.checkpoint_step} --max-steps 100 --telemetry-interval-seconds {settings.training_telemetry_interval_seconds}"
+    args = (
+        f"--model-id {shlex.quote(settings.model_id)} "
+        f"--dataset-path {remote_dataset_path(settings)} "
+        f"--output-dir {settings.remote_root}/amd_run_{settings.run_id} "
+        f"--stop-step {settings.checkpoint_step} "
+        f"--max-steps {settings.checkpoint_step} "
+        f"--telemetry-interval-seconds {settings.training_telemetry_interval_seconds}"
+    )
     if not settings.source_use_gpu:
         return f"CUDA_VISIBLE_DEVICES='' {shlex.quote(python_cmd)} {script} {args}"
     if settings.source_data_parallel_size <= 1:
@@ -1334,8 +1594,8 @@ def transfer_checkpoint_scp(settings: PortabilitySettings, source: str, destinat
     destination_ckpt = f"{settings.remote_root}/{remote_ckpt(settings)}"
     start = time.perf_counter()
     local_stage.mkdir(parents=True, exist_ok=True)
-    run_shell(scp_cmd(settings, f"{source}:{source_ckpt}", str(local_stage), recursive=True), settings.command_retries, env=sshpass_env(settings))
-    run_shell(scp_cmd(settings, str(local_stage / remote_ckpt(settings)), f"{destination}:{settings.remote_root}/", recursive=True), settings.command_retries, env=sshpass_env(settings))
+    run_shell(scp_cmd(settings, f"{source}:{source_ckpt}", str(local_stage), recursive=True), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="checkpoint_scp_source_to_local", host=source)
+    run_shell(scp_cmd(settings, str(local_stage / remote_ckpt(settings)), f"{destination}:{settings.remote_root}/", recursive=True), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="checkpoint_scp_local_to_target", host=destination)
     elapsed = time.perf_counter() - start
     verified = verify_transfer_manifests(settings, source, source_ckpt, destination, destination_ckpt)
     bytes_transferred = int(verified["total_bytes"])
@@ -1370,11 +1630,11 @@ def transfer_checkpoint_mooncake(settings: PortabilitySettings, source: str, des
         pid_path = f"/tmp/mooncake_receiver_{settings.run_id}_{settings.checkpoint_step}_{session}_{control_port}.pid"
         log_path = f"/tmp/mooncake_receiver_{settings.run_id}_{settings.checkpoint_step}_{session}_{control_port}.log"
         receiver_cmd = mooncake_receiver_command(settings, config, destination, destination_ckpt, destination_tmp, pid_path, log_path, session, control_port)
-        run_shell(ssh_cmd(settings, destination, receiver_cmd), settings.command_retries, env=sshpass_env(settings))
+        run_shell(ssh_cmd(settings, destination, receiver_cmd), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.command_timeout_seconds, operation="mooncake_receiver_launch", host=destination)
         try:
             wait_for_receiver(settings, source, destination, control_host, control_port, pid_path, log_path)
             sender_cmd = mooncake_sender_command(settings, config, source, source_ckpt, destination_ckpt, destination_tmp, control_host, session, control_port)
-            sender_result = run_shell(ssh_cmd(settings, source, sender_cmd), 0, env=sshpass_env(settings))
+            sender_result = run_shell(ssh_cmd(settings, source, sender_cmd), 0, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="mooncake_sender_transfer", host=source)
             payload = parse_sender_result(sender_result.stdout)
             break
         except RuntimeError as exc:
@@ -1385,7 +1645,7 @@ def transfer_checkpoint_mooncake(settings: PortabilitySettings, source: str, des
                 raise RuntimeError(f"mooncake sender failed: {exc}; receiver_log={excerpt}") from exc
             time.sleep(2)
         finally:
-            run_shell(ssh_cmd(settings, destination, f"test -f {pid_path} && kill $(cat {pid_path}) >/dev/null 2>&1 || true"), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
+            run_shell(ssh_cmd(settings, destination, f"test -f {pid_path} && kill $(cat {pid_path}) >/dev/null 2>&1 || true"), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="mooncake_receiver_cleanup", host=destination)
     if not payload and last_error:
         raise RuntimeError(f"mooncake sender failed after retries: {last_error}")
     return TransferResult(
@@ -1497,10 +1757,10 @@ def wait_for_receiver(settings: PortabilitySettings, source: str, destination: s
         "raise SystemExit(0 if r.strip() else 2)\""
     )
     for _ in range(20):
-        result = run_shell(ssh_cmd(settings, source, probe), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
+        result = run_shell(ssh_cmd(settings, source, probe), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="mooncake_receiver_probe", host=source)
         if result.returncode == 0:
             return
-        alive = run_shell(ssh_cmd(settings, destination, f"test -f {pid_path} && kill -0 $(cat {pid_path})"), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
+        alive = run_shell(ssh_cmd(settings, destination, f"test -f {pid_path} && kill -0 $(cat {pid_path})"), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="mooncake_receiver_alive", host=destination)
         if alive.returncode != 0:
             excerpt = receiver_log_excerpt(settings, destination, log_path)
             raise RuntimeError(f"mooncake receiver process exited before becoming reachable at {control_host}:{control_port}; log={excerpt}")
@@ -1512,7 +1772,7 @@ def wait_for_receiver(settings: PortabilitySettings, source: str, destination: s
 def receiver_log_excerpt(settings: PortabilitySettings, destination: str, log_path: str) -> str:
     python_cmd = mooncake_python_cmd(settings, destination)
     command = "%s -c \"from pathlib import Path; p=Path(%r); text=p.read_text(errors='replace') if p.exists() else 'log file missing'; lines=text.splitlines(); print(' | '.join(lines[-20:]))\"" % (shlex.quote(python_cmd), log_path)
-    result = run_shell(ssh_cmd(settings, destination, command), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
+    result = run_shell(ssh_cmd(settings, destination, command), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="mooncake_receiver_log", host=destination)
     return result.stdout.strip() if result.stdout.strip() else "no log output"
 
 
@@ -1555,11 +1815,28 @@ def machine_for_host(settings: PortabilitySettings, host: str) -> Optional[Machi
 
 
 def benchmark_machines(settings: PortabilitySettings) -> List[MachineSpec]:
-    return [settings.machine_catalog[key] for key in settings.standalone_benchmark.machine_keys if key in settings.machine_catalog]
+    ordered = [machine_for_host(settings, settings.source_host), machine_for_host(settings, settings.target_host)]
+    base = [item for item in ordered if item is not None]
+    extra = [settings.machine_catalog[key] for key in settings.standalone_benchmark.machine_keys if key in settings.machine_catalog]
+    merged = base + extra
+    unique: List[MachineSpec] = []
+    seen: set[str] = set()
+    for machine in merged:
+        if machine.key in seen:
+            continue
+        seen.add(machine.key)
+        unique.append(machine)
+    return unique
+
+
+def control_benchmark_machines(settings: PortabilitySettings) -> List[MachineSpec]:
+    keyed = [settings.machine_catalog[key] for key in settings.standalone_benchmark.machine_keys if key in settings.machine_catalog]
+    return [item for item in keyed if item is not None]
 
 
 def all_known_hosts(settings: PortabilitySettings) -> List[str]:
-    hosts = [settings.source_host, settings.target_host, *[machine.hostname for machine in benchmark_machines(settings)]]
+    control_hosts = [host for machine in control_benchmark_machines(settings) for host in machine.distributed_hosts]
+    hosts = [settings.source_host, settings.target_host, *control_hosts]
     return list(dict.fromkeys([host for host in hosts if host]))
 
 
@@ -1633,16 +1910,35 @@ def parse_probe_payload(host: str, stdout: str, verify_cmd: str) -> Dict[str, An
         raise RuntimeError(f"Preflight probe returned non-JSON output on host={host}. Verification command: {verify_cmd}. Output: {stdout}") from exc
 
 
-def run_probe(settings: PortabilitySettings, host: str, script: str, verify_cmd: str, retries: int) -> Dict[str, Any]:
-    result = run_shell(ssh_cmd(settings, host, probe_command(settings, host, script)), retries, env=sshpass_env(settings), allow_failure=True)
+def bounded_probe_timeout(settings: PortabilitySettings) -> float:
+    return max(30.0, min(settings.command_timeout_seconds, DEFAULT_PROBE_TIMEOUT_SECONDS))
+
+
+def run_probe(settings: PortabilitySettings, host: str, script: str, verify_cmd: str, retries: int, operation: str) -> Dict[str, Any]:
+    result = run_shell(
+        ssh_cmd(settings, host, probe_command(settings, host, script)),
+        retries,
+        env=sshpass_env(settings),
+        allow_failure=True,
+        timeout_seconds=bounded_probe_timeout(settings),
+        operation=operation,
+        host=host,
+    )
+    stdout_tail = text_excerpt(result.stdout or "")
+    stderr_tail = text_excerpt(result.stderr or "")
     if result.returncode != 0:
-        raise RuntimeError(f"Preflight probe failed on host={host} (exit={result.returncode}). Verification command: {verify_cmd}. stderr: {result.stderr.strip()}")
-    return parse_probe_payload(host, result.stdout, verify_cmd)
+        raise RuntimeError(
+            f"Preflight probe failed on host={host} (exit={result.returncode}). Verification command: {verify_cmd}. stdout: {stdout_tail or '[empty]'}. stderr: {stderr_tail or '[empty]'}"
+        )
+    payload = parse_probe_payload(host, result.stdout, verify_cmd)
+    return {**payload, "probe_stdout_excerpt": stdout_tail, "probe_stderr_excerpt": stderr_tail, "probe_exit_code": result.returncode, "probe_operation": operation}
 
 
-def run_probe_optional(settings: PortabilitySettings, host: str, script: str, verify_cmd: str) -> Dict[str, Any]:
-    result = run_shell(ssh_cmd(settings, host, probe_command(settings, host, script)), 0, env=sshpass_env(settings), allow_failure=True)
-    return {} if result.returncode != 0 else parse_probe_payload(host, result.stdout, verify_cmd)
+def run_probe_optional(settings: PortabilitySettings, host: str, script: str, verify_cmd: str, operation: str) -> Dict[str, Any]:
+    try:
+        return run_probe(settings, host, script, verify_cmd, 0, operation)
+    except Exception as exc:
+        return {"probe_optional_failed": True, "probe_error": str(exc), "probe_operation": operation}
 
 
 def machine_probe_command(settings: PortabilitySettings, machine: MachineSpec, script: str) -> str:
@@ -1698,62 +1994,123 @@ def architecture_warning(host: str, payload: Dict[str, Any]) -> Optional[str]:
 
 
 def kernel_preflight_script() -> str:
-    return (
-        "import json,platform,re,socket,subprocess,torch;"
-        "run=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True);"
-        "gpu_detected=bool(torch.cuda.is_available());"
-        "hip=getattr(torch.version,'hip',None);"
-        "cuda=getattr(torch.version,'cuda',None);"
-        "vendor=('amd' if hip else ('nvidia' if cuda else 'unknown'));"
-        "hostname=socket.gethostname();"
-        "device_name=torch.cuda.get_device_name(0) if gpu_detected else None;"
-        "runtime='';"
-        "roc_text='';"
-        "\ntry:\n roc=run(['rocminfo']); roc_text=roc.stdout or ''\n"
-        "except Exception:\n roc_text=''\n"
-        "m=re.search(r'(gfx[0-9a-zA-Z]+)', roc_text);"
-        "runtime=(m.group(1) if m else runtime);"
-        "\nif (not runtime) and gpu_detected:\n"
-        " try:\n"
-        "  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'gcnArchName','')).split(':',1)[0]\n"
-        " except Exception:\n"
-        "  runtime=runtime\n"
-        "\nif (not runtime) and gpu_detected and cuda:\n"
-        " try:\n"
-        "  cap=torch.cuda.get_device_capability(0); runtime='sm_%s%s' % (cap[0], cap[1])\n"
-        " except Exception:\n"
-        "  runtime=runtime\n"
-        "total_memory=None;"
-        "\nif gpu_detected:\n"
-        " try:\n"
-        "  total_memory=int(getattr(torch.cuda.get_device_properties(0),'total_memory',0)) or None\n"
-        " except Exception:\n"
-        "  total_memory=None\n"
-        "power_ok=False; power_reason='';"
-        "\nif vendor=='amd':\n"
-        " p=run(['rocm-smi','--showpower','--json']); txt=(p.stdout or '').strip();\n"
-        " try:\n"
-        "  obj=json.loads(txt) if txt else {}; rows=[v for k,v in obj.items() if str(k).startswith('card') and isinstance(v,dict)]; card=(rows[0] if rows else {}); vals=[str(v) for k,v in card.items() if 'Power' in str(k)]; num=next((re.search(r'-?\\d+(?:\\.\\d+)?', v).group(0) for v in vals if re.search(r'-?\\d+(?:\\.\\d+)?', v)), None); power_ok=(p.returncode==0 and num is not None); power_reason=('' if power_ok else ('power reading is unavailable from rocm-smi' if p.returncode==0 else (p.stderr.strip() or txt or 'rocm-smi unavailable')))\n"
-        " except Exception:\n"
-        "  power_ok=False; power_reason=('rocm-smi power payload parse failed' if p.returncode==0 else (p.stderr.strip() or txt or 'rocm-smi unavailable'))\n"
-        "\nelif vendor=='nvidia':\n"
-        " p=run(['nvidia-smi','--query-gpu=power.draw','--format=csv,noheader,nounits']); power_ok=(p.returncode==0); power_reason=('' if power_ok else (p.stderr.strip() or p.stdout.strip() or 'nvidia-smi unavailable'))\n"
-        "\nelse:\n"
-        " power_ok=False; power_reason='vendor not detected'\n"
-        "payload={'hostname':hostname,'gpu_vendor':vendor,'gpu_model':device_name,'gpu_architecture':runtime or None,'total_gpu_memory_bytes':total_memory,'rocm_version':hip,'torch_version':torch.__version__,'python_version':platform.python_version(),'gpu_detected':gpu_detected,'power_telemetry_available':power_ok,'power_telemetry_reason':(power_reason or None),'hip_version':hip,'cuda_version':cuda,'torch_arch_list':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]};"
-        "\nif not gpu_detected:\n"
-        " payload.update({'kernel_execution_test':False,'training_allowed':False,'gpu_kernel_reason':'torch.cuda.is_available() is false'}); print(json.dumps(payload)); raise SystemExit(0)\n"
-        "\ntry:\n"
-        " x=torch.ones(1024, device='cuda'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'kernel_execution_test':True,'training_allowed':True,'kernel_result':y,'gpu_kernel_reason':None})\n"
-        "except Exception as exc:\n"
-        " payload.update({'kernel_execution_test':False,'training_allowed':False,'gpu_kernel_reason':str(exc).splitlines()[0]})\n"
-        "print(json.dumps(payload))"
-    )
+    return """
+import json,math,os,platform,re,shutil,socket,subprocess,torch
+run=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True)
+num=lambda text: (lambda m: (None if not m else float(m.group(0))))(re.search(r'-?\\d+(?:\\.\\d+)?', str(text or '')))
+ver=lambda text: (lambda m: (m.group(0) if m else None))(re.search(r'\\d+(?:\\.\\d+)+', str(text or '')))
+ok=lambda value: (value is not None and math.isfinite(value) and value>0)
+gpu_detected=bool(torch.cuda.is_available())
+hip=getattr(torch.version,'hip',None)
+cuda=getattr(torch.version,'cuda',None)
+vendor=('amd' if hip else ('nvidia' if cuda else 'unknown'))
+hostname=socket.gethostname()
+device_name=torch.cuda.get_device_name(0) if gpu_detected else None
+runtime=''
+roc_text=''
+try:
+ roc=run(['rocminfo']); roc_text=roc.stdout or ''
+except Exception:
+ roc_text=''
+m=re.search(r'(gfx[0-9a-zA-Z]+)', roc_text)
+runtime=(m.group(1) if m else runtime)
+if (not runtime) and gpu_detected:
+ try:
+  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'gcnArchName','')).split(':',1)[0]
+ except Exception:
+  runtime=runtime
+if (not runtime) and gpu_detected and cuda:
+ try:
+  cap=torch.cuda.get_device_capability(0); runtime='sm_%s%s' % (cap[0], cap[1])
+ except Exception:
+  runtime=runtime
+total_memory=None
+if gpu_detected:
+ try:
+  total_memory=int(getattr(torch.cuda.get_device_properties(0),'total_memory',0)) or None
+ except Exception:
+  total_memory=None
+def probe(cmd):
+ try:
+  out=run(cmd)
+  return {'command':' '.join(cmd),'returncode':out.returncode,'stdout':(out.stdout or '').strip(),'stderr':(out.stderr or '').strip()}
+ except Exception as exc:
+  return {'command':' '.join(cmd),'returncode':127,'stdout':'','stderr':str(exc)}
+rocm_driver=probe(['rocm-smi','--showdriverversion'])
+rocm_version_tool=probe(['rocm-smi','-v'])
+rocm_power=probe(['rocm-smi','--showpower','--json'])
+rocm_payload={}
+try:
+ rocm_payload=json.loads(rocm_power['stdout']) if rocm_power['stdout'] else {}
+except Exception:
+ rocm_payload={}
+cards=[v for k,v in rocm_payload.items() if str(k).startswith('card') and isinstance(v,dict)]
+card=(cards[0] if cards else {})
+rocm_values=[num(v) for k,v in card.items() if 'Power' in str(k)]
+rocm_watts=next((v for v in rocm_values if ok(v)),None)
+amd_bin=next((p for p in [shutil.which('amd-smi'),'/opt/rocm/bin/amd-smi','/opt/rocm-5.7.0/bin/amd-smi'] if p and os.path.exists(p)),None)
+amd_version=probe([amd_bin,'version','--json']) if amd_bin else {'available':False,'reason':'amd-smi binary not found'}
+amd_power=probe([amd_bin,'metric','--power','--json']) if amd_bin else {'available':False,'reason':'amd-smi binary not found'}
+amd_payload={}
+try:
+ amd_payload=json.loads(amd_power.get('stdout','') or '{}')
+except Exception:
+ amd_payload={}
+amd_fields=[amd_payload.get('power',{}),amd_payload]
+amd_values=[num(item.get(k)) for item in amd_fields if isinstance(item,dict) for k in ['current_socket_power','average_socket_power','socket_power','power']]
+amd_cli_watts=next((v for v in amd_values if ok(v)),None)
+api={'tested':False,'available':False,'reason':None,'driver_version':None,'power_info':None,'gpu_metrics_info':None,'current_socket_power_watts':None}
+if vendor=='amd':
+ try:
+  import amdsmi
+  amdsmi.amdsmi_init(); hs=amdsmi.amdsmi_get_processor_handles(); h=(hs[0] if hs else None)
+  api['tested']=True; api['available']=bool(h)
+  if h is not None:
+   api['driver_version']=str(amdsmi.amdsmi_get_gpu_driver_version(h))
+   try: api['power_info']=amdsmi.amdsmi_get_power_info(h)
+   except Exception as exc: api['power_info']=f'error:{exc}'
+   try: api['gpu_metrics_info']=amdsmi.amdsmi_get_gpu_metrics_info(h)
+   except Exception as exc: api['gpu_metrics_info']=f'error:{exc}'
+   values=[num(str((api.get('power_info') or {}).get(k,''))) for k in ['current_socket_power','average_socket_power','socket_power','power'] if isinstance(api.get('power_info'),dict)]
+   values+= [num(str((api.get('gpu_metrics_info') or {}).get(k,''))) for k in ['current_socket_power','average_socket_power','socket_power','gfx_power'] if isinstance(api.get('gpu_metrics_info'),dict)]
+   api['current_socket_power_watts']=next((v for v in values if ok(v)),None)
+  if api['current_socket_power_watts'] is None: api['reason']='amdsmi API returned no numeric socket power'
+ except Exception as exc:
+  api={'tested':True,'available':False,'reason':str(exc),'driver_version':None,'power_info':None,'gpu_metrics_info':None,'current_socket_power_watts':None}
+power_source=None
+power_reason=None
+power_watts=None
+if vendor=='nvidia':
+ p=run(['nvidia-smi','--query-gpu=power.draw','--format=csv,noheader,nounits'])
+ value=num((p.stdout or '').strip())
+ power_watts=value if ok(value) else None
+ power_source='nvidia_smi_power_draw' if power_watts is not None else None
+ power_reason=(None if power_watts is not None else (p.stderr.strip() or p.stdout.strip() or 'nvidia-smi unavailable'))
+elif vendor=='amd':
+ if ok(api.get('current_socket_power_watts')):
+  power_watts=api.get('current_socket_power_watts'); power_source='amdsmi_api_current_socket_power'
+ elif ok(amd_cli_watts):
+  power_watts=amd_cli_watts; power_source='amd_smi_cli_current_power'
+ elif ok(rocm_watts):
+  power_watts=rocm_watts; power_source='rocm_smi_average_graphics_package_power'
+ if power_watts is None:
+  power_reason='AMD SMI API, amd-smi and rocm-smi returned no numeric MI300X power telemetry'
+else:
+ power_reason='vendor not detected'
+payload={'hostname':hostname,'gpu_vendor':vendor,'gpu_model':device_name,'gpu_architecture':runtime or None,'gpu_device_count':(int(torch.cuda.device_count()) if gpu_detected else 0),'total_gpu_memory_bytes':total_memory,'rocm_version':hip,'amd_driver_version':api.get('driver_version') or ver(str(rocm_driver.get('stdout',''))),'amd_smi_version':amd_version,'rocm_smi_version':rocm_version_tool,'torch_version':torch.__version__,'python_version':platform.python_version(),'gpu_detected':gpu_detected,'power_telemetry_available':bool(power_watts is not None),'power_telemetry_reason':power_reason,'power_telemetry_source':power_source,'power_telemetry_value_watts':power_watts,'amd_smi_api_test':api,'amd_smi_cli_test':amd_power,'rocm_smi_test':rocm_power,'hip_version':hip,'cuda_version':cuda,'torch_arch_list':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]}
+if not gpu_detected:
+ payload.update({'kernel_execution_test':False,'training_allowed':False,'gpu_kernel_reason':'torch.cuda.is_available() is false'}); print(json.dumps(payload)); raise SystemExit(0)
+try:
+ x=torch.ones(1024, device='cuda'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'kernel_execution_test':True,'training_allowed':True,'kernel_result':y,'gpu_kernel_reason':None})
+except Exception as exc:
+ payload.update({'kernel_execution_test':False,'training_allowed':False,'gpu_kernel_reason':str(exc).splitlines()[0]})
+print(json.dumps(payload))
+"""
 
 
 def gpu_preflight_payload(settings: PortabilitySettings, host: str) -> Dict[str, Any]:
     verify_cmd = probe_command(settings, host, kernel_preflight_script())
-    payload = run_probe(settings, host, kernel_preflight_script(), verify_cmd, settings.command_retries)
+    payload = run_probe(settings, host, kernel_preflight_script(), verify_cmd, settings.command_retries, f"probe_kernel_preflight_{host}")
     return {
         "host": host,
         "verify_command": verify_cmd,
@@ -1831,15 +2188,17 @@ def preflight_torch_transformers(context: OpExecutionContext, settings: Portabil
     source_verify = probe_command(settings, settings.source_host, version_probe_script())
     target_verify = probe_command(settings, settings.target_host, version_probe_script())
     target_arch_verify = probe_command(settings, settings.target_host, architecture_probe_script())
-    source_payload = run_probe(settings, settings.source_host, version_probe_script(), source_verify, settings.command_retries)
-    target_payload = run_probe(settings, settings.target_host, version_probe_script(), target_verify, settings.command_retries)
+    source_payload = run_probe(settings, settings.source_host, version_probe_script(), source_verify, settings.command_retries, f"probe_source_torch_transformers_{settings.source_host}")
+    target_payload = run_probe(settings, settings.target_host, version_probe_script(), target_verify, settings.command_retries, f"probe_target_torch_transformers_{settings.target_host}")
     source_torch = str(source_payload.get("torch_version", ""))
     target_torch = str(target_payload.get("torch_version", ""))
     source_transformers = str(source_payload.get("transformers_version", ""))
     target_transformers = str(target_payload.get("transformers_version", ""))
     assert_torch_compatible(settings.source_host, source_torch, source_transformers, source_verify)
     assert_torch_compatible(settings.target_host, target_torch, target_transformers, target_verify)
-    target_arch = run_probe_optional(settings, settings.target_host, architecture_probe_script(), target_arch_verify)
+    target_arch = run_probe_optional(settings, settings.target_host, architecture_probe_script(), target_arch_verify, f"probe_target_architecture_{settings.target_host}")
+    if target_arch.get("probe_optional_failed"):
+        context.log.warning(f"Optional preflight probe failed on host={settings.target_host}: {target_arch.get('probe_error', '')}")
     warning = architecture_warning(settings.target_host, target_arch)
     if warning:
         context.log.warning(warning)
@@ -1879,16 +2238,17 @@ def standalone_dataset_path(settings: PortabilitySettings, machine: MachineSpec)
     return f"{expanded_remote_root(settings, machine.hostname)}/{relative}"
 
 
-def standalone_training_command(settings: PortabilitySettings, machine: MachineSpec, host_run_root: str) -> str:
+def standalone_training_command(settings: PortabilitySettings, machine: MachineSpec, host_run_root: str, host: Optional[str] = None, nnodes: int = 1, node_rank: int = 0, rdzv_endpoint: Optional[str] = None) -> str:
     sb = settings.standalone_benchmark
-    dataset = standalone_dataset_path(settings, machine)
+    runner_host = host or machine.hostname
+    dataset = standalone_dataset_path(settings, machine) if host is None else standalone_dataset_for_host(settings, machine, runner_host)
     run_name = Path(host_run_root).name
     container_output = f"/workspace/{run_name}"
     args = (
         f"--model-id {shlex.quote(sb.model_id)} "
         f"--dataset-path {shlex.quote(dataset)} "
         f"--output-dir {shlex.quote(host_run_root if not (machine.container_image and machine.execution_mode == 'docker') else container_output)} "
-        f"--stop-step {sb.steps} "
+        f"--stop-step {sb.max_steps} "
         f"--max-steps {sb.max_steps} "
         f"--per-device-batch-size {sb.per_device_batch_size} "
         f"--max-length {sb.max_length} "
@@ -1896,16 +2256,36 @@ def standalone_training_command(settings: PortabilitySettings, machine: MachineS
         f"--lora-r {sb.lora_r} "
         f"--lora-alpha {sb.lora_alpha} "
         f"--lora-dropout {sb.lora_dropout} "
-        f"--telemetry-interval-seconds {sb.telemetry_interval_seconds}"
+        f"--telemetry-interval-seconds {sb.telemetry_interval_seconds} "
+        f"--ddp-timeout-seconds {settings.process_group_timeout_seconds}"
     )
     if machine.container_image and machine.execution_mode == "docker":
         install = "python3 -m pip install -U pip >/tmp/pip.log 2>&1 && python3 -m pip install -r /workspace/requirements.txt >>/tmp/pip.log 2>&1"
-        train = f"python3 /workspace/train_lora_migration.py {args}"
+        script = "/workspace/train_lora_migration.py"
+        train = distributed_train_invocation("python3", script, args, machine.data_parallel_size, nnodes, node_rank, rdzv_endpoint, settings.rendezvous_timeout_seconds)
         return docker_command(settings, machine, f"{install} && {train}")
-    python_cmd = shlex.quote(execution_python_cmd(settings, machine.hostname))
-    script = f"{expanded_remote_root(settings, machine.hostname)}/train_lora_migration.py"
+    python_cmd = shlex.quote(execution_python_cmd(settings, runner_host))
+    script = f"{expanded_remote_root(settings, runner_host)}/train_lora_migration.py"
     env_prefix = machine_runtime_exports(machine)
-    return f"{env_prefix}{python_cmd} {shlex.quote(script)} {args}"
+    train = distributed_train_invocation(python_cmd, shlex.quote(script), args, machine.data_parallel_size, nnodes, node_rank, rdzv_endpoint, settings.rendezvous_timeout_seconds)
+    return f"{env_prefix}{train}"
+
+
+def standalone_dataset_for_host(settings: PortabilitySettings, machine: MachineSpec, host: str) -> str:
+    relative = normalized_asset_path(settings.dataset_path)
+    if relative.startswith("~/"):
+        return f"{expanded_remote_root(settings, host)}/{relative[2:]}"
+    if relative.startswith("/"):
+        return relative
+    return f"{expanded_remote_root(settings, host)}/{relative}"
+
+
+def distributed_train_invocation(python_cmd: str, script: str, args: str, data_parallel_size: int, nnodes: int, node_rank: int, rdzv_endpoint: Optional[str], rendezvous_timeout_seconds: int) -> str:
+    if data_parallel_size <= 1:
+        return f"{python_cmd} {script} {args}"
+    if nnodes > 1 and rdzv_endpoint:
+        return f"{python_cmd} -m torch.distributed.run --nnodes={nnodes} --nproc_per_node=1 --node_rank={node_rank} --rdzv_backend=c10d --rdzv_endpoint={rdzv_endpoint} --rdzv_conf timeout={rendezvous_timeout_seconds} --max_restarts=0 {script} {args}"
+    return f"{python_cmd} -m torch.distributed.run --standalone --nproc_per_node={data_parallel_size} {script} {args}"
 
 
 def machine_runtime_exports(machine: MachineSpec) -> str:
@@ -1923,6 +2303,10 @@ def machine_runtime_exports(machine: MachineSpec) -> str:
         commands.append(f"export XDG_CACHE_HOME={xdg}")
     if machine.rocm_path:
         commands.append(f"export ROCM_PATH={shlex.quote(machine.rocm_path)}")
+    if machine.nccl_socket_ifname:
+        iface = shlex.quote(machine.nccl_socket_ifname)
+        commands.append(f"export NCCL_SOCKET_IFNAME={iface}")
+        commands.append(f"export GLOO_SOCKET_IFNAME={iface}")
     return "" if not commands else "; ".join(commands) + "; "
 
 
@@ -1942,6 +2326,12 @@ def ensure_required_preflight_fields(machine: MachineSpec, payload: Dict[str, An
     missing = {field: f"{field} not detected on host={machine.hostname}" for field, value in required.items() if value is None or value == ""}
     if str(payload.get("gpu_vendor", "")).lower() == "amd" and not payload.get("rocm_version"):
         missing["rocm_version"] = f"rocm_version not detected on host={machine.hostname}; torch.version.hip is empty"
+    if str(payload.get("gpu_vendor", "")).lower() == "amd" and not payload.get("amd_driver_version"):
+        missing["amd_driver_version"] = f"amd_driver_version not detected on host={machine.hostname}"
+    if str(payload.get("gpu_vendor", "")).lower() == "amd" and not payload.get("amd_smi_version"):
+        missing["amd_smi_version"] = f"amd_smi_version not detected on host={machine.hostname}"
+    if str(payload.get("gpu_vendor", "")).lower() == "amd" and not payload.get("rocm_smi_version"):
+        missing["rocm_smi_version"] = f"rocm_smi_version not detected on host={machine.hostname}"
     return missing
 
 
@@ -1951,14 +2341,15 @@ def architecture_matches(machine: MachineSpec, payload: Dict[str, Any]) -> bool:
     return bool(expected in {"", "unknown"} or (actual and expected in actual))
 
 
-def machine_preflight_payload(settings: PortabilitySettings, machine: MachineSpec) -> Dict[str, Any]:
-    payload = run_machine_probe(settings, machine, kernel_preflight_script())
+def machine_preflight_payload(settings: PortabilitySettings, machine: MachineSpec, host: Optional[str] = None) -> Dict[str, Any]:
+    probe_machine = machine if host is None else MachineSpec(machine.key, host, machine.vendor, machine.device_name, machine.expected_gpu_architecture, machine.container_image, machine.execution_mode, machine.torch_install_command, machine.hf_cache_dir, machine.rocm_path, machine.electricity_price_per_kwh, machine.currency, machine.python_cmd, machine.data_parallel_size, machine.distributed_hosts, machine.ddp_master_addr, machine.nccl_socket_ifname, machine.transfer)
+    payload = run_machine_probe(settings, probe_machine, kernel_preflight_script())
     missing = ensure_required_preflight_fields(machine, payload)
     arch_ok = architecture_matches(machine, payload)
     arch_reason = None if arch_ok else f"expected {machine.expected_gpu_architecture} but detected {payload.get('gpu_architecture')}"
     return {
         "machine_key": machine.key,
-        "hostname": machine.hostname,
+        "hostname": probe_machine.hostname,
         "container_image": machine.container_image,
         "expected_gpu_architecture": machine.expected_gpu_architecture,
         **payload,
@@ -1972,15 +2363,22 @@ def benchmark_row(machine: MachineSpec, summary: Dict[str, Any], preflight: Dict
     tokens = as_int(summary.get("useful_training_tokens"))
     runtime = as_float(summary.get("runtime_seconds"))
     avg_watts = as_float(summary.get("mean_power_watts"))
+    power_source = summary.get("power_telemetry_source")
+    power_samples = as_int(summary.get("power_sample_count"))
+    power_available = as_bool(summary.get("power_telemetry_available"))
+    power_reason = summary.get("power_telemetry_reason") or preflight.get("power_telemetry_reason")
     tps = as_float(summary.get("tokens_per_second")) or safe_ratio(as_float(tokens), runtime)
     energy_joules = as_float(summary.get("gpu_energy_joules")) or (None if avg_watts is None or runtime is None else avg_watts * runtime)
-    tpj = safe_ratio(as_float(tokens), None if avg_watts is None or runtime is None else avg_watts * runtime)
-    cost_per_million = None if tpj is None else machine.electricity_price_per_kwh / (3.6 * tpj)
-    reason = preflight.get("power_telemetry_reason") or "power telemetry unavailable"
+    tpj = safe_ratio(tps, avg_watts)
+    kwh_per_million = as_float(summary.get("energy_kwh_per_million_tokens"))
+    kwh_per_million = kwh_per_million if kwh_per_million is not None else (None if tpj is None else 1_000_000.0 / (tpj * 3_600_000.0))
+    cost_per_million = None if kwh_per_million is None else kwh_per_million * machine.electricity_price_per_kwh
+    reason = power_reason or "power telemetry unavailable"
     unavailable = {
         "average_power_watts": reason if avg_watts is None else None,
         "total_energy_joules": reason if energy_joules is None else None,
         "tokens_per_joule": reason if tpj is None else None,
+        "energy_kwh_per_million_tokens": reason if kwh_per_million is None else None,
         "energy_cost_per_million_tokens": reason if cost_per_million is None else None,
     }
     return {
@@ -1994,6 +2392,7 @@ def benchmark_row(machine: MachineSpec, summary: Dict[str, Any], preflight: Dict
         "detected_gpu_architecture": preflight.get("gpu_architecture"),
         "container_image": machine.container_image,
         "execution_mode": machine.execution_mode,
+        "data_parallel_size": machine.data_parallel_size,
         "electricity_price_per_kwh": machine.electricity_price_per_kwh,
         "currency": machine.currency,
         "training_tokens_processed": tokens,
@@ -2002,19 +2401,29 @@ def benchmark_row(machine: MachineSpec, summary: Dict[str, Any], preflight: Dict
         "average_power_watts": avg_watts,
         "total_energy_joules": energy_joules,
         "tokens_per_joule": tpj,
+        "energy_kwh_per_million_tokens": kwh_per_million,
         "energy_cost_per_million_tokens": cost_per_million,
         "gpu_detected": preflight.get("gpu_detected"),
         "gpu_kernel_test_passed": preflight.get("kernel_execution_test"),
         "gpu_runtime_verified": summary.get("gpu_runtime_verified"),
-        "power_telemetry_available": preflight.get("power_telemetry_available"),
-        "power_telemetry_reason": preflight.get("power_telemetry_reason"),
+        "power_telemetry_available": power_available if power_available is not None else preflight.get("power_telemetry_available"),
+        "power_telemetry_source": power_source,
+        "power_sample_count": power_samples,
+        "power_telemetry_reason": power_reason,
+        "power_telemetry_environment": summary.get("power_telemetry_environment"),
         "metric_unavailable_reasons": {k: v for k, v in unavailable.items() if v},
         "required_field_reasons": preflight.get("missing_reasons", {}),
     }
 
 
 def machine_label(machine: MachineSpec) -> str:
-    aliases = {"nvidia_control": "NVIDIA control", "amd_existing": "Existing AMD", "mi300x": "MI300X"}
+    aliases = {
+        "nvidia_control": "DGX Spark (single)",
+        "dgx_spark_single": "DGX Spark (single)",
+        "dgx_spark_dp2": "DGX Spark (DP x2)",
+        "amd_existing": "Radeon",
+        "mi300x": "MI300X",
+    }
     return aliases.get(machine.key, machine.key)
 
 
@@ -2028,38 +2437,91 @@ def benchmark_row_errors(row: Dict[str, Any]) -> List[str]:
         errors.append(f"{row.get('machine_key')}: training runtime did not verify GPU execution")
     if not truthy(row.get("power_telemetry_available")):
         errors.append(f"{row.get('machine_key')}: power telemetry unavailable ({row.get('power_telemetry_reason')})")
-    for key in ["training_tokens_processed", "runtime_seconds", "tokens_per_second", "average_power_watts", "total_energy_joules", "tokens_per_joule", "energy_cost_per_million_tokens"]:
+    for key in ["training_tokens_processed", "runtime_seconds", "tokens_per_second", "average_power_watts", "total_energy_joules", "tokens_per_joule", "energy_kwh_per_million_tokens", "energy_cost_per_million_tokens"]:
         value = as_float(row.get(key)) if key != "training_tokens_processed" else as_int(row.get(key))
         if value is None:
             errors.append(f"{row.get('machine_key')}: missing {key}")
+    watts = as_float(row.get("average_power_watts"))
+    if watts is not None and watts <= 0:
+        errors.append(f"{row.get('machine_key')}: average_power_watts must be > 0")
+    samples = as_int(row.get("power_sample_count"))
+    if watts is not None and (samples is None or samples < 2):
+        errors.append(f"{row.get('machine_key')}: power_sample_count must be >= 2 when power metrics are present")
+    tpj = as_float(row.get("tokens_per_joule"))
+    if tpj is not None and tpj <= 0:
+        errors.append(f"{row.get('machine_key')}: tokens_per_joule must be > 0")
+    energy_cost = as_float(row.get("energy_cost_per_million_tokens"))
+    if energy_cost is not None and energy_cost <= 0:
+        errors.append(f"{row.get('machine_key')}: energy_cost_per_million_tokens must be > 0")
     if row.get("required_field_reasons"):
         errors.append(f"{row.get('machine_key')}: missing preflight fields: {row.get('required_field_reasons')}")
     return errors
 
 
 def render_standalone_table(rows: List[Dict[str, Any]]) -> str:
-    header = "| Machine | Backend | Training tokens | Runtime | tok/s | Avg W | tok/J | Energy cost/M tokens |"
-    divider = "|---|---|---:|---:|---:|---:|---:|---:|"
+    header = "| Machine | DP | Backend | Training tokens | Runtime | tok/s | Avg W | tok/J | kWh/M tokens | Energy cost/M tokens | Power source | Power samples |"
+    divider = "|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---:|"
     lines = [header, divider]
     for row in rows:
         runtime = format_value(as_float(row.get("runtime_seconds")), "", 2)
         tps = format_value(as_float(row.get("tokens_per_second")), "", 2)
         watts = format_value(as_float(row.get("average_power_watts")), "", 2)
         tpj = format_value(as_float(row.get("tokens_per_joule")), "", 4)
+        kwh = format_value(as_float(row.get("energy_kwh_per_million_tokens")), "", 6)
         cost = format_value(as_float(row.get("energy_cost_per_million_tokens")), "", 6)
+        source = str(row.get("power_telemetry_source") or "N/A")
+        samples = format_value(as_float(row.get("power_sample_count")), "", 0)
         lines.append(
-            "| {machine} | {backend} | {tokens} | {runtime} | {tps} | {watts} | {tpj} | {cost} {currency} |".format(
+            "| {machine} | {dp} | {backend} | {tokens} | {runtime} | {tps} | {watts} | {tpj} | {kwh} | {cost} {currency} | {source} | {samples} |".format(
                 machine=row.get("machine"),
+                dp=row.get("data_parallel_size") or 1,
                 backend=row.get("backend"),
                 tokens=row.get("training_tokens_processed") or 0,
                 runtime=runtime,
                 tps=tps,
                 watts=watts,
                 tpj=tpj,
+                kwh=kwh,
                 cost=cost,
                 currency=row.get("currency") or "GBP",
+                source=source,
+                samples=samples,
             )
         )
+    return "\n".join(lines)
+
+
+def standalone_validation_matrix(rows: List[Dict[str, Any]], preflight: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+    nvidia = next((item for item in rows if str(item.get("vendor", "")).lower() == "nvidia"), {})
+    amd = next((item for item in rows if str(item.get("vendor", "")).lower() == "amd"), {})
+    nvidia_preflight = next((item for item in preflight if str(item.get("gpu_vendor", "")).lower() == "nvidia"), {})
+    amd_preflight = next((item for item in preflight if str(item.get("gpu_vendor", "")).lower() == "amd"), {})
+    return [
+        check_row("DGX control detected", truthy(nvidia.get("gpu_detected"))),
+        check_row("Radeon control detected", truthy(amd.get("gpu_detected"))),
+        check_row("CUDA version captured", bool(nvidia_preflight.get("cuda_version"))),
+        check_row("ROCm version captured", bool(amd_preflight.get("rocm_version"))),
+        check_row("DGX power sampled", as_float(nvidia.get("power_sample_count")) is not None and as_float(nvidia.get("power_sample_count")) > 1),
+        check_row("Radeon power sampled", as_float(amd.get("power_sample_count")) is not None and as_float(amd.get("power_sample_count")) > 1),
+        check_row("DGX tokens/J calculated", as_float(nvidia.get("tokens_per_joule")) is not None),
+        check_row("Radeon tokens/J calculated", as_float(amd.get("tokens_per_joule")) is not None),
+        check_row("DGX energy cost/M calculated", as_float(nvidia.get("energy_cost_per_million_tokens")) is not None),
+        check_row("Radeon energy cost/M calculated", as_float(amd.get("energy_cost_per_million_tokens")) is not None),
+        check_row("Full Dagster run completed", not rows_have_errors(rows)),
+    ]
+
+
+def check_row(name: str, passed: bool) -> Dict[str, str]:
+    return {"check": name, "result": "PASS" if passed else "FAIL"}
+
+
+def rows_have_errors(rows: List[Dict[str, Any]]) -> bool:
+    return any(benchmark_row_errors(row) for row in rows)
+
+
+def render_validation_matrix(rows: List[Dict[str, str]]) -> str:
+    lines = ["| Check | Result |", "|---|---|"]
+    lines.extend([f"| {row['check']} | {row['result']} |" for row in rows])
     return "\n".join(lines)
 
 
@@ -2070,54 +2532,178 @@ def run_standalone_benchmarks(context: OpExecutionContext, settings: Portability
     rows: List[Dict[str, Any]] = []
     preflight_rows: List[Dict[str, Any]] = []
     errors: List[str] = []
-    for machine in benchmark_machines(settings):
-        _, host_run_root = standalone_roots(settings, machine)
-        run_shell(ssh_cmd(settings, machine.hostname, f"rm -rf {shlex.quote(host_run_root)}"), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
-        preflight = machine_preflight_payload(settings, machine)
-        preflight_rows.append(preflight)
-        if preflight.get("missing_reasons"):
-            errors.append(f"{machine.key}: missing preflight metadata {preflight.get('missing_reasons')}")
+    machines = control_benchmark_machines(settings)
+    for machine in machines:
+        hosts = list(dict.fromkeys(machine.distributed_hosts or [machine.hostname]))
+        run_roots = {host: f"{expanded_remote_root(settings, host)}/{standalone_run_id(settings, machine)}" for host in hosts}
+        preflights = [machine_preflight_payload(settings, machine, host) for host in hosts]
+        preflight_rows.extend(preflights)
+        bad = next((item for item in preflights if item.get("missing_reasons") or (not item.get("architecture_match")) or (not item.get("training_allowed"))), None)
+        if bad:
+            errors.append(f"{machine.key}: preflight failed on host={bad.get('hostname')}")
             continue
-        if not preflight.get("architecture_match"):
-            errors.append(f"{machine.key}: architecture mismatch {preflight.get('architecture_reason')}")
+        if len(hosts) > 1 and machine.data_parallel_size != len(hosts):
+            errors.append(f"{machine.key}: data_parallel_size={machine.data_parallel_size} must equal distributed_hosts={len(hosts)}")
             continue
-        if not preflight.get("training_allowed"):
-            errors.append(f"{machine.key}: preflight training not allowed ({preflight.get('gpu_kernel_reason')})")
+        min_gpus = min([as_int(item.get("gpu_device_count")) or 0 for item in preflights])
+        if min_gpus < 1:
+            errors.append(f"{machine.key}: distributed hosts require >=1 visible GPU each")
             continue
-        run_shell(ssh_cmd(settings, machine.hostname, standalone_training_command(settings, machine, host_run_root)), settings.command_retries, env=sshpass_env(settings))
-        summary = pull_json(settings, machine.hostname, f"{host_run_root}/run_summary.json")
-        row = benchmark_row(machine, summary, preflight)
+        for host in hosts:
+            run_shell(ssh_cmd(settings, host, f"rm -rf {shlex.quote(run_roots[host])}"), settings.command_retries, env=sshpass_env(settings), allow_failure=True)
+        try:
+            execute_standalone_training(context, settings, machine, hosts, run_roots)
+            summary = pull_json(settings, hosts[0], f"{run_roots[hosts[0]]}/run_summary.json")
+        except Exception as exc:
+            errors.append(f"{machine.key}: training failed ({str(exc).splitlines()[0]})")
+            continue
+        row = benchmark_row(machine, summary, preflights[0])
         rows.append(row)
         errors.extend(benchmark_row_errors(row))
     table = render_standalone_table(rows)
+    matrix_rows = standalone_validation_matrix(rows, preflight_rows)
+    matrix_md = render_validation_matrix(matrix_rows)
+    combined_md = f"{table}\n\n{matrix_md}"
     payload = {
         "enabled": True,
         "rows": rows,
         "preflight": preflight_rows,
         "validation_errors": sorted(dict.fromkeys(errors)),
         "table": table,
+        "validation_matrix": matrix_rows,
     }
     local_root = Path(settings.local_root) / "artifacts" / settings.run_id
     local_root.mkdir(parents=True, exist_ok=True)
     json_path = local_root / "standalone_benchmark_comparison.json"
     text_path = local_root / "standalone_benchmark_comparison.md"
     json_path.write_text(json.dumps(payload, indent=2))
-    text_path.write_text(table)
+    text_path.write_text(combined_md)
     emit_materialization(
         context,
         ["portability", "published", "standalone_benchmark_comparison"],
         "Standalone GPU benchmark matrix completed.",
         {
             **common_metadata(settings, "persisted", str(json_path)),
-            "machines": MetadataValue.json([machine.key for machine in benchmark_machines(settings)]),
+            "machines": MetadataValue.json([machine.key for machine in machines]),
             "row_count": len(rows),
             "validation_errors": MetadataValue.json(payload["validation_errors"]),
-            "table": MetadataValue.md(table),
+            "table": MetadataValue.md(combined_md),
+            "validation_matrix": MetadataValue.md(matrix_md),
         },
     )
     if errors:
-        raise RuntimeError(f"standalone benchmark validation failed: {errors}")
+        context.log.warning(f"standalone benchmark validation warnings: {errors}")
     return payload
+
+
+def execute_standalone_training(context: OpExecutionContext, settings: PortabilitySettings, machine: MachineSpec, hosts: List[str], run_roots: Dict[str, str]) -> None:
+    if len(hosts) == 1:
+        command = standalone_training_command(settings, machine, run_roots[hosts[0]], host=hosts[0])
+        run_shell(ssh_cmd(settings, hosts[0], command), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.torchrun_timeout_seconds, operation="torchrun_single_node", host=hosts[0])
+        return
+    run_distributed_training(context, settings, machine, hosts, run_roots)
+
+
+def distributed_log_path(machine: MachineSpec, settings: PortabilitySettings, port: int, rank: int) -> str:
+    return f"/tmp/{machine.key}_{settings.run_id}_{port}_rank{rank}.log"
+
+
+def distributed_pid_path(machine: MachineSpec, settings: PortabilitySettings, port: int, rank: int) -> str:
+    return f"/tmp/{machine.key}_{settings.run_id}_{port}_rank{rank}.pid"
+
+
+def remote_rank_log(settings: PortabilitySettings, host: str, log_path: str) -> str:
+    python_cmd = execution_python_cmd(settings, host)
+    script = "from pathlib import Path; p=Path(__import__('sys').argv[1]); t=p.read_text(errors='replace') if p.exists() else ''; r=t.splitlines(); print('\\n'.join(r[-50:]))"
+    cmd = f"{shlex.quote(python_cmd)} -c {shlex.quote(script)} {shlex.quote(log_path)}"
+    result = run_shell(ssh_cmd(settings, host, cmd), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="fetch_rank_log", host=host)
+    return (result.stdout or "").strip()
+
+
+def remote_rank_alive(settings: PortabilitySettings, host: str, pid_path: str) -> bool:
+    check = f"test -f {shlex.quote(pid_path)} && kill -0 $(cat {shlex.quote(pid_path)})"
+    result = run_shell(ssh_cmd(settings, host, check), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="check_rank_process", host=host)
+    return result.returncode == 0
+
+
+def distributed_runtime_config(settings: PortabilitySettings, machine: MachineSpec, hosts: List[str], master: str, port: int) -> Dict[str, Any]:
+    iface = machine.nccl_socket_ifname or ""
+    ips = {host: host_interface_ipv4(settings, host, iface) if iface else None for host in hosts}
+    return {"MASTER_ADDR": master, "MASTER_PORT": port, "NNODES": len(hosts), "WORLD_SIZE": len(hosts), "backend": "nccl", "network_interface": iface or "auto", "hosts": [{"host": host, "node_rank": idx, "interface_ip": ips.get(host)} for idx, host in enumerate(hosts)]}
+
+
+def validate_distributed_network(config: Dict[str, Any]) -> None:
+    iface = str(config.get("network_interface", ""))
+    hosts = list(config.get("hosts", []))
+    ips = [item.get("interface_ip") for item in hosts]
+    if iface == "auto":
+        return
+    if any(not value for value in ips):
+        raise RuntimeError(f"network interface resolution failed for iface={iface}: {config}")
+    if hosts and str(config.get("MASTER_ADDR", "")) != str(hosts[0].get("interface_ip", "")):
+        raise RuntimeError(f"MASTER_ADDR does not match rank0 interface {iface}: {config}")
+
+
+def rank_status_snapshot(settings: PortabilitySettings, hosts: List[str], pid_files: Dict[str, str], log_files: Dict[str, str], rank0_stdout: str, rank0_stderr: str) -> Dict[str, Any]:
+    workers = [{"host": host, "alive": remote_rank_alive(settings, host, pid_files[host]), "last_stdout": remote_rank_log(settings, host, log_files[host]), "last_stderr": remote_rank_log(settings, host, log_files[host])} for host in hosts[1:]]
+    return {"rank0": {"host": hosts[0], "last_stdout": text_excerpt(rank0_stdout, lines=50), "last_stderr": text_excerpt(rank0_stderr, lines=50)}, "workers": workers}
+
+
+def distributed_timeout_message(stage: str, host: str, command: str, elapsed: float, snapshot: Dict[str, Any]) -> str:
+    return f"HANG/TIMEOUT DETECTED\n\nstage: {stage}\nhost: {host}\ncommand: {command}\nelapsed: {elapsed:.3f}\n\nrank 0 status: {snapshot['rank0']}\nrank 1 status: {snapshot['workers']}\n\nlast stdout: {snapshot['rank0']['last_stdout']}\nlast stderr: {snapshot['rank0']['last_stderr']}"
+
+
+def run_distributed_training(context: OpExecutionContext, settings: PortabilitySettings, machine: MachineSpec, hosts: List[str], run_roots: Dict[str, str]) -> None:
+    master = distributed_master_address(settings, machine, hosts[0])
+    port = 29500 + (int(time.time()) % 1000)
+    endpoint = f"{master}:{port}"
+    workers = hosts[1:]
+    pid_files = {host: distributed_pid_path(machine, settings, port, idx) for idx, host in enumerate(workers, start=1)}
+    log_files = {host: distributed_log_path(machine, settings, port, idx) for idx, host in enumerate(workers, start=1)}
+    config = distributed_runtime_config(settings, machine, hosts, master, port)
+    validate_distributed_network(config)
+    context.log.info(f"distributed_config={json.dumps(config, sort_keys=True)}")
+    for idx, host in enumerate(workers, start=1):
+        command = standalone_training_command(settings, machine, run_roots[host], host=host, nnodes=len(hosts), node_rank=idx, rdzv_endpoint=endpoint)
+        launch = f"nohup setsid bash -lc {shlex.quote(command)} </dev/null > {shlex.quote(log_files[host])} 2>&1 & echo $! > {shlex.quote(pid_files[host])}"
+        run_shell(ssh_cmd(settings, host, launch), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.command_timeout_seconds, operation=f"launch_rank_{idx}", host=host)
+    try:
+        master_command = standalone_training_command(settings, machine, run_roots[hosts[0]], host=hosts[0], nnodes=len(hosts), node_rank=0, rdzv_endpoint=endpoint)
+        start = time.perf_counter()
+        result = run_shell(ssh_cmd(settings, hosts[0], master_command), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.torchrun_timeout_seconds, operation="torchrun_rank_0", host=hosts[0])
+        context.log.info(f"rank=0 host={hosts[0]} stdout={text_excerpt(result.stdout or '', lines=80)}")
+        context.log.info(f"rank=0 host={hosts[0]} stderr={text_excerpt(result.stderr or '', lines=80)}")
+        if result.returncode != 0:
+            snapshot = rank_status_snapshot(settings, hosts, pid_files, log_files, result.stdout or "", result.stderr or "")
+            raise RuntimeError(distributed_timeout_message("torchrun_failed", hosts[0], master_command, time.perf_counter() - start, snapshot))
+        for idx, host in enumerate(workers, start=1):
+            worker_log = remote_rank_log(settings, host, log_files[host])
+            context.log.info(f"rank={idx} host={host} stdout_stderr={worker_log}")
+    except RuntimeError as exc:
+        snapshot = rank_status_snapshot(settings, hosts, pid_files, log_files, "", str(exc))
+        raise RuntimeError(distributed_timeout_message("distributed_training", hosts[0], endpoint, settings.torchrun_timeout_seconds, snapshot)) from exc
+    finally:
+        for host in workers:
+            stop = f"test -f {shlex.quote(pid_files[host])} && kill $(cat {shlex.quote(pid_files[host])}) >/dev/null 2>&1 || true"
+            run_shell(ssh_cmd(settings, host, stop), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="cleanup_rank", host=host)
+
+
+def distributed_master_address(settings: PortabilitySettings, machine: MachineSpec, host: str) -> str:
+    if machine.ddp_master_addr:
+        return machine.ddp_master_addr
+    if machine.nccl_socket_ifname:
+        ip = host_interface_ipv4(settings, host, machine.nccl_socket_ifname)
+        if ip:
+            return ip
+    return host.split("@", 1)[-1]
+
+
+def host_interface_ipv4(settings: PortabilitySettings, host: str, interface: str) -> Optional[str]:
+    script = "import json,subprocess,sys; out=subprocess.run(['ip','-o','-4','addr','show','dev',sys.argv[1]],capture_output=True,text=True).stdout.strip(); value=next((part.split('/')[0] for line in out.splitlines() for part in line.split() if '/' in part and part.count('.')==3), ''); print(value)"
+    cmd = f"python3 -c {shlex.quote(script)} {shlex.quote(interface)}"
+    result = run_shell(ssh_cmd(settings, host, cmd), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.command_timeout_seconds, operation="host_interface_ipv4", host=host)
+    ip = result.stdout.strip()
+    return ip or None
 
 
 def ensure_mooncake_dependency(settings: PortabilitySettings, host: str) -> None:
@@ -2158,10 +2744,10 @@ def verify_transfer_manifests(settings: PortabilitySettings, source: str, source
     dst_py = shlex.quote(execution_python_cmd(settings, destination))
     src_cmd = f"{src_py} {settings.remote_root}/checkpoint_io.py --mode manifest --checkpoint-a {source_ckpt} --output {source_manifest_remote}"
     dst_cmd = f"{dst_py} {settings.remote_root}/checkpoint_io.py --mode manifest --checkpoint-a {destination_ckpt} --output {destination_manifest_remote}"
-    run_shell(ssh_cmd(settings, source, src_cmd), settings.command_retries, env=sshpass_env(settings))
-    run_shell(ssh_cmd(settings, destination, dst_cmd), settings.command_retries, env=sshpass_env(settings))
-    run_shell(scp_cmd(settings, f"{source}:{source_manifest_remote}", str(source_manifest_local)), settings.command_retries, env=sshpass_env(settings))
-    run_shell(scp_cmd(settings, f"{destination}:{destination_manifest_remote}", str(destination_manifest_local)), settings.command_retries, env=sshpass_env(settings))
+    run_shell(ssh_cmd(settings, source, src_cmd), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="manifest_source", host=source)
+    run_shell(ssh_cmd(settings, destination, dst_cmd), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="manifest_destination", host=destination)
+    run_shell(scp_cmd(settings, f"{source}:{source_manifest_remote}", str(source_manifest_local)), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="manifest_pull_source", host=source)
+    run_shell(scp_cmd(settings, f"{destination}:{destination_manifest_remote}", str(destination_manifest_local)), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="manifest_pull_destination", host=destination)
     source_manifest = json.loads(source_manifest_local.read_text())
     destination_manifest = json.loads(destination_manifest_local.read_text())
     mismatches = strict_manifest_mismatches(source_manifest, destination_manifest)
@@ -2255,7 +2841,15 @@ def resume_on_target(context: OpExecutionContext, settings: PortabilitySettings,
         raise RuntimeError("resume_on_nvidia blocked because checkpoint transfer verification did not pass")
     python_cmd = shlex.quote(execution_python_cmd(settings, settings.target_host))
     device_prefix = "" if settings.target_use_gpu else "CUDA_VISIBLE_DEVICES='' "
-    run = f"{device_prefix}{python_cmd} {settings.remote_root}/train_lora_migration.py --dataset-path {remote_dataset_path(settings)} --output-dir {settings.remote_root}/nvidia_run_{settings.run_id} --resume-from {settings.remote_root}/{remote_ckpt(settings)} --stop-step {settings.final_step} --max-steps {settings.final_step} --telemetry-interval-seconds {settings.training_telemetry_interval_seconds}"
+    run = (
+        f"{device_prefix}{python_cmd} {settings.remote_root}/train_lora_migration.py "
+        f"--model-id {shlex.quote(settings.model_id)} "
+        f"--dataset-path {remote_dataset_path(settings)} "
+        f"--output-dir {settings.remote_root}/nvidia_run_{settings.run_id} "
+        f"--resume-from {settings.remote_root}/{remote_ckpt(settings)} "
+        f"--stop-step {settings.final_step} --max-steps {settings.final_step} "
+        f"--telemetry-interval-seconds {settings.training_telemetry_interval_seconds}"
+    )
     run_shell(ssh_cmd(settings, settings.target_host, run), settings.command_retries, env=sshpass_env(settings))
     emit_materialization(
         context,
@@ -2349,8 +2943,83 @@ def transfer_to_first_step_seconds(migration: Dict[str, Any]) -> Optional[float]
     return None if not parts else float(sum(parts))
 
 
+def end_to_end_summary(source: Dict[str, Any], target: Dict[str, Any], migration: Dict[str, Any]) -> Dict[str, Any]:
+    total_tokens = (as_int(source.get("useful_training_tokens")) or 0) + (as_int(target.get("useful_training_tokens")) or 0)
+    source_time = as_float(source.get("training_runtime_seconds")) or 0.0
+    target_time = as_float(target.get("training_runtime_seconds")) or 0.0
+    migration_time = as_float(migration.get("migration_to_first_step_seconds")) or 0.0
+    source_energy = as_float(source.get("gpu_energy_joules")) or 0.0
+    target_energy = as_float(target.get("gpu_energy_joules")) or 0.0
+    training_seconds = source_time + target_time
+    wall_seconds = training_seconds + migration_time
+    total_energy = source_energy + target_energy
+    return {
+        "backend": f"{str(source.get('vendor', 'source')).upper()} -> {str(target.get('vendor', 'target')).upper()}",
+        "start_step": as_int(source.get("start_step")),
+        "end_step": as_int(target.get("end_step")),
+        "steps_executed": phase_steps_executed(as_int(source.get("start_step")), as_int(target.get("end_step"))),
+        "useful_training_tokens": total_tokens,
+        "training_runtime_seconds": training_seconds,
+        "wall_clock_runtime_seconds": wall_seconds,
+        "training_tokens_per_second": safe_ratio(float(total_tokens), training_seconds),
+        "wall_clock_tokens_per_second": safe_ratio(float(total_tokens), wall_seconds),
+        "gpu_energy_joules": total_energy,
+        "gpu_energy_wh": total_energy / 3600.0,
+        "gpu_energy_kwh": total_energy / 3_600_000.0,
+        "tokens_per_joule": safe_ratio(float(total_tokens), total_energy),
+    }
+
+
+def formula_validation(source: Dict[str, Any], target: Dict[str, Any], migration: Dict[str, Any], end_to_end: Dict[str, Any]) -> Dict[str, Any]:
+    checks: List[Dict[str, Any]] = []
+    add = checks.append
+    add({"name": "source.steps_executed", "passed": as_int(source.get("steps_executed")) == phase_steps_executed(as_int(source.get("start_step")), as_int(source.get("end_step")))})
+    add({"name": "target.steps_executed", "passed": as_int(target.get("steps_executed")) == phase_steps_executed(as_int(target.get("start_step")), as_int(target.get("end_step")))})
+    source_tokens = as_int(source.get("useful_training_tokens")) or 0
+    target_tokens = as_int(target.get("useful_training_tokens")) or 0
+    add({"name": "end_to_end.total_useful_tokens", "passed": as_int(end_to_end.get("useful_training_tokens")) == (source_tokens + target_tokens)})
+    add({"name": "source.tokens_per_second", "passed": almost_equal(as_float(source.get("tokens_per_second")), safe_ratio(float(source_tokens), as_float(source.get("training_runtime_seconds"))))})
+    add({"name": "target.tokens_per_second", "passed": almost_equal(as_float(target.get("tokens_per_second")), safe_ratio(float(target_tokens), as_float(target.get("training_runtime_seconds"))))})
+    add({"name": "source.tokens_per_joule", "passed": almost_equal(as_float(source.get("tokens_per_joule")), safe_ratio(float(source_tokens), as_float(source.get("gpu_energy_joules"))))})
+    add({"name": "target.tokens_per_joule", "passed": almost_equal(as_float(target.get("tokens_per_joule")), safe_ratio(float(target_tokens), as_float(target.get("gpu_energy_joules"))))})
+    add({"name": "source.gpu_energy_kwh", "passed": almost_equal(as_float(source.get("gpu_energy_kwh")), safe_ratio(as_float(source.get("gpu_energy_joules")), 3_600_000.0))})
+    add({"name": "target.gpu_energy_kwh", "passed": almost_equal(as_float(target.get("gpu_energy_kwh")), safe_ratio(as_float(target.get("gpu_energy_joules")), 3_600_000.0))})
+    source_direct_cost = cost_per_million_tokens(as_float(source.get("energy_cost_gbp")), as_int(source.get("useful_training_tokens")))
+    source_alt_cost = safe_ratio(as_float(source.get("electricity_price_per_kwh")), (3.6 * as_float(source.get("tokens_per_joule"))) if as_float(source.get("tokens_per_joule")) else None)
+    target_direct_cost = cost_per_million_tokens(as_float(target.get("energy_cost_gbp")), as_int(target.get("useful_training_tokens")))
+    target_alt_cost = safe_ratio(as_float(target.get("electricity_price_per_kwh")), (3.6 * as_float(target.get("tokens_per_joule"))) if as_float(target.get("tokens_per_joule")) else None)
+    add({"name": "source.energy_cost_per_million_tokens", "passed": almost_equal(as_float(source.get("energy_cost_per_million_tokens_gbp")), source_direct_cost) and almost_equal(as_float(source.get("energy_cost_per_million_tokens_gbp")), source_alt_cost)})
+    add({"name": "target.energy_cost_per_million_tokens", "passed": almost_equal(as_float(target.get("energy_cost_per_million_tokens_gbp")), target_direct_cost) and almost_equal(as_float(target.get("energy_cost_per_million_tokens_gbp")), target_alt_cost)})
+    add({"name": "migration_overhead_percent", "passed": almost_equal(as_float(migration.get("migration_overhead_percent")), safe_ratio(as_float(migration.get("migration_to_first_step_seconds")), (as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)) * 100.0 if ((as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)) > 0 else None)})
+    add({"name": "end_to_end.cross_oem_energy", "passed": almost_equal(as_float(end_to_end.get("gpu_energy_joules")), (as_float(source.get("gpu_energy_joules")) or 0.0) + (as_float(target.get("gpu_energy_joules")) or 0.0))})
+    passed = all(item["passed"] for item in checks)
+    return {
+        "relative_tolerance": FORMULA_RELATIVE_TOLERANCE,
+        "absolute_tolerance": FORMULA_ABSOLUTE_TOLERANCE,
+        "checks": checks,
+        "passed": passed,
+    }
+
+
+def control_row_for_vendor(rows: List[Dict[str, Any]], vendor: str) -> Dict[str, Any]:
+    return next((row for row in rows if str(row.get("vendor", "")).lower() == vendor), {})
+
+
+def controls_validation(settings: PortabilitySettings, standalone: Dict[str, Any]) -> Dict[str, Any]:
+    rows = list(standalone.get("rows", [])) if isinstance(standalone, dict) else []
+    required = sorted({settings.machine_catalog[key].vendor for key in settings.standalone_benchmark.machine_keys if key in settings.machine_catalog})
+    checks = [{"name": f"control_present_{vendor}", "passed": bool(control_row_for_vendor(rows, vendor))} for vendor in required]
+    checks.append({"name": "standalone_errors_empty", "passed": not bool(standalone.get("validation_errors", []))})
+    dgx = control_row_for_vendor(rows, "nvidia")
+    radeon = control_row_for_vendor(rows, "amd")
+    return {"checks": checks, "passed": all(item["passed"] for item in checks), "dgx_only": dgx, "radeon_only": radeon, "required_vendors": required}
+
+
 def training_phase_errors(prefix: str, payload: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
+    start_step = as_int(payload.get("start_step"))
+    end_step = as_int(payload.get("end_step"))
+    steps_executed = as_int(payload.get("steps_executed"))
     useful = as_int(payload.get("useful_training_tokens"))
     runtime = as_float(payload.get("training_runtime_seconds"))
     tps = as_float(payload.get("tokens_per_second"))
@@ -2362,7 +3031,20 @@ def training_phase_errors(prefix: str, payload: Dict[str, Any]) -> List[str]:
     energy_j = as_float(payload.get("gpu_energy_joules"))
     energy_kwh = as_float(payload.get("gpu_energy_kwh"))
     tpj = as_float(payload.get("tokens_per_joule"))
+    electricity_price = as_float(payload.get("electricity_price_per_kwh"))
+    cost = as_float(payload.get("energy_cost_gbp"))
+    cost_per_million = as_float(payload.get("energy_cost_per_million_tokens_gbp"))
     add = errors.append
+    if start_step is None:
+        add(f"{prefix}.start_step is required")
+    if end_step is None:
+        add(f"{prefix}.end_step is required")
+    if start_step is not None and end_step is not None and end_step < start_step:
+        add(f"{prefix}.end_step must be >= start_step")
+    if steps_executed is None:
+        add(f"{prefix}.steps_executed is required")
+    if steps_executed is not None and start_step is not None and end_step is not None and steps_executed != (end_step - start_step):
+        add(f"{prefix}.steps_executed must equal end_step - start_step")
     if useful is not None and useful <= 0:
         add(f"{prefix}.useful_training_tokens must be > 0")
     if runtime is not None and runtime <= 0:
@@ -2389,8 +3071,16 @@ def training_phase_errors(prefix: str, payload: Dict[str, Any]) -> List[str]:
         add(f"{prefix}.gpu_energy_kwh must be > 0")
     if tpj is not None and tpj <= 0:
         add(f"{prefix}.tokens_per_joule must be > 0")
+    if electricity_price is not None and electricity_price <= 0:
+        add(f"{prefix}.electricity_price_per_kwh must be > 0")
+    if cost is not None and cost <= 0:
+        add(f"{prefix}.energy_cost_gbp must be > 0")
+    if cost_per_million is not None and cost_per_million <= 0:
+        add(f"{prefix}.energy_cost_per_million_tokens_gbp must be > 0")
     if energy_j is not None and energy_kwh is not None and abs((energy_j / 3_600_000.0) - energy_kwh) > 1e-6:
         add(f"{prefix}.gpu_energy_kwh inconsistent with gpu_energy_joules")
+    if energy_j is not None and as_float(payload.get("gpu_energy_wh")) is not None and abs((energy_j / 3600.0) - as_float(payload.get("gpu_energy_wh"))) > 1e-6:
+        add(f"{prefix}.gpu_energy_wh inconsistent with gpu_energy_joules")
     return errors
 
 
@@ -2399,6 +3089,8 @@ def build_validation(
     source: Dict[str, Any],
     target: Dict[str, Any],
     migration: Dict[str, Any],
+    end_to_end: Dict[str, Any],
+    controls: Dict[str, Any],
     continuity: Dict[str, Any],
     source_energy_validation: Dict[str, Any],
     target_energy_validation: Dict[str, Any],
@@ -2408,8 +3100,14 @@ def build_validation(
         *metrics_missing_paths("source_training", source, SOURCE_PHASE_REQUIRED_FIELDS),
         *metrics_missing_paths("destination_training", target, DESTINATION_PHASE_REQUIRED_FIELDS),
     ]
+    non_finite = [
+        *metrics_non_finite_paths("source_training", source, SOURCE_PHASE_REQUIRED_FIELDS),
+        *metrics_non_finite_paths("destination_training", target, DESTINATION_PHASE_REQUIRED_FIELDS),
+    ]
     errors: List[str] = []
     warnings: List[str] = []
+    if non_finite:
+        errors.append(f"non-finite required metrics: {non_finite}")
     expected = run_direction_expected_vendors(settings.run_id)
     if expected:
         if source.get("vendor") != expected[0] or target.get("vendor") != expected[1]:
@@ -2418,14 +3116,14 @@ def build_validation(
         errors.append("source_training.gpu_execution_verified is false while gpu_requested=true")
     if settings.target_use_gpu and not truthy(target.get("gpu_execution_verified")):
         errors.append("destination_training.gpu_execution_verified is false while gpu_requested=true")
-    source_first, source_last = as_int(source.get("first_step")), as_int(source.get("last_step"))
-    target_first, target_last = as_int(target.get("first_step")), as_int(target.get("last_step"))
+    source_first, source_last = as_int(source.get("start_step")), as_int(source.get("end_step"))
+    target_first, target_last = as_int(target.get("start_step")), as_int(target.get("end_step"))
     if source_first is not None and source_last is not None and source_first > source_last:
         errors.append("source phase step bounds invalid")
     if target_first is not None and target_last is not None and target_first > target_last:
         errors.append("destination phase step bounds invalid")
-    if source_last is not None and target_first is not None and target_first != source_last + 1:
-        errors.append(f"phase continuity invalid: expected destination first step {source_last + 1}, got {target_first}")
+    if source_last is not None and target_first is not None and target_first != source_last:
+        errors.append(f"phase continuity invalid: expected destination start step {source_last}, got {target_first}")
     errors.extend(training_phase_errors("source_training", source))
     errors.extend(training_phase_errors("destination_training", target))
     if not truthy(migration.get("iperf3", {}).get("success")):
@@ -2468,6 +3166,17 @@ def build_validation(
         errors.append("Source GPU energy consistency error above tolerance")
     if not truthy(target_energy_validation.get("energy_consistency_check_passed")):
         errors.append("Destination GPU energy consistency error above tolerance")
+    source_telemetry = telemetry_integrity_payload(source)
+    target_telemetry = telemetry_integrity_payload(target)
+    if not source_telemetry.get("passed"):
+        errors.append(f"source telemetry integrity failed: {source_telemetry.get('checks')}")
+    if not target_telemetry.get("passed"):
+        errors.append(f"destination telemetry integrity failed: {target_telemetry.get('checks')}")
+    formulas = formula_validation(source, target, migration, end_to_end)
+    if not formulas.get("passed"):
+        errors.append("formula validation failed")
+    if not controls.get("passed"):
+        errors.append("required control runs failed")
     source_runtime = as_float(source.get("training_runtime_seconds"))
     target_runtime = as_float(target.get("training_runtime_seconds"))
     if source_runtime is not None and source_runtime < settings.recommended_minimum_energy_benchmark_seconds:
@@ -2479,13 +3188,14 @@ def build_validation(
     direction_ok = expected is None or (source.get("vendor") == expected[0] and target.get("vendor") == expected[1])
     source_steps_ok = source_first is not None and source_last is not None and source_first <= source_last
     target_steps_ok = target_first is not None and target_last is not None and target_first <= target_last
-    sequential_steps_ok = source_last is not None and target_first is not None and target_first == source_last + 1
+    sequential_steps_ok = source_last is not None and target_first is not None and target_first == source_last
     functional_benchmark_complete = direction_ok and source_steps_ok and target_steps_ok and sequential_steps_ok and truthy(source.get("gpu_execution_verified")) and truthy(target.get("gpu_execution_verified")) and not required_missing
     cross_oem_resume_valid = truthy(continuity.get("step_continuity_verified")) and truthy(continuity.get("optimizer_state_verified")) and truthy(continuity.get("learning_rate_continuity_verified")) and truthy(continuity.get("resume_continuity_verified"))
     transfer_benchmark_valid = truthy(migration.get("iperf3", {}).get("success")) and truthy(migration.get("rsync", {}).get("success")) and truthy(migration.get("mooncake", {}).get("success")) and truthy(migration.get("checksum_verified"))
     energy_benchmark_valid = phase_energy_inputs_valid(source) and phase_energy_inputs_valid(target) and truthy(source_energy_validation.get("passed")) and truthy(target_energy_validation.get("passed"))
-    economic_comparison_valid = energy_benchmark_valid and transfer_benchmark_valid and cross_oem_resume_valid and not required_missing
-    benchmark_complete = functional_benchmark_complete and cross_oem_resume_valid and transfer_benchmark_valid and energy_benchmark_valid and economic_comparison_valid and not errors
+    telemetry_integrity_valid = source_telemetry.get("passed") and target_telemetry.get("passed")
+    economic_comparison_valid = energy_benchmark_valid and transfer_benchmark_valid and cross_oem_resume_valid and telemetry_integrity_valid and formulas.get("passed") and not required_missing
+    benchmark_complete = functional_benchmark_complete and cross_oem_resume_valid and transfer_benchmark_valid and energy_benchmark_valid and telemetry_integrity_valid and economic_comparison_valid and controls.get("passed") and not errors
     return {
         "benchmark_complete": benchmark_complete,
         "cross_oem_gpu_benchmark_valid": benchmark_complete,
@@ -2493,8 +3203,13 @@ def build_validation(
         "cross_oem_resume_valid": cross_oem_resume_valid,
         "transfer_benchmark_valid": transfer_benchmark_valid,
         "energy_benchmark_valid": energy_benchmark_valid,
+        "telemetry_integrity_valid": telemetry_integrity_valid,
         "economic_comparison_valid": economic_comparison_valid,
+        "formula_validation": formulas,
+        "telemetry_integrity": {"source": source_telemetry, "destination": target_telemetry},
+        "controls": controls,
         "required_metrics_missing": sorted(dict.fromkeys(required_missing)),
+        "required_metrics_non_finite": sorted(dict.fromkeys(non_finite)),
         "validation_errors": sorted(dict.fromkeys(errors)),
         "validation_warnings": sorted(dict.fromkeys(warnings)),
         "field_classification": required_metric_classification(source, target),
@@ -2555,6 +3270,12 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
             "transfer_seconds": migration.get("transfer_seconds"),
         }
     )
+    migration["migration_overhead_percent"] = safe_ratio(
+        as_float(migration.get("migration_to_first_step_seconds")),
+        (as_float(source.get("training_runtime_seconds")) or 0.0) + (as_float(target.get("training_runtime_seconds")) or 0.0),
+    )
+    if migration.get("migration_overhead_percent") is not None:
+        migration["migration_overhead_percent"] = float(migration["migration_overhead_percent"]) * 100.0
     last_source_step = as_int(proof.get("source_saved_step")) or source.get("last_step")
     continuity = {
         "last_source_step": last_source_step,
@@ -2598,7 +3319,16 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
         "tokens_per_joule_ratio_destination_vs_source": None,
         "energy_cost_per_million_tokens_ratio_destination_vs_source": None,
     }
-    validation = build_validation(settings, source, target, migration, continuity, source_energy_validation, target_energy_validation, system_energy)
+    source_cost = energy_cost_gbp(as_float(source.get("gpu_energy_kwh")), as_float(source.get("electricity_price_per_kwh")) or settings.electricity_price_gbp_per_kwh)
+    target_cost = energy_cost_gbp(as_float(target.get("gpu_energy_kwh")), as_float(target.get("electricity_price_per_kwh")) or settings.electricity_price_gbp_per_kwh)
+    total_energy_cost = (source_cost or 0.0) + (target_cost or 0.0)
+    end_to_end = end_to_end_summary(source, target, migration)
+    end_to_end["source_energy_cost_gbp"] = source_cost
+    end_to_end["target_energy_cost_gbp"] = target_cost
+    end_to_end["total_energy_cost_gbp"] = total_energy_cost
+    end_to_end["energy_cost_per_million_tokens_gbp"] = cost_per_million_tokens(total_energy_cost, as_int(end_to_end.get("useful_training_tokens")))
+    controls = controls_validation(settings, standalone_benchmark)
+    validation = build_validation(settings, source, target, migration, end_to_end, controls, continuity, source_energy_validation, target_energy_validation, system_energy)
     if validation.get("economic_comparison_valid"):
         comparison = {
         "higher_tokens_per_second": metric_winner(source, target, "tokens_per_second"),
@@ -2611,14 +3341,35 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
     report = {
         "run": {
             "run_id": settings.run_id,
-            "model_id": source_raw.get("model_id") or target_raw.get("model_id"),
+            "benchmark_schema_version": "cross_oem_benchmark.v2",
+            "model_id": source_raw.get("model_id") or target_raw.get("model_id") or settings.model_id,
             "training_type": source_raw.get("training_type") or target_raw.get("training_type") or "lora",
             "dataset_path": settings.dataset_path,
+            "checkpoint_step": settings.checkpoint_step,
+            "final_step": settings.final_step,
             "electricity_price_gbp_per_kwh": settings.electricity_price_gbp_per_kwh,
             "economic_scope": "energy-only break-even; excludes hardware, CPU/system energy, networking, storage, cooling, and operations",
+            "environment": {
+                "git_commit_sha": git_commit_sha(),
+                "source_host": source.get("hostname"),
+                "target_host": target.get("hostname"),
+                "source_vendor": source.get("vendor"),
+                "target_vendor": target.get("vendor"),
+                "source_gpu_model": source.get("device_name"),
+                "target_gpu_model": target.get("device_name"),
+                "source_gpu_architecture": source.get("gpu_architecture"),
+                "target_gpu_architecture": target.get("gpu_architecture"),
+                "source_torch_version": source.get("torch_version"),
+                "target_torch_version": target.get("torch_version"),
+                "source_cuda_version": source.get("cuda_version"),
+                "target_cuda_version": target.get("cuda_version"),
+                "source_rocm_version": source.get("hip_version"),
+                "target_rocm_version": target.get("hip_version"),
+            },
         },
         "source_training": source,
         "destination_training": target,
+        "end_to_end": end_to_end,
         "migration": migration,
         "continuity": continuity,
         "system_energy": system_energy,
@@ -2634,7 +3385,7 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
     json_path.write_text(json.dumps(report, indent=2))
     text_path.write_text(render_side_by_side(report))
     if not validation.get("cross_oem_gpu_benchmark_valid"):
-        context.log.warning(f"cross_oem_gpu_benchmark_valid=false: missing={validation.get('required_metrics_missing')} errors={validation.get('validation_errors')}")
+        raise Failure(description=f"cross_oem_gpu_benchmark_valid=false: missing={validation.get('required_metrics_missing')} errors={validation.get('validation_errors')}")
     emit_materialization(
         context,
         ["portability", "published", "cross_oem_metrics_report"],
@@ -2728,6 +3479,16 @@ def portability_job() -> None:
     recorded = record_transfer_tests(settings=settings, transfer_result=verified, _ready=validated)
     report = build_cross_oem_report(settings=settings, _ready=recorded, verified_transfer=verified, gpu_preflight=gpu_ready, standalone_benchmark=standalone)
     save_assets(settings, report)
+
+
+@job
+def single_dgx_baseline_job() -> None:
+    settings = settings_op()
+    prepared = prepare_hosts(settings)
+    synced = sync_and_install(settings, prepared)
+    preflight = preflight_torch_transformers(settings, synced)
+    gpu_ready = preflight_gpu_kernel_execution(settings, preflight)
+    run_standalone_benchmarks(settings, gpu_ready)
 
 
 if __name__ == "__main__":

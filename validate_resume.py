@@ -57,6 +57,13 @@ def check_log_continuity(source_meta: Dict[str, Any], resumed_summary: Dict[str,
     assert first_after_handoff is not None, f"resume continuity failed: no logged step after {source_step}"
 
 
+def first_step_after_handoff(source_meta: Dict[str, Any], resumed_summary: Dict[str, Any]) -> Optional[int]:
+    source_step = int(source_meta["saved_step"])
+    trace = resumed_summary.get("loss_trace") or []
+    steps = [int(item["step"]) for item in trace if "step" in item]
+    return next((step for step in steps if step > source_step), None)
+
+
 def check_handoff_step(source_meta: Dict[str, Any], resumed_summary: Dict[str, Any]) -> None:
     source_step = int(source_meta["saved_step"])
     loaded_step = resumed_summary.get("resume_loaded_from_step")
@@ -77,18 +84,52 @@ def check_checkpoint_state_files(checkpoint_dir: str) -> Dict[str, int]:
     return {path.name: assert_non_empty(path) for path in files}
 
 
-def build_proof(source_meta: Dict[str, Any], resumed_summary: Dict[str, Any], source_files: Dict[str, int], resumed_files: Dict[str, int]) -> Dict[str, Any]:
+def read_trainer_state(checkpoint_dir: str) -> Dict[str, Any]:
+    return read_json(str(Path(checkpoint_dir) / "trainer_state.json"))
+
+
+def last_learning_rate(trainer_state: Dict[str, Any]) -> Optional[float]:
+    rows = trainer_state.get("log_history") or []
+    rates = [item.get("learning_rate") for item in rows if isinstance(item, dict) and item.get("learning_rate") is not None]
+    return None if not rates else float(rates[-1])
+
+
+def build_proof(source_meta: Dict[str, Any], resumed_summary: Dict[str, Any], source_files: Dict[str, int], resumed_files: Dict[str, int], source_checkpoint: str, resumed_checkpoint: str, max_optimizer_norm_delta: float) -> Dict[str, Any]:
     source_norm = source_meta.get("optimizer_exp_avg_sq_norm_before_save")
     resumed_norm = resumed_summary.get("optimizer_exp_avg_sq_norm_after_resume_load")
+    source_lr = source_meta.get("optimizer_learning_rate_before_save")
+    resumed_lr = resumed_summary.get("optimizer_learning_rate_after_resume_load")
+    if source_lr is None:
+        source_lr = last_learning_rate(read_trainer_state(source_checkpoint))
+    if resumed_lr is None:
+        resumed_lr = last_learning_rate(read_trainer_state(resumed_checkpoint))
+    step_after = first_step_after_handoff(source_meta, resumed_summary)
+    source_step = int(source_meta["saved_step"])
+    norm_delta = None if source_norm is None or resumed_norm is None else abs(float(source_norm) - float(resumed_norm))
+    lr_delta = None if source_lr is None or resumed_lr is None else abs(float(source_lr) - float(resumed_lr))
     return {
         "source_saved_step": int(source_meta["saved_step"]),
         "resumed_saved_step": int(resumed_summary["saved_step"]),
         "resumed_first_logged_step": resumed_summary.get("first_logged_step"),
+        "first_step_after_handoff": step_after,
         "resume_from": resumed_summary.get("resume_from"),
         "resume_loaded_from_step": resumed_summary.get("resume_loaded_from_step"),
         "source_optimizer_exp_avg_sq_norm_before_save": source_norm,
         "resumed_optimizer_exp_avg_sq_norm_after_resume_load": resumed_norm,
-        "optimizer_norm_delta": None if source_norm is None or resumed_norm is None else abs(float(source_norm) - float(resumed_norm)),
+        "optimizer_norm_delta": norm_delta,
+        "source_learning_rate_before_save": source_lr,
+        "resumed_learning_rate_after_resume_load": resumed_lr,
+        "learning_rate_delta": lr_delta,
+        "step_continuity_verified": bool(step_after is not None and step_after == source_step + 1),
+        "optimizer_state_verified": bool(norm_delta is not None and norm_delta <= max_optimizer_norm_delta),
+        "learning_rate_continuity_verified": bool(lr_delta is not None and lr_delta <= 1e-12),
+        "resume_continuity_verified": bool(int(resumed_summary.get("resume_loaded_from_step") or -1) == source_step),
+        "checkpoint_validation_result": "pass",
+        "continuity_policy": {
+            "step_rule": "first_step_after_handoff == source_saved_step + 1",
+            "optimizer_norm_delta_max": max_optimizer_norm_delta,
+            "learning_rate_delta_max": 1e-12,
+        },
         "source_state_file_sizes": source_files,
         "resumed_state_file_sizes": resumed_files,
     }
@@ -130,7 +171,8 @@ def main() -> None:
     check_log_continuity(source_meta, resumed)
     check_loss(source_meta, resumed, cfg.max_loss_delta)
     check_optimizer_norm(source_meta, resumed, cfg.max_optimizer_norm_delta)
-    write_proof(cfg.proof_out, build_proof(source_meta, resumed, source_files, resumed_files))
+    proof = build_proof(source_meta, resumed, source_files, resumed_files, cfg.source_checkpoint, cfg.resumed_checkpoint, cfg.max_optimizer_norm_delta)
+    write_proof(cfg.proof_out, proof)
     print("resume validation passed")
 
 

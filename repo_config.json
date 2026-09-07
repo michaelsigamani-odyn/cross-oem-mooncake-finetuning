@@ -1,24 +1,26 @@
 {
   "common": {
-    "local_root_dir": "/Users/michaelsigamani/cross-vendor-mooncake-test",
+    "local_root_dir": "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning",
     "remote_root_dir": "~/cross-vendor-mooncake-test"
   },
   "basic_portability": {
-    "source_host": "michael@odyn-radeon2",
+    "source_host": "runpod-mi300x",
     "target_host": "michael@odyn-dgx3",
+    "model_id": "Qwen/Qwen2.5-0.5B",
     "checkpoint_step": 10,
     "final_step": 30,
-    "run_id": "amd-to-nvidia-qwen7b-alpaca500-1",
+    "run_id": "mi300x-to-dgxspark-qwen25-05b",
     "dataset_path": "data/quant_mentor_500_alpaca.jsonl",
     "source_data_parallel_size": 1,
-    "source_python_cmd": "/home/michael/torch-env/bin/python",
+    "source_python_cmd": "/workspace/venvs/py312-rocm/bin/python",
     "target_python_cmd": "/usr/bin/python3.12",
     "host_python_cmd_overrides": {
       "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
-      "michael@odyn-dgx3": "/usr/bin/python3.12"
+      "michael@odyn-dgx3": "/usr/bin/python3.12",
+      "runpod-mi300x": "/workspace/venvs/py312-rocm/bin/python"
     },
     "ssh_password": null,
-    "transfer_backend": "mooncake_tcp",
+    "transfer_backend": "scp",
     "asset_paths": [
       "data/quant_mentor_500_alpaca.jsonl"
     ],
@@ -46,7 +48,13 @@
     "min_extra_steps": 5,
     "max_loss_delta": 2.0,
     "max_optimizer_norm_delta": 0.0001,
-    "electricity_price_gbp_per_kwh": 0.27
+    "electricity_price_gbp_per_kwh": 0.27,
+    "minimum_power_samples": 5,
+    "maximum_energy_consistency_error_percent": 25.0,
+    "recommended_minimum_energy_benchmark_seconds": 2.0,
+    "command_timeout_seconds": 2400,
+    "torchrun_timeout_seconds": 2400,
+    "transfer_timeout_seconds": 2400
   },
   "machine_catalog": {
     "nvidia_control": {
@@ -58,6 +66,46 @@
       "electricity_price_per_kwh": 0.27,
       "currency": "GBP",
       "python_cmd": "/usr/bin/python3.12",
+      "data_parallel_size": 1,
+      "transfer": {
+        "control_host": "10.6.45.106",
+        "control_port": 56001
+      }
+    },
+    "dgx_spark_single": {
+      "hostname": "michael@odyn-dgx1",
+      "vendor": "nvidia",
+      "device_name": "NVIDIA GB10",
+      "expected_gpu_architecture": "gb10",
+      "container_image": null,
+      "electricity_price_per_kwh": 0.27,
+      "currency": "GBP",
+      "python_cmd": "/usr/bin/python3.12",
+      "data_parallel_size": 1,
+      "distributed_hosts": [
+        "michael@odyn-dgx1"
+      ],
+      "transfer": {
+        "control_host": "10.6.45.106",
+        "control_port": 56001
+      }
+    },
+    "dgx_spark_dp2": {
+      "hostname": "michael@odyn-dgx1",
+      "vendor": "nvidia",
+      "device_name": "NVIDIA GB10",
+      "expected_gpu_architecture": "gb10",
+      "container_image": null,
+      "electricity_price_per_kwh": 0.27,
+      "currency": "GBP",
+      "python_cmd": "/usr/bin/python3.12",
+      "data_parallel_size": 2,
+      "ddp_master_addr": "192.168.100.10",
+      "nccl_socket_ifname": "enp1s0f0np0",
+      "distributed_hosts": [
+        "michael@odyn-dgx1",
+        "michael@odyn-dgx3"
+      ],
       "transfer": {
         "control_host": "10.6.45.106",
         "control_port": 56001
@@ -84,12 +132,13 @@
       "expected_gpu_architecture": "gfx942",
       "container_image": "rocm/pytorch:rocm10.0_ubuntu24.04_py3.12_pytorch_release_2.12.0",
       "execution_mode": "host",
-      "torch_install_command": "python3 -m pip install --index-url https://download.pytorch.org/whl/rocm6.3 torch==2.9.1+rocm6.3",
+      "torch_install_command": "/workspace/venvs/py312-rocm/bin/python -c \"import torch\" || /workspace/venvs/py312-rocm/bin/python -m pip install --index-url https://download.pytorch.org/whl/rocm6.3 torch==2.9.1+rocm6.3",
       "hf_cache_dir": "/workspace/.cache/huggingface",
       "rocm_path": "/opt/rocm-5.7.0",
       "electricity_price_per_kwh": 0.27,
       "currency": "GBP",
-      "python_cmd": "python3",
+      "python_cmd": "/workspace/venvs/py312-rocm/bin/python",
+      "data_parallel_size": 1,
       "transfer": {
         "control_host": null,
         "control_port": null
@@ -99,8 +148,8 @@
   "standalone_benchmark": {
     "enabled": true,
     "machine_keys": [
-      "nvidia_control",
       "amd_existing",
+      "nvidia_control",
       "mi300x"
     ],
     "run_id_suffix": "baseline",
@@ -113,7 +162,7 @@
     "lora_alpha": 16,
     "lora_dropout": 0.05,
     "telemetry_interval_seconds": 0.25,
-    "model_id": "Qwen/Qwen2.5-7B"
+    "model_id": "Qwen/Qwen2.5-0.5B"
   },
   "story3": {
     "plan_path": "./experiments/story3_preregistration.json",
