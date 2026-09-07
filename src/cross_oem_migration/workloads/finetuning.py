@@ -1,11 +1,3 @@
-"""Fine-tuning workload. The actual training loop lives entirely in
-`scripts/finetuning/train_lora_migration.py` -- a standalone script with
-no knowledge of Dagster, SSH, or this package. This class's only job is
-building the correct command line to invoke it, given a target host,
-model, dataset and optional data-parallel width. This is the fix for ask
-#2: the workload is now a swappable, independently testable, independently
-runnable unit instead of being three inlined f-strings inside a Dagster op.
-"""
 import shlex
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
