@@ -1,18 +1,3 @@
-"""Publishes every output artifact (checkpoints, telemetry, transfer test
-results, the report) from the remote hosts into local `artifacts/<run_id>/`,
-and attaches two asset checks. Ports `save_assets` +
-`saved_assets_exist_check` + `saved_assets_supported_type_check` (original
-lines 3470-3525).
-
-Difference from the original: the original emitted ad hoc
-`AssetMaterialization` events by hand inside plain `@op`s, with the asset
-checks (`@asset_check`) pointed at a manually-constructed `AssetKey` that
-wasn't otherwise produced by any `@asset`. That's why asset checks likely
-weren't rendering attached to anything sensible in the UI. Here,
-`published_manifest` is a real `@asset`, and the two checks are declared
-against it directly via `check_specs`/`@asset_check(asset=published_manifest)`,
-which is what makes them show up as pass/fail badges on that asset node.
-"""
 from pathlib import Path
 from typing import Any, Dict, List
 
