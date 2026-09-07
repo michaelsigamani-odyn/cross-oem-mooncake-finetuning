@@ -1,10 +1,3 @@
-"""Resume + resume-validation assets. Ports `resume_on_target` and
-`validate_resume` (original lines 2880-2928). `validate_resume` invokes
-scripts/validation/validate_resume.py -- a standalone workload script,
-unchanged and untouched by this refactor -- so the actual pass/fail logic
-for "did resume genuinely continue training correctly" lives in one place
-and is independently testable/runnable outside Dagster entirely.
-"""
 import json
 from typing import Any, Dict
 
