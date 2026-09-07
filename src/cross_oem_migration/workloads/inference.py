@@ -1,12 +1,3 @@
-"""Inference workload -- placeholder satisfying ask #2 ("potentially
-inference"). The original repo (per its README) explicitly scoped
-inference out ("we could later add disaggregated prefill for inference").
-Rather than invent behavior that was never in the source repo, this stub
-defines the *shape* a real inference workload would take, so plugging one
-in later is additive (new file + new registry entry), not a rewrite of
-the orchestration layer. Delete the NotImplementedError once a real
-inference script (e.g. scripts/inference/serve.py) exists.
-"""
 from dataclasses import dataclass
 from typing import Any, Dict
 
