@@ -1,5 +1,5 @@
-<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/65129aca-018a-442a-9abf-f85a555dacf6" />
-# Cross-OEM Checkpoint Resume and Fine-Tuning
+
+# Odyn compute profiler and prediction engine
 
 This repository demonstrates a controlled cross-OEM training workflow:
 
