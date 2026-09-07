@@ -1,0 +1,15 @@
+2026-09-07T11:42:09Z START probe_source_torch_transformers_michael@odyn-dgx3
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import json,torch,transformers; print(json.dumps({'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"': torch.__version__, '"'"'"'"'"'"'"'"'transformers_version'"'"'"'"'"'"'"'"': transformers.__version__}))'"'"''
+timeout_seconds=180.0
+2026-09-07T11:42:12Z END probe_source_torch_transformers_michael@odyn-dgx3
+duration=2.502
+returncode=0
+2026-09-07T11:42:12Z START probe_target_torch_transformers_runpod-mi300x-michael
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import json,torch,transformers; print(json.dumps({'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"': torch.__version__, '"'"'"'"'"'"'"'"'transformers_version'"'"'"'"'"'"'"'"': transformers.__version__}))'"'"''
+timeout_seconds=180.0
+2026-09-07T11:42:13Z INTERRUPTED probe_target_torch_transformers_runpod-mi300x-michael
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import json,torch,transformers; print(json.dumps({'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"': torch.__version__, '"'"'"'"'"'"'"'"'transformers_version'"'"'"'"'"'"'"'"': transformers.__version__}))'"'"''
+elapsed=0.937

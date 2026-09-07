@@ -1,6 +1,7 @@
 locations:
-  - location_name: finetuning_sequential
+  - location_name: cross_oem_migration
     code_source:
-      python_file: finetuning_sequential.py
+      module_name: cross_oem_migration.orchestration.dagster.definitions
+      attribute: defs
     build:
       directory: .

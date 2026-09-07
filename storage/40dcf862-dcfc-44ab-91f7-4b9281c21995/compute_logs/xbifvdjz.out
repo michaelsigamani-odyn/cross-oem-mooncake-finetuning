@@ -1,0 +1,21 @@
+2026-09-07T10:04:19Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'mkdir -p ~/cross-vendor-mooncake-test'
+timeout_seconds=600.0
+2026-09-07T10:04:20Z END command
+duration=1.150
+returncode=0
+2026-09-07T10:04:20Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p ~/cross-vendor-mooncake-test'
+timeout_seconds=600.0
+2026-09-07T10:04:22Z END command
+duration=1.381
+returncode=0
+2026-09-07T10:04:22Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'mkdir -p ~/cross-vendor-mooncake-test'
+timeout_seconds=600.0
+2026-09-07T10:04:23Z END command
+duration=0.836
+returncode=0

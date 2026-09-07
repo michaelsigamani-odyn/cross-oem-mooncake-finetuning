@@ -1,0 +1,178 @@
+{
+  "saved_step": 30,
+  "resume_loaded_from_step": 10,
+  "loss_before_migration": 2.677119255065918,
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 3.4082555770874023
+    },
+    {
+      "step": 2,
+      "loss": 3.3796608448028564
+    },
+    {
+      "step": 3,
+      "loss": 3.343294382095337
+    },
+    {
+      "step": 4,
+      "loss": 3.3006978034973145
+    },
+    {
+      "step": 5,
+      "loss": 3.2659664154052734
+    },
+    {
+      "step": 6,
+      "loss": 3.2297539710998535
+    },
+    {
+      "step": 7,
+      "loss": 3.197890281677246
+    },
+    {
+      "step": 8,
+      "loss": 3.1909737586975098
+    },
+    {
+      "step": 9,
+      "loss": 3.1606340408325195
+    },
+    {
+      "step": 10,
+      "loss": 3.1541666984558105
+    },
+    {
+      "step": 11,
+      "loss": 3.141880750656128
+    },
+    {
+      "step": 12,
+      "loss": 3.1443769931793213
+    },
+    {
+      "step": 13,
+      "loss": 3.0997474193573
+    },
+    {
+      "step": 14,
+      "loss": 3.0658586025238037
+    },
+    {
+      "step": 15,
+      "loss": 3.0233981609344482
+    },
+    {
+      "step": 16,
+      "loss": 2.9927337169647217
+    },
+    {
+      "step": 17,
+      "loss": 2.958963632583618
+    },
+    {
+      "step": 18,
+      "loss": 2.9284698963165283
+    },
+    {
+      "step": 19,
+      "loss": 2.9045095443725586
+    },
+    {
+      "step": 20,
+      "loss": 2.854039192199707
+    },
+    {
+      "step": 21,
+      "loss": 2.8315963745117188
+    },
+    {
+      "step": 22,
+      "loss": 2.8059544563293457
+    },
+    {
+      "step": 23,
+      "loss": 2.7756764888763428
+    },
+    {
+      "step": 24,
+      "loss": 2.754460096359253
+    },
+    {
+      "step": 25,
+      "loss": 2.7365965843200684
+    },
+    {
+      "step": 26,
+      "loss": 2.722527265548706
+    },
+    {
+      "step": 27,
+      "loss": 2.7030465602874756
+    },
+    {
+      "step": 28,
+      "loss": 2.69584321975708
+    },
+    {
+      "step": 29,
+      "loss": 2.6793689727783203
+    },
+    {
+      "step": 30,
+      "loss": 2.677119255065918
+    }
+  ],
+  "first_logged_step": 1,
+  "last_logged_step": 30,
+  "optimizer_exp_avg_sq_norm": 0.0004369183839317176,
+  "optimizer_exp_avg_sq_norm_before_save": 0.0004369183839317176,
+  "optimizer_exp_avg_sq_norm_after_resume_load": 0.00015503313001478497,
+  "learning_rate": 0.0,
+  "optimizer_learning_rate_before_save": 0.0,
+  "optimizer_learning_rate_after_resume_load": 0.0,
+  "seed": 17,
+  "model_id": "Qwen/Qwen2.5-0.5B",
+  "dataset_path": "/home/michael/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl",
+  "hostname": "odyn-dgx3",
+  "python": "3.12.3",
+  "device": "NVIDIA GB10",
+  "vendor": "nvidia",
+  "gpu_architecture": "sm_121",
+  "torch": "2.13.0+cu130",
+  "torch_version": "2.13.0+cu130",
+  "resume_from": "/home/michael/cross-vendor-mooncake-test/checkpoint-10",
+  "runtime_seconds": 2.614079436985776,
+  "useful_training_tokens": 2560,
+  "tokens_per_second": 979.3122442185103,
+  "final_loss": 2.677119255065918,
+  "mean_gpu_utilization_percent": 28.22222222222222,
+  "peak_gpu_utilization_percent": 63.0,
+  "peak_accelerator_memory_bytes": 1460975104,
+  "mean_power_watts": 15.13888888888889,
+  "peak_power_watts": 21.48,
+  "min_power_watts": 10.91,
+  "gpu_energy_joules": 34.932613378033274,
+  "gpu_energy_kwh": 9.703503716120354e-06,
+  "tokens_per_joule": 73.28395308693992,
+  "energy_kwh_per_million_tokens": 0.0037904311391095133,
+  "power_sample_count": 9,
+  "power_telemetry_available": true,
+  "power_telemetry_source": "nvml",
+  "power_telemetry_reason": null,
+  "telemetry_source": "nvml",
+  "sampling_interval_seconds": 0.25,
+  "telemetry_duration_seconds": 2.614079436985776,
+  "telemetry_sample_count": 9,
+  "raw_telemetry_sample_count": 9,
+  "telemetry_start_timestamp": "2026-09-07T06:59:36.918906+00:00",
+  "telemetry_end_timestamp": "2026-09-07T06:59:39.532996+00:00",
+  "gpu_runtime_verified": true,
+  "checkpoint_size_bytes": null,
+  "checkpoint_save_seconds": null,
+  "checkpoint_load_seconds": 0.1801932519301772,
+  "resume_to_first_step_seconds": 0.9857151799369603,
+  "first_step_after_resume": 11,
+  "max_sequence_length": 128
+}

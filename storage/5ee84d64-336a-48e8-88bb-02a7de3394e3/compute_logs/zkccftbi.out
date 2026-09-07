@@ -1,0 +1,7 @@
+2026-09-07T11:49:16Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python ~/cross-vendor-mooncake-test/validate_resume.py --source-checkpoint ~/cross-vendor-mooncake-test/checkpoint-10 --resumed-summary ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/run_summary.json --resumed-checkpoint ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/checkpoint-30 --proof-out ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/resume_validation_proof.json --min-extra-steps 5 --max-loss-delta 2.0 --max-optimizer-norm-delta 0.0001'
+timeout_seconds=600.0
+2026-09-07T11:49:17Z END command
+duration=0.932
+returncode=0

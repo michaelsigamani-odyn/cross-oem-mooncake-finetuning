@@ -1,0 +1,11 @@
+{
+  "test": "SCP/rsync",
+  "path": "File-transfer baseline",
+  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b-baseline/transfer_tests/scp_rsync_file_transfer_baseline.json",
+  "details": {
+    "success": true,
+    "bytes_transferred": 18039859,
+    "elapsed_seconds": 0.6435582499834709,
+    "throughput_bytes_per_second": 28031431.49895652
+  }
+}

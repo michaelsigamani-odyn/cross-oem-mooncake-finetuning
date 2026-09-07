@@ -1,0 +1,86 @@
+Cross-OEM LoRA Migration Benchmark
+=================================
+
+Model: Qwen/Qwen2.5-0.5B
+Path: odyn-radeon2 -> migration -> odyn-dgx3
+
+TRAINING
+                             NVIDIA SOURCE      AMD TARGET      END-TO-END
+                              odyn-radeon2       odyn-dgx3        MIGRATED
+--------------------------------------------------------------------------
+Backend                                AMD          NVIDIA   AMD -> NVIDIA
+Start step                               0              10               0
+End step                                10              30              30
+Steps executed                          10              20              30
+Useful tokens                         1280            2560            3840
+Training runtime                    2.16 s          2.61 s          4.78 s
+Training tokens/sec                 591.75          979.31          803.83
+Wall-clock tokens/sec                                               595.11
+
+GPU / ENERGY
+                              odyn-radeon2       odyn-dgx3      END-TO-END
+--------------------------------------------------------------------------
+Mean GPU util                       12.50%          28.22%                
+Peak GPU util                       26.00%          63.00%                
+Peak accel memory                  1.45 GB         1.36 GB                
+Mean GPU power                     45.05 W         15.14 W                
+GPU energy (J)                     79.62 J         34.93 J        114.56 J
+GPU energy (Wh)                  0.0221 Wh       0.0097 Wh       0.0318 Wh
+GPU energy (kWh)              0.000022 kWh    0.000010 kWh    0.000032 kWh
+Tokens/joule                         16.08           73.28           33.52
+Electricity GBP/kWh                   0.27            0.27                
+Energy cost / 1M tokens           0.00 GBP        0.00 GBP        0.00 GBP
+
+Migration
+--------------------------------------------------------------------------
+Checkpoint size           0.02 GB
+iperf3 ceiling            941.34 Mbit/s
+rsync                     224.25 Mbit/s
+Mooncake                  569.17 Mbit/s
+Bytes transferred         18039859 B
+Effective bandwidth       569.17 Mbit/s
+Mooncake / TCP ceiling    60.46%
+Mooncake / rsync          253.81%
+
+Save checkpoint           0.26 s
+Transfer                  0.25 s
+Load checkpoint           0.18 s
+Resume -> first step      0.99 s
+Total migration           1.68 s
+Migration overhead        35.07%
+
+VALIDATION
+--------------------------------------------------------------------------
+Checkpoint continuity     PASS
+AMD -> NVIDIA resume       PASS
+Expected final step       30
+Actual final step         30
+Metrics complete          PASS
+Formula validation        PASS
+Control runs              PASS
+Benchmark valid           PASS
+Source power reason       AVAILABLE
+Target power reason       AVAILABLE
+
+CONTROL COMPARISON
+--------------------------------------------------------------------------
+Metric                         DGX only    Radeon only    DGX -> Radeon
+--------------------------------------------------------------------------
+Useful tokens                        1280           1280             3840
+Training runtime                   1.75 s         2.15 s           4.78 s
+Migration runtime                  0.00 s         0.00 s           1.68 s
+Wall-clock runtime                 1.75 s         2.15 s           6.45 s
+Training tok/s                     733.36         594.29           803.83
+Wall-clock tok/s                   733.36         594.29           595.11
+Energy J                            17.18          80.57           114.56
+Tokens/J                            60.23          13.00            33.52
+Energy cost / 1M tokens          0.00 GBP       0.00 GBP         0.00 GBP
+Migration overhead                  0.00%          0.00%           35.07%
+Training continuity                  PASS           PASS             PASS
+
+Standalone Benchmark
+------------------------------------------------
+| Machine | DP | Backend | Training tokens | Runtime | tok/s | Avg W | tok/J | kWh/M tokens | Energy cost/M tokens | Power source | Power samples |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---:|
+| Radeon | 1 | ROCm | 1280 | 2.15 | 594.29 | 45.71 | 13.0011 | 0.017485 | 0.004721 GBP | amd_smi | 6 |
+| DGX Spark (single) | 1 | CUDA | 1280 | 1.75 | 733.36 | 12.17 | 60.2349 | 0.003728 | 0.001007 GBP | nvml | 6 |

@@ -1,0 +1,56 @@
+2026-09-07T10:46:04Z START checkpoint_clean_local_stage
+host=local
+command=rm -rf /tmp/dgx3-to-mi300x-qwen25-05b/checkpoint-10
+timeout_seconds=600.0
+2026-09-07T10:46:04Z END checkpoint_clean_local_stage
+duration=0.008
+returncode=0
+2026-09-07T10:46:04Z START checkpoint_clean_destination
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'rm -rf /root/cross-vendor-mooncake-test/checkpoint-10'
+timeout_seconds=2400.0
+2026-09-07T10:46:05Z END checkpoint_clean_destination
+duration=0.743
+returncode=1
+2026-09-07T10:46:05Z START checkpoint_scp_source_to_local
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10' /tmp/dgx3-to-mi300x-qwen25-05b
+timeout_seconds=2400.0
+2026-09-07T10:46:09Z END checkpoint_scp_source_to_local
+duration=4.083
+returncode=0
+2026-09-07T10:46:09Z START checkpoint_scp_local_to_target
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r /tmp/dgx3-to-mi300x-qwen25-05b/checkpoint-10 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=2400.0
+2026-09-07T10:46:16Z END checkpoint_scp_local_to_target
+duration=7.118
+returncode=0
+2026-09-07T10:46:16Z START manifest_source
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 ~/cross-vendor-mooncake-test/checkpoint_io.py --mode manifest --checkpoint-a ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10 --output /tmp/source_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json'
+timeout_seconds=2400.0
+2026-09-07T10:46:17Z END manifest_source
+duration=0.258
+returncode=0
+2026-09-07T10:46:17Z START manifest_destination
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python ~/cross-vendor-mooncake-test/checkpoint_io.py --mode manifest --checkpoint-a ~/cross-vendor-mooncake-test/checkpoint-10 --output /tmp/destination_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json'
+timeout_seconds=2400.0
+2026-09-07T10:46:17Z END manifest_destination
+duration=0.881
+returncode=0
+2026-09-07T10:46:17Z START manifest_pull_source
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3:/tmp/source_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json /tmp/source_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json
+timeout_seconds=2400.0
+2026-09-07T10:46:18Z END manifest_pull_source
+duration=0.293
+returncode=0
+2026-09-07T10:46:18Z START manifest_pull_destination
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael:/tmp/destination_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json /tmp/destination_manifest_dgx3-to-mi300x-qwen25-05b_10_1788777976.json
+timeout_seconds=2400.0
+2026-09-07T10:46:19Z END manifest_pull_destination
+duration=1.249
+returncode=0

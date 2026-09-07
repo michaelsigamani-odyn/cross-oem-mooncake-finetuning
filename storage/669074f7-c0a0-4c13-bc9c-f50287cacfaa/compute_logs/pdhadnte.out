@@ -1,0 +1,21 @@
+2026-09-07T10:29:27Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/checkpoint-10/checkpoint_meta.json'
+timeout_seconds=600.0
+2026-09-07T10:29:27Z END command
+duration=0.204
+returncode=0
+2026-09-07T10:29:27Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'test -e ~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json'
+timeout_seconds=600.0
+2026-09-07T10:29:27Z END command
+duration=0.197
+returncode=0
+2026-09-07T10:29:27Z START command
+host=local
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/amd_run_dgx3-to-mi300x-qwen25-05b/run_summary.json' /tmp/finetuning_pull_dgx3-to-mi300x-qwen25-05b_1788776967701.json
+timeout_seconds=600.0
+2026-09-07T10:29:28Z END command
+duration=0.319
+returncode=0

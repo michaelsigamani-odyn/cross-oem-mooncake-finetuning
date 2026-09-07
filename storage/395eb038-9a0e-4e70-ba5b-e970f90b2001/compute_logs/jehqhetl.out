@@ -1,0 +1,168 @@
+2026-09-07T11:31:13Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:14Z END command
+duration=0.288
+returncode=0
+2026-09-07T11:31:14Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:15Z END command
+duration=1.180
+returncode=0
+2026-09-07T11:31:15Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/requirements.txt 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:15Z END command
+duration=0.507
+returncode=0
+2026-09-07T11:31:15Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/train_lora_migration.py 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:16Z END command
+duration=0.305
+returncode=0
+2026-09-07T11:31:16Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/train_lora_migration.py 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:17Z END command
+duration=1.212
+returncode=0
+2026-09-07T11:31:17Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/train_lora_migration.py 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:17Z END command
+duration=0.552
+returncode=0
+2026-09-07T11:31:17Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/validate_resume.py 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:18Z END command
+duration=0.286
+returncode=0
+2026-09-07T11:31:18Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/validate_resume.py 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:19Z END command
+duration=1.199
+returncode=0
+2026-09-07T11:31:19Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/validate_resume.py 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:19Z END command
+duration=0.508
+returncode=0
+2026-09-07T11:31:19Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/checkpoint_io.py 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:20Z END command
+duration=0.277
+returncode=0
+2026-09-07T11:31:20Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/checkpoint_io.py 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:21Z END command
+duration=1.152
+returncode=0
+2026-09-07T11:31:21Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/checkpoint_io.py 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:21Z END command
+duration=0.519
+returncode=0
+2026-09-07T11:31:21Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/mooncake_tcp_agent.py 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:22Z END command
+duration=0.329
+returncode=0
+2026-09-07T11:31:22Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/mooncake_tcp_agent.py 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:23Z END command
+duration=1.180
+returncode=0
+2026-09-07T11:31:23Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/mooncake_tcp_agent.py 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/'
+timeout_seconds=600.0
+2026-09-07T11:31:23Z END command
+duration=0.521
+returncode=0
+2026-09-07T11:31:23Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p ~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:23Z END command
+duration=0.179
+returncode=0
+2026-09-07T11:31:23Z START command
+host=michael@odyn-dgx3
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/data/quant_mentor_500_alpaca.jsonl 'michael@odyn-dgx3:~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:24Z END command
+duration=0.461
+returncode=0
+2026-09-07T11:31:24Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'mkdir -p ~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:25Z END command
+duration=0.779
+returncode=0
+2026-09-07T11:31:25Z START command
+host=runpod-mi300x-michael
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/data/quant_mentor_500_alpaca.jsonl 'runpod-mi300x-michael:~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:26Z END command
+duration=1.591
+returncode=0
+2026-09-07T11:31:26Z START command
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'mkdir -p ~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:27Z END command
+duration=0.420
+returncode=0
+2026-09-07T11:31:27Z START command
+host=michael@odyn-radeon2
+command=sshpass -e scp -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 -r /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/data/quant_mentor_500_alpaca.jsonl 'michael@odyn-radeon2:~/cross-vendor-mooncake-test/data'
+timeout_seconds=600.0
+2026-09-07T11:31:27Z END command
+duration=0.703
+returncode=0
+2026-09-07T11:31:27Z START sync_install
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'IS_VENV=$(/usr/bin/python3.12 -c "import sys; print(1 if sys.prefix != sys.base_prefix else 0)"); if [ "$IS_VENV" = "1" ]; then /usr/bin/python3.12 -m pip install -U pip && /usr/bin/python3.12 -m pip install -r ~/cross-vendor-mooncake-test/requirements.txt; else /usr/bin/python3.12 -m pip --version >/dev/null 2>&1 || (printf %s michael | sudo -S -k apt-get update && printf %s michael | sudo -S -k apt-get install -y python3-pip) && /usr/bin/python3.12 -m pip install --user --break-system-packages -U pip && /usr/bin/python3.12 -m pip install --user --break-system-packages -r ~/cross-vendor-mooncake-test/requirements.txt; fi'
+timeout_seconds=2400.0
+2026-09-07T11:31:28Z END sync_install
+duration=0.924
+returncode=0
+2026-09-07T11:31:28Z START sync_install
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'IS_VENV=$(/workspace/venvs/py312-rocm/bin/python -c "import sys; print(1 if sys.prefix != sys.base_prefix else 0)"); if [ "$IS_VENV" = "1" ]; then /workspace/venvs/py312-rocm/bin/python -m pip install -U pip && /workspace/venvs/py312-rocm/bin/python -m pip install -r ~/cross-vendor-mooncake-test/requirements.txt; else /workspace/venvs/py312-rocm/bin/python -m pip --version >/dev/null 2>&1 || (printf %s michael | sudo -S -k apt-get update && printf %s michael | sudo -S -k apt-get install -y python3-pip) && /workspace/venvs/py312-rocm/bin/python -m pip install --user --break-system-packages -U pip && /workspace/venvs/py312-rocm/bin/python -m pip install --user --break-system-packages -r ~/cross-vendor-mooncake-test/requirements.txt; fi && /workspace/venvs/py312-rocm/bin/python -c "import torch" || /workspace/venvs/py312-rocm/bin/python -m pip install --index-url https://download.pytorch.org/whl/rocm6.3 torch==2.9.1+rocm6.3'
+timeout_seconds=2400.0
+2026-09-07T11:32:17Z END sync_install
+duration=48.474
+returncode=0
+2026-09-07T11:32:17Z START sync_install
+host=michael@odyn-radeon2
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-radeon2 'IS_VENV=$(/home/michael/torch-env/bin/python -c "import sys; print(1 if sys.prefix != sys.base_prefix else 0)"); if [ "$IS_VENV" = "1" ]; then /home/michael/torch-env/bin/python -m pip install -U pip && /home/michael/torch-env/bin/python -m pip install -r ~/cross-vendor-mooncake-test/requirements.txt; else /home/michael/torch-env/bin/python -m pip --version >/dev/null 2>&1 || (printf %s michael | sudo -S -k apt-get update && printf %s michael | sudo -S -k apt-get install -y python3-pip) && /home/michael/torch-env/bin/python -m pip install --user --break-system-packages -U pip && /home/michael/torch-env/bin/python -m pip install --user --break-system-packages -r ~/cross-vendor-mooncake-test/requirements.txt; fi'
+timeout_seconds=2400.0
+2026-09-07T11:32:18Z END sync_install
+duration=1.019
+returncode=0

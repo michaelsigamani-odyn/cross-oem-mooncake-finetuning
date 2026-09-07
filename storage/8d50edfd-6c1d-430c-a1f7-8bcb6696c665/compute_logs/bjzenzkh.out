@@ -1,0 +1,91 @@
+2026-09-07T10:40:18Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'nohup iperf3 -s -1 -J >/tmp/iperf3_server_dgx3-to-mi300x-qwen25-05b_10_1788777618861.json 2>&1 & echo $! > /tmp/iperf3_server_dgx3-to-mi300x-qwen25-05b_10_1788777618861.pid'
+timeout_seconds=600.0
+2026-09-07T10:40:19Z END command
+duration=0.745
+returncode=0
+2026-09-07T10:40:20Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'iperf3 -c runpod-mi300x-michael -J -t 10'
+timeout_seconds=600.0
+2026-09-07T10:40:22Z END command
+duration=2.217
+returncode=1
+2026-09-07T10:40:22Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'test -f /tmp/iperf3_server_dgx3-to-mi300x-qwen25-05b_10_1788777618861.pid && kill $(cat /tmp/iperf3_server_dgx3-to-mi300x-qwen25-05b_10_1788777618861.pid) >/dev/null 2>&1 || true'
+timeout_seconds=600.0
+2026-09-07T10:40:23Z END command
+duration=0.764
+returncode=0
+2026-09-07T10:40:23Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'mkdir -p '"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/rsync_benchmark_dgx3-to-mi300x-qwen25-05b_10_1788777623591'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:24Z END command
+duration=0.787
+returncode=0
+2026-09-07T10:40:24Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && touch "$HOME/.ssh/known_hosts" && chmod 600 "$HOME/.ssh/known_hosts" && (ssh-keygen -F runpod-mi300x-michael -f "$HOME/.ssh/known_hosts" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> "$HOME/.ssh/known_hosts")'
+timeout_seconds=600.0
+2026-09-07T10:40:24Z END command
+duration=0.222
+returncode=1
+2026-09-07T10:40:26Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && touch "$HOME/.ssh/known_hosts" && chmod 600 "$HOME/.ssh/known_hosts" && (ssh-keygen -F runpod-mi300x-michael -f "$HOME/.ssh/known_hosts" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> "$HOME/.ssh/known_hosts")'
+timeout_seconds=600.0
+2026-09-07T10:40:26Z END command
+duration=0.210
+returncode=1
+2026-09-07T10:40:28Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && touch "$HOME/.ssh/known_hosts" && chmod 600 "$HOME/.ssh/known_hosts" && (ssh-keygen -F runpod-mi300x-michael -f "$HOME/.ssh/known_hosts" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> "$HOME/.ssh/known_hosts")'
+timeout_seconds=600.0
+2026-09-07T10:40:29Z END command
+duration=0.204
+returncode=1
+2026-09-07T10:40:31Z START command
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh" && touch "$HOME/.ssh/known_hosts" && chmod 600 "$HOME/.ssh/known_hosts" && (ssh-keygen -F runpod-mi300x-michael -f "$HOME/.ssh/known_hosts" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> "$HOME/.ssh/known_hosts")'
+timeout_seconds=600.0
+2026-09-07T10:40:31Z END command
+duration=0.205
+returncode=1
+2026-09-07T10:40:31Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael 'rm -rf '"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/rsync_benchmark_dgx3-to-mi300x-qwen25-05b_10_1788777623591'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:32Z END command
+duration=0.796
+returncode=0
+2026-09-07T10:40:32Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "iperf3",\n  "path": "Maximum TCP capability",\n  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",\n  "details": {\n    "success": false,\n    "error": "{\\n\\t\\"start\\":\\t{\\n\\t\\t\\"connected\\":\\t[],\\n\\t\\t\\"version\\":\\t\\"iperf 3.16\\",\\n\\t\\t\\"system_info\\":\\t\\"Linux odyn-dgx3 6.17.0-1029-nvidia #29-Ubuntu SMP PREEMPT_DYNAMIC Wed Jul  1 00:13:52 UTC 2026 aarch64\\"\\n\\t},\\n\\t\\"intervals\\":\\t[],\\n\\t\\"end\\":\\t{\\n\\t},\\n\\t\\"error\\":\\t\\"unable to connect to server - server may have stopped running or use a different port, firewall issue, etc.: Resource temporarily unavailable\\"\\n}",\n    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:32Z END command
+duration=0.826
+returncode=0
+2026-09-07T10:40:32Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "SCP/rsync",\n  "path": "File-transfer baseline",\n  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",\n  "details": {\n    "success": false,\n    "error": "command failed: sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 \'"'"'"'"'"'"'"'"'mkdir -p \\"$HOME/.ssh\\" && chmod 700 \\"$HOME/.ssh\\" && touch \\"$HOME/.ssh/known_hosts\\" && chmod 600 \\"$HOME/.ssh/known_hosts\\" && (ssh-keygen -F runpod-mi300x-michael -f \\"$HOME/.ssh/known_hosts\\" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> \\"$HOME/.ssh/known_hosts\\")\'"'"'"'"'"'"'"'"'\\nexit=1\\nstdout=\\nstderr=getaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\n",\n    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:33Z END command
+duration=0.873
+returncode=0
+2026-09-07T10:40:33Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "test": "Mooncake TCP",\n  "path": "Mooncake application path",\n  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",\n  "details": {\n    "backend": "scp",\n    "success": true,\n    "bytes_transferred": 18039793,\n    "elapsed_seconds": 11.657672250003088,\n    "throughput_bytes_per_second": 1547460.9864756851,\n    "manifest_path": "",\n    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:34Z END command
+duration=0.864
+returncode=0
+2026-09-07T10:40:34Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import pathlib; p=pathlib.Path('"'"'"'"'"'"'"'"'~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/transfer_test_matrix.json'"'"'"'"'"'"'"'"').expanduser(); p.parent.mkdir(parents=True, exist_ok=True); p.write_text('"'"'"'"'"'"'"'"'{\n  "tests": [\n    {\n      "test": "iperf3",\n      "path": "Maximum TCP capability",\n      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",\n      "details": {\n        "success": false,\n        "error": "{\\n\\t\\"start\\":\\t{\\n\\t\\t\\"connected\\":\\t[],\\n\\t\\t\\"version\\":\\t\\"iperf 3.16\\",\\n\\t\\t\\"system_info\\":\\t\\"Linux odyn-dgx3 6.17.0-1029-nvidia #29-Ubuntu SMP PREEMPT_DYNAMIC Wed Jul  1 00:13:52 UTC 2026 aarch64\\"\\n\\t},\\n\\t\\"intervals\\":\\t[],\\n\\t\\"end\\":\\t{\\n\\t},\\n\\t\\"error\\":\\t\\"unable to connect to server - server may have stopped running or use a different port, firewall issue, etc.: Resource temporarily unavailable\\"\\n}",\n        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n      }\n    },\n    {\n      "test": "SCP/rsync",\n      "path": "File-transfer baseline",\n      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",\n      "details": {\n        "success": false,\n        "error": "command failed: sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 \'"'"'"'"'"'"'"'"'mkdir -p \\"$HOME/.ssh\\" && chmod 700 \\"$HOME/.ssh\\" && touch \\"$HOME/.ssh/known_hosts\\" && chmod 600 \\"$HOME/.ssh/known_hosts\\" && (ssh-keygen -F runpod-mi300x-michael -f \\"$HOME/.ssh/known_hosts\\" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> \\"$HOME/.ssh/known_hosts\\")\'"'"'"'"'"'"'"'"'\\nexit=1\\nstdout=\\nstderr=getaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\\n",\n        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n      }\n    },\n    {\n      "test": "Mooncake TCP",\n      "path": "Mooncake application path",\n      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",\n      "details": {\n        "backend": "scp",\n        "success": true,\n        "bytes_transferred": 18039793,\n        "elapsed_seconds": 11.657672250003088,\n        "throughput_bytes_per_second": 1547460.9864756851,\n        "manifest_path": "",\n        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n      }\n    }\n  ],\n  "comparison": {\n    "mooncake_vs_iperf_percent": null,\n    "mooncake_vs_rsync_percent": null\n  },\n  "machines": {\n    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",\n    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"\n  }\n}'"'"'"'"'"'"'"'"')'"'"''
+timeout_seconds=600.0
+2026-09-07T10:40:35Z END command
+duration=0.866
+returncode=0

@@ -1,0 +1,40 @@
+2026-09-07T10:34:27Z START probe_source_torch_transformers_michael@odyn-dgx3
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'import json,torch,transformers; print(json.dumps({'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"': torch.__version__, '"'"'"'"'"'"'"'"'transformers_version'"'"'"'"'"'"'"'"': transformers.__version__}))'"'"''
+timeout_seconds=180.0
+2026-09-07T10:34:29Z END probe_source_torch_transformers_michael@odyn-dgx3
+duration=2.195
+returncode=0
+2026-09-07T10:34:29Z START probe_target_torch_transformers_runpod-mi300x-michael
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import json,torch,transformers; print(json.dumps({'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"': torch.__version__, '"'"'"'"'"'"'"'"'transformers_version'"'"'"'"'"'"'"'"': transformers.__version__}))'"'"''
+timeout_seconds=180.0
+2026-09-07T10:35:40Z END probe_target_torch_transformers_runpod-mi300x-michael
+duration=70.660
+returncode=0
+2026-09-07T10:35:40Z START probe_target_architecture_runpod-mi300x-michael
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'import json,re,subprocess,torch;run=lambda cmd: ((lambda p: p.stdout)(__import__('"'"'"'"'"'"'"'"'subprocess'"'"'"'"'"'"'"'"').run(cmd, check=False, text=True, capture_output=True)) if __import__('"'"'"'"'"'"'"'"'shutil'"'"'"'"'"'"'"'"').which(cmd[0]) else '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"');roc=run(['"'"'"'"'"'"'"'"'rocminfo'"'"'"'"'"'"'"'"']);gfx=re.search(r'"'"'"'"'"'"'"'"'(gfx[0-9a-zA-Z]+)'"'"'"'"'"'"'"'"', roc);nvs=run(['"'"'"'"'"'"'"'"'nvidia-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--query-gpu=compute_cap'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--format=csv,noheader'"'"'"'"'"'"'"'"']);cc=re.search(r'"'"'"'"'"'"'"'"'(\d+)\.(\d+)'"'"'"'"'"'"'"'"', nvs);runtime=(gfx.group(1) if gfx else ('"'"'"'"'"'"'"'"'sm_%s%s'"'"'"'"'"'"'"'"' % (cc.group(1), cc.group(2)) if cc else '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'));runtime=runtime.split('"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"', 1)[0];arches=[];
+try:
+ arches=[str(x) for x in torch.cuda.get_arch_list()]
+except Exception:
+ arches=[]
+
+if (not runtime):
+
+ try:
+
+  if torch.cuda.is_available():
+
+   prop=torch.cuda.get_device_properties(0);
+   gcn=str(getattr(prop, '"'"'"'"'"'"'"'"'gcnArchName'"'"'"'"'"'"'"'"', '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')).split('"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"', 1)[0];
+   cap=getattr(torch.cuda, '"'"'"'"'"'"'"'"'get_device_capability'"'"'"'"'"'"'"'"', lambda *_: (0, 0))(0);
+   runtime=gcn or ('"'"'"'"'"'"'"'"'sm_%s%s'"'"'"'"'"'"'"'"' % (cap[0], cap[1]) if cap != (0, 0) else '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"');
+ except Exception:
+
+  runtime='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+print(json.dumps({'"'"'"'"'"'"'"'"'runtime_gpu_arch'"'"'"'"'"'"'"'"': runtime, '"'"'"'"'"'"'"'"'torch_arch_list'"'"'"'"'"'"'"'"': arches}))'"'"''
+timeout_seconds=180.0
+2026-09-07T10:36:23Z END probe_target_architecture_runpod-mi300x-michael
+duration=42.591
+returncode=0

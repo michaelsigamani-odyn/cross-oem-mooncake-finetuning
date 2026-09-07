@@ -1,0 +1,236 @@
+2026-09-07T10:29:00Z START probe_kernel_preflight_michael@odyn-dgx3
+host=michael@odyn-dgx3
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 '/usr/bin/python3.12 -c '"'"'
+import json,math,os,platform,re,shutil,socket,subprocess,torch
+run=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True)
+num=lambda text: (lambda m: (None if not m else float(m.group(0))))(re.search(r'"'"'"'"'"'"'"'"'-?\d+(?:\.\d+)?'"'"'"'"'"'"'"'"', str(text or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')))
+ver=lambda text: (lambda m: (m.group(0) if m else None))(re.search(r'"'"'"'"'"'"'"'"'\d+(?:\.\d+)+'"'"'"'"'"'"'"'"', str(text or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')))
+ok=lambda value: (value is not None and math.isfinite(value) and value>0)
+gpu_detected=bool(torch.cuda.is_available())
+hip=getattr(torch.version,'"'"'"'"'"'"'"'"'hip'"'"'"'"'"'"'"'"',None)
+cuda=getattr(torch.version,'"'"'"'"'"'"'"'"'cuda'"'"'"'"'"'"'"'"',None)
+vendor=('"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"' if hip else ('"'"'"'"'"'"'"'"'nvidia'"'"'"'"'"'"'"'"' if cuda else '"'"'"'"'"'"'"'"'unknown'"'"'"'"'"'"'"'"'))
+hostname=socket.gethostname()
+device_name=torch.cuda.get_device_name(0) if gpu_detected else None
+runtime='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+roc_text='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+try:
+ roc=run(['"'"'"'"'"'"'"'"'rocminfo'"'"'"'"'"'"'"'"']); roc_text=roc.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+except Exception:
+ roc_text='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+m=re.search(r'"'"'"'"'"'"'"'"'(gfx[0-9a-zA-Z]+)'"'"'"'"'"'"'"'"', roc_text)
+runtime=(m.group(1) if m else runtime)
+if (not runtime) and gpu_detected:
+ try:
+  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'"'"'"'"'"'"'"'"'gcnArchName'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')).split('"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"',1)[0]
+ except Exception:
+  runtime=runtime
+if (not runtime) and gpu_detected and cuda:
+ try:
+  cap=torch.cuda.get_device_capability(0); runtime='"'"'"'"'"'"'"'"'sm_%s%s'"'"'"'"'"'"'"'"' % (cap[0], cap[1])
+ except Exception:
+  runtime=runtime
+total_memory=None
+if gpu_detected:
+ try:
+  total_memory=int(getattr(torch.cuda.get_device_properties(0),'"'"'"'"'"'"'"'"'total_memory'"'"'"'"'"'"'"'"',0)) or None
+ except Exception:
+  total_memory=None
+def probe(cmd):
+ try:
+  out=run(cmd)
+  return {'"'"'"'"'"'"'"'"'command'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"' '"'"'"'"'"'"'"'"'.join(cmd),'"'"'"'"'"'"'"'"'returncode'"'"'"'"'"'"'"'"':out.returncode,'"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"':(out.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip(),'"'"'"'"'"'"'"'"'stderr'"'"'"'"'"'"'"'"':(out.stderr or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip()}
+ except Exception as exc:
+  return {'"'"'"'"'"'"'"'"'command'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"' '"'"'"'"'"'"'"'"'.join(cmd),'"'"'"'"'"'"'"'"'returncode'"'"'"'"'"'"'"'"':127,'"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'stderr'"'"'"'"'"'"'"'"':str(exc)}
+rocm_driver=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--showdriverversion'"'"'"'"'"'"'"'"'])
+rocm_version_tool=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'-v'"'"'"'"'"'"'"'"'])
+rocm_power=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--showpower'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"'])
+rocm_payload={}
+try:
+ rocm_payload=json.loads(rocm_power['"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"']) if rocm_power['"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"'] else {}
+except Exception:
+ rocm_payload={}
+cards=[v for k,v in rocm_payload.items() if str(k).startswith('"'"'"'"'"'"'"'"'card'"'"'"'"'"'"'"'"') and isinstance(v,dict)]
+card=(cards[0] if cards else {})
+rocm_values=[num(v) for k,v in card.items() if '"'"'"'"'"'"'"'"'Power'"'"'"'"'"'"'"'"' in str(k)]
+rocm_watts=next((v for v in rocm_values if ok(v)),None)
+amd_bin=next((p for p in [shutil.which('"'"'"'"'"'"'"'"'amd-smi'"'"'"'"'"'"'"'"'),'"'"'"'"'"'"'"'"'/opt/rocm/bin/amd-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'/opt/rocm-5.7.0/bin/amd-smi'"'"'"'"'"'"'"'"'] if p and os.path.exists(p)),None)
+amd_version=probe([amd_bin,'"'"'"'"'"'"'"'"'version'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"']) if amd_bin else {'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'amd-smi binary not found'"'"'"'"'"'"'"'"'}
+amd_power=probe([amd_bin,'"'"'"'"'"'"'"'"'metric'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"']) if amd_bin else {'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'amd-smi binary not found'"'"'"'"'"'"'"'"'}
+amd_payload={}
+try:
+ amd_payload=json.loads(amd_power.get('"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"') or '"'"'"'"'"'"'"'"'{}'"'"'"'"'"'"'"'"')
+except Exception:
+ amd_payload={}
+amd_fields=[amd_payload.get('"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"',{}),amd_payload]
+amd_values=[num(item.get(k)) for item in amd_fields if isinstance(item,dict) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"']]
+amd_cli_watts=next((v for v in amd_values if ok(v)),None)
+api={'"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"':None}
+if vendor=='"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"':
+ try:
+  import amdsmi
+  amdsmi.amdsmi_init(); hs=amdsmi.amdsmi_get_processor_handles(); h=(hs[0] if hs else None)
+  api['"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"']=True; api['"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"']=bool(h)
+  if h is not None:
+   api['"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"']=str(amdsmi.amdsmi_get_gpu_driver_version(h))
+   try: api['"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"']=amdsmi.amdsmi_get_power_info(h)
+   except Exception as exc: api['"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"']=f'"'"'"'"'"'"'"'"'error:{exc}'"'"'"'"'"'"'"'"'
+   try: api['"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"']=amdsmi.amdsmi_get_gpu_metrics_info(h)
+   except Exception as exc: api['"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"']=f'"'"'"'"'"'"'"'"'error:{exc}'"'"'"'"'"'"'"'"'
+   values=[num(str((api.get('"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"') or {}).get(k,'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"'] if isinstance(api.get('"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"'),dict)]
+   values+= [num(str((api.get('"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"') or {}).get(k,'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'gfx_power'"'"'"'"'"'"'"'"'] if isinstance(api.get('"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"'),dict)]
+   api['"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"']=next((v for v in values if ok(v)),None)
+  if api['"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"'] is None: api['"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"']='"'"'"'"'"'"'"'"'amdsmi API returned no numeric socket power'"'"'"'"'"'"'"'"'
+ except Exception as exc:
+  api={'"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':str(exc),'"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"':None}
+power_source=None
+power_reason=None
+power_watts=None
+if vendor=='"'"'"'"'"'"'"'"'nvidia'"'"'"'"'"'"'"'"':
+ p=run(['"'"'"'"'"'"'"'"'nvidia-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--query-gpu=power.draw'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--format=csv,noheader,nounits'"'"'"'"'"'"'"'"'])
+ value=num((p.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip())
+ power_watts=value if ok(value) else None
+ power_source='"'"'"'"'"'"'"'"'nvidia_smi_power_draw'"'"'"'"'"'"'"'"' if power_watts is not None else None
+ power_reason=(None if power_watts is not None else (p.stderr.strip() or p.stdout.strip() or '"'"'"'"'"'"'"'"'nvidia-smi unavailable'"'"'"'"'"'"'"'"'))
+elif vendor=='"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"':
+ if ok(api.get('"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"')):
+  power_watts=api.get('"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"'); power_source='"'"'"'"'"'"'"'"'amdsmi_api_current_socket_power'"'"'"'"'"'"'"'"'
+ elif ok(amd_cli_watts):
+  power_watts=amd_cli_watts; power_source='"'"'"'"'"'"'"'"'amd_smi_cli_current_power'"'"'"'"'"'"'"'"'
+ elif ok(rocm_watts):
+  power_watts=rocm_watts; power_source='"'"'"'"'"'"'"'"'rocm_smi_average_graphics_package_power'"'"'"'"'"'"'"'"'
+ if power_watts is None:
+  power_reason='"'"'"'"'"'"'"'"'AMD SMI API, amd-smi and rocm-smi returned no numeric MI300X power telemetry'"'"'"'"'"'"'"'"'
+else:
+ power_reason='"'"'"'"'"'"'"'"'vendor not detected'"'"'"'"'"'"'"'"'
+payload={'"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"':hostname,'"'"'"'"'"'"'"'"'gpu_vendor'"'"'"'"'"'"'"'"':vendor,'"'"'"'"'"'"'"'"'gpu_model'"'"'"'"'"'"'"'"':device_name,'"'"'"'"'"'"'"'"'gpu_architecture'"'"'"'"'"'"'"'"':runtime or None,'"'"'"'"'"'"'"'"'gpu_device_count'"'"'"'"'"'"'"'"':(int(torch.cuda.device_count()) if gpu_detected else 0),'"'"'"'"'"'"'"'"'total_gpu_memory_bytes'"'"'"'"'"'"'"'"':total_memory,'"'"'"'"'"'"'"'"'rocm_version'"'"'"'"'"'"'"'"':hip,'"'"'"'"'"'"'"'"'amd_driver_version'"'"'"'"'"'"'"'"':api.get('"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"') or ver(str(rocm_driver.get('"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))),'"'"'"'"'"'"'"'"'amd_smi_version'"'"'"'"'"'"'"'"':amd_version,'"'"'"'"'"'"'"'"'rocm_smi_version'"'"'"'"'"'"'"'"':rocm_version_tool,'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"':torch.__version__,'"'"'"'"'"'"'"'"'python_version'"'"'"'"'"'"'"'"':platform.python_version(),'"'"'"'"'"'"'"'"'gpu_detected'"'"'"'"'"'"'"'"':gpu_detected,'"'"'"'"'"'"'"'"'power_telemetry_available'"'"'"'"'"'"'"'"':bool(power_watts is not None),'"'"'"'"'"'"'"'"'power_telemetry_reason'"'"'"'"'"'"'"'"':power_reason,'"'"'"'"'"'"'"'"'power_telemetry_source'"'"'"'"'"'"'"'"':power_source,'"'"'"'"'"'"'"'"'power_telemetry_value_watts'"'"'"'"'"'"'"'"':power_watts,'"'"'"'"'"'"'"'"'amd_smi_api_test'"'"'"'"'"'"'"'"':api,'"'"'"'"'"'"'"'"'amd_smi_cli_test'"'"'"'"'"'"'"'"':amd_power,'"'"'"'"'"'"'"'"'rocm_smi_test'"'"'"'"'"'"'"'"':rocm_power,'"'"'"'"'"'"'"'"'hip_version'"'"'"'"'"'"'"'"':hip,'"'"'"'"'"'"'"'"'cuda_version'"'"'"'"'"'"'"'"':cuda,'"'"'"'"'"'"'"'"'torch_arch_list'"'"'"'"'"'"'"'"':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]}
+if not gpu_detected:
+ payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'torch.cuda.is_available() is false'"'"'"'"'"'"'"'"'}); print(json.dumps(payload)); raise SystemExit(0)
+try:
+ x=torch.ones(1024, device='"'"'"'"'"'"'"'"'cuda'"'"'"'"'"'"'"'"'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'kernel_result'"'"'"'"'"'"'"'"':y,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':None})
+except Exception as exc:
+ payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':str(exc).splitlines()[0]})
+print(json.dumps(payload))
+'"'"''
+timeout_seconds=180.0
+2026-09-07T10:29:02Z END probe_kernel_preflight_michael@odyn-dgx3
+duration=2.293
+returncode=0
+2026-09-07T10:29:02Z START probe_kernel_preflight_runpod-mi300x-michael
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python -c '"'"'
+import json,math,os,platform,re,shutil,socket,subprocess,torch
+run=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True)
+num=lambda text: (lambda m: (None if not m else float(m.group(0))))(re.search(r'"'"'"'"'"'"'"'"'-?\d+(?:\.\d+)?'"'"'"'"'"'"'"'"', str(text or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')))
+ver=lambda text: (lambda m: (m.group(0) if m else None))(re.search(r'"'"'"'"'"'"'"'"'\d+(?:\.\d+)+'"'"'"'"'"'"'"'"', str(text or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')))
+ok=lambda value: (value is not None and math.isfinite(value) and value>0)
+gpu_detected=bool(torch.cuda.is_available())
+hip=getattr(torch.version,'"'"'"'"'"'"'"'"'hip'"'"'"'"'"'"'"'"',None)
+cuda=getattr(torch.version,'"'"'"'"'"'"'"'"'cuda'"'"'"'"'"'"'"'"',None)
+vendor=('"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"' if hip else ('"'"'"'"'"'"'"'"'nvidia'"'"'"'"'"'"'"'"' if cuda else '"'"'"'"'"'"'"'"'unknown'"'"'"'"'"'"'"'"'))
+hostname=socket.gethostname()
+device_name=torch.cuda.get_device_name(0) if gpu_detected else None
+runtime='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+roc_text='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+try:
+ roc=run(['"'"'"'"'"'"'"'"'rocminfo'"'"'"'"'"'"'"'"']); roc_text=roc.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+except Exception:
+ roc_text='"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'
+m=re.search(r'"'"'"'"'"'"'"'"'(gfx[0-9a-zA-Z]+)'"'"'"'"'"'"'"'"', roc_text)
+runtime=(m.group(1) if m else runtime)
+if (not runtime) and gpu_detected:
+ try:
+  prop=torch.cuda.get_device_properties(0); runtime=str(getattr(prop,'"'"'"'"'"'"'"'"'gcnArchName'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"')).split('"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"',1)[0]
+ except Exception:
+  runtime=runtime
+if (not runtime) and gpu_detected and cuda:
+ try:
+  cap=torch.cuda.get_device_capability(0); runtime='"'"'"'"'"'"'"'"'sm_%s%s'"'"'"'"'"'"'"'"' % (cap[0], cap[1])
+ except Exception:
+  runtime=runtime
+total_memory=None
+if gpu_detected:
+ try:
+  total_memory=int(getattr(torch.cuda.get_device_properties(0),'"'"'"'"'"'"'"'"'total_memory'"'"'"'"'"'"'"'"',0)) or None
+ except Exception:
+  total_memory=None
+def probe(cmd):
+ try:
+  out=run(cmd)
+  return {'"'"'"'"'"'"'"'"'command'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"' '"'"'"'"'"'"'"'"'.join(cmd),'"'"'"'"'"'"'"'"'returncode'"'"'"'"'"'"'"'"':out.returncode,'"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"':(out.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip(),'"'"'"'"'"'"'"'"'stderr'"'"'"'"'"'"'"'"':(out.stderr or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip()}
+ except Exception as exc:
+  return {'"'"'"'"'"'"'"'"'command'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"' '"'"'"'"'"'"'"'"'.join(cmd),'"'"'"'"'"'"'"'"'returncode'"'"'"'"'"'"'"'"':127,'"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'stderr'"'"'"'"'"'"'"'"':str(exc)}
+rocm_driver=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--showdriverversion'"'"'"'"'"'"'"'"'])
+rocm_version_tool=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'-v'"'"'"'"'"'"'"'"'])
+rocm_power=probe(['"'"'"'"'"'"'"'"'rocm-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--showpower'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"'])
+rocm_payload={}
+try:
+ rocm_payload=json.loads(rocm_power['"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"']) if rocm_power['"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"'] else {}
+except Exception:
+ rocm_payload={}
+cards=[v for k,v in rocm_payload.items() if str(k).startswith('"'"'"'"'"'"'"'"'card'"'"'"'"'"'"'"'"') and isinstance(v,dict)]
+card=(cards[0] if cards else {})
+rocm_values=[num(v) for k,v in card.items() if '"'"'"'"'"'"'"'"'Power'"'"'"'"'"'"'"'"' in str(k)]
+rocm_watts=next((v for v in rocm_values if ok(v)),None)
+amd_bin=next((p for p in [shutil.which('"'"'"'"'"'"'"'"'amd-smi'"'"'"'"'"'"'"'"'),'"'"'"'"'"'"'"'"'/opt/rocm/bin/amd-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'/opt/rocm-5.7.0/bin/amd-smi'"'"'"'"'"'"'"'"'] if p and os.path.exists(p)),None)
+amd_version=probe([amd_bin,'"'"'"'"'"'"'"'"'version'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"']) if amd_bin else {'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'amd-smi binary not found'"'"'"'"'"'"'"'"'}
+amd_power=probe([amd_bin,'"'"'"'"'"'"'"'"'metric'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--json'"'"'"'"'"'"'"'"']) if amd_bin else {'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'amd-smi binary not found'"'"'"'"'"'"'"'"'}
+amd_payload={}
+try:
+ amd_payload=json.loads(amd_power.get('"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"') or '"'"'"'"'"'"'"'"'{}'"'"'"'"'"'"'"'"')
+except Exception:
+ amd_payload={}
+amd_fields=[amd_payload.get('"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"',{}),amd_payload]
+amd_values=[num(item.get(k)) for item in amd_fields if isinstance(item,dict) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"']]
+amd_cli_watts=next((v for v in amd_values if ok(v)),None)
+api={'"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"':None}
+if vendor=='"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"':
+ try:
+  import amdsmi
+  amdsmi.amdsmi_init(); hs=amdsmi.amdsmi_get_processor_handles(); h=(hs[0] if hs else None)
+  api['"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"']=True; api['"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"']=bool(h)
+  if h is not None:
+   api['"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"']=str(amdsmi.amdsmi_get_gpu_driver_version(h))
+   try: api['"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"']=amdsmi.amdsmi_get_power_info(h)
+   except Exception as exc: api['"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"']=f'"'"'"'"'"'"'"'"'error:{exc}'"'"'"'"'"'"'"'"'
+   try: api['"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"']=amdsmi.amdsmi_get_gpu_metrics_info(h)
+   except Exception as exc: api['"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"']=f'"'"'"'"'"'"'"'"'error:{exc}'"'"'"'"'"'"'"'"'
+   values=[num(str((api.get('"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"') or {}).get(k,'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'power'"'"'"'"'"'"'"'"'] if isinstance(api.get('"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"'),dict)]
+   values+= [num(str((api.get('"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"') or {}).get(k,'"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))) for k in ['"'"'"'"'"'"'"'"'current_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'average_socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'socket_power'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'gfx_power'"'"'"'"'"'"'"'"'] if isinstance(api.get('"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"'),dict)]
+   api['"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"']=next((v for v in values if ok(v)),None)
+  if api['"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"'] is None: api['"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"']='"'"'"'"'"'"'"'"'amdsmi API returned no numeric socket power'"'"'"'"'"'"'"'"'
+ except Exception as exc:
+  api={'"'"'"'"'"'"'"'"'tested'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'available'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'reason'"'"'"'"'"'"'"'"':str(exc),'"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'power_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'gpu_metrics_info'"'"'"'"'"'"'"'"':None,'"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"':None}
+power_source=None
+power_reason=None
+power_watts=None
+if vendor=='"'"'"'"'"'"'"'"'nvidia'"'"'"'"'"'"'"'"':
+ p=run(['"'"'"'"'"'"'"'"'nvidia-smi'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--query-gpu=power.draw'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"'--format=csv,noheader,nounits'"'"'"'"'"'"'"'"'])
+ value=num((p.stdout or '"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"').strip())
+ power_watts=value if ok(value) else None
+ power_source='"'"'"'"'"'"'"'"'nvidia_smi_power_draw'"'"'"'"'"'"'"'"' if power_watts is not None else None
+ power_reason=(None if power_watts is not None else (p.stderr.strip() or p.stdout.strip() or '"'"'"'"'"'"'"'"'nvidia-smi unavailable'"'"'"'"'"'"'"'"'))
+elif vendor=='"'"'"'"'"'"'"'"'amd'"'"'"'"'"'"'"'"':
+ if ok(api.get('"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"')):
+  power_watts=api.get('"'"'"'"'"'"'"'"'current_socket_power_watts'"'"'"'"'"'"'"'"'); power_source='"'"'"'"'"'"'"'"'amdsmi_api_current_socket_power'"'"'"'"'"'"'"'"'
+ elif ok(amd_cli_watts):
+  power_watts=amd_cli_watts; power_source='"'"'"'"'"'"'"'"'amd_smi_cli_current_power'"'"'"'"'"'"'"'"'
+ elif ok(rocm_watts):
+  power_watts=rocm_watts; power_source='"'"'"'"'"'"'"'"'rocm_smi_average_graphics_package_power'"'"'"'"'"'"'"'"'
+ if power_watts is None:
+  power_reason='"'"'"'"'"'"'"'"'AMD SMI API, amd-smi and rocm-smi returned no numeric MI300X power telemetry'"'"'"'"'"'"'"'"'
+else:
+ power_reason='"'"'"'"'"'"'"'"'vendor not detected'"'"'"'"'"'"'"'"'
+payload={'"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"':hostname,'"'"'"'"'"'"'"'"'gpu_vendor'"'"'"'"'"'"'"'"':vendor,'"'"'"'"'"'"'"'"'gpu_model'"'"'"'"'"'"'"'"':device_name,'"'"'"'"'"'"'"'"'gpu_architecture'"'"'"'"'"'"'"'"':runtime or None,'"'"'"'"'"'"'"'"'gpu_device_count'"'"'"'"'"'"'"'"':(int(torch.cuda.device_count()) if gpu_detected else 0),'"'"'"'"'"'"'"'"'total_gpu_memory_bytes'"'"'"'"'"'"'"'"':total_memory,'"'"'"'"'"'"'"'"'rocm_version'"'"'"'"'"'"'"'"':hip,'"'"'"'"'"'"'"'"'amd_driver_version'"'"'"'"'"'"'"'"':api.get('"'"'"'"'"'"'"'"'driver_version'"'"'"'"'"'"'"'"') or ver(str(rocm_driver.get('"'"'"'"'"'"'"'"'stdout'"'"'"'"'"'"'"'"','"'"'"'"'"'"'"'"''"'"'"'"'"'"'"'"'))),'"'"'"'"'"'"'"'"'amd_smi_version'"'"'"'"'"'"'"'"':amd_version,'"'"'"'"'"'"'"'"'rocm_smi_version'"'"'"'"'"'"'"'"':rocm_version_tool,'"'"'"'"'"'"'"'"'torch_version'"'"'"'"'"'"'"'"':torch.__version__,'"'"'"'"'"'"'"'"'python_version'"'"'"'"'"'"'"'"':platform.python_version(),'"'"'"'"'"'"'"'"'gpu_detected'"'"'"'"'"'"'"'"':gpu_detected,'"'"'"'"'"'"'"'"'power_telemetry_available'"'"'"'"'"'"'"'"':bool(power_watts is not None),'"'"'"'"'"'"'"'"'power_telemetry_reason'"'"'"'"'"'"'"'"':power_reason,'"'"'"'"'"'"'"'"'power_telemetry_source'"'"'"'"'"'"'"'"':power_source,'"'"'"'"'"'"'"'"'power_telemetry_value_watts'"'"'"'"'"'"'"'"':power_watts,'"'"'"'"'"'"'"'"'amd_smi_api_test'"'"'"'"'"'"'"'"':api,'"'"'"'"'"'"'"'"'amd_smi_cli_test'"'"'"'"'"'"'"'"':amd_power,'"'"'"'"'"'"'"'"'rocm_smi_test'"'"'"'"'"'"'"'"':rocm_power,'"'"'"'"'"'"'"'"'hip_version'"'"'"'"'"'"'"'"':hip,'"'"'"'"'"'"'"'"'cuda_version'"'"'"'"'"'"'"'"':cuda,'"'"'"'"'"'"'"'"'torch_arch_list'"'"'"'"'"'"'"'"':[str(x) for x in (torch.cuda.get_arch_list() if gpu_detected else [])]}
+if not gpu_detected:
+ payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'torch.cuda.is_available() is false'"'"'"'"'"'"'"'"'}); print(json.dumps(payload)); raise SystemExit(0)
+try:
+ x=torch.ones(1024, device='"'"'"'"'"'"'"'"'cuda'"'"'"'"'"'"'"'"'); y=(x*2).sum().item(); torch.cuda.synchronize(); payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':True,'"'"'"'"'"'"'"'"'kernel_result'"'"'"'"'"'"'"'"':y,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':None})
+except Exception as exc:
+ payload.update({'"'"'"'"'"'"'"'"'kernel_execution_test'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'training_allowed'"'"'"'"'"'"'"'"':False,'"'"'"'"'"'"'"'"'gpu_kernel_reason'"'"'"'"'"'"'"'"':str(exc).splitlines()[0]})
+print(json.dumps(payload))
+'"'"''
+timeout_seconds=180.0
+2026-09-07T10:29:26Z END probe_kernel_preflight_runpod-mi300x-michael
+duration=23.669
+returncode=0

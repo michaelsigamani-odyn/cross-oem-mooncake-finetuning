@@ -1,0 +1,161 @@
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - LOGS_CAPTURED - Capturing logs for process (pid: 13717).
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - STEP_START - Started execution of step "resume_on_target".
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - resume_on_target - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/c001883e-c48c-4b48-b32e-9a8bce8adc6a/settings_op/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - LOADED_INPUT - Loaded input "settings" using input manager "io_manager", from output "result" of step "settings_op"
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - resume_on_target - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/c001883e-c48c-4b48-b32e-9a8bce8adc6a/verify_transfer/result using PickledObjectFilesystemIOManager...
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - LOADED_INPUT - Loaded input "verified_transfer" using input manager "io_manager", from output "result" of step "verify_transfer"
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - STEP_INPUT - Got input "settings" of type "PortabilitySettings". (Type check passed).
+2026-09-07 11:16:21 +0100 - dagster - DEBUG - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - STEP_INPUT - Got input "verified_transfer" of type "TransferResult". (Type check passed).
+2026-09-07 11:25:38 +0100 - dagster - ERROR - finetuning_sequential_job - c001883e-c48c-4b48-b32e-9a8bce8adc6a - 13717 - resume_on_target - STEP_FAILURE - Execution of step "resume_on_target" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "resume_on_target"::
+
+RuntimeError: command failed: sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python ~/cross-vendor-mooncake-test/train_lora_migration.py --model-id Qwen/Qwen2.5-0.5B --dataset-path ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl --output-dir ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b --resume-from ~/cross-vendor-mooncake-test/checkpoint-10 --stop-step 30 --max-steps 30 --telemetry-interval-seconds 0.25'
+exit=1
+stdout=DISTRIBUTED_ENV {"GLOO_SOCKET_IFNAME": "", "LOCAL_RANK": "", "MASTER_ADDR": "", "MASTER_PORT": "", "NCCL_SOCKET_IFNAME": "", "NNODES": "", "NODE_RANK": "", "RANK": "", "WORLD_SIZE": "", "host_ip": "192.168.192.2", "hostname": "f3bab8d75c53"}
+ENV_DIAGNOSTICS {"cuda_available": true, "cuda_version": null, "gpu_name": "AMD Radeon Graphics", "hip_version": "6.3.42134-a9a80e791", "hostname": "f3bab8d75c53", "model_device": "cuda:0", "python_version": "3.12.14", "torch_version": "2.9.1+rocm6.3", "trainer_device": "cuda:0"}
+{'loss': '3.144', 'grad_norm': '1.502', 'learning_rate': '0', 'epoch': '0.022'}
+{'loss': '3.149', 'grad_norm': '1.506', 'learning_rate': '0.0001267', 'epoch': '0.024'}
+{'loss': '3.101', 'grad_norm': '1.545', 'learning_rate': '0.00012', 'epoch': '0.026'}
+{'loss': '3.069', 'grad_norm': '1.561', 'learning_rate': '0.0001133', 'epoch': '0.028'}
+{'loss': '3.02', 'grad_norm': '1.612', 'learning_rate': '0.0001067', 'epoch': '0.03'}
+{'loss': '2.986', 'grad_norm': '1.627', 'learning_rate': '0.0001', 'epoch': '0.032'}
+{'loss': '2.953', 'grad_norm': '1.672', 'learning_rate': '9.333e-05', 'epoch': '0.034'}
+{'loss': '2.923', 'grad_norm': '1.712', 'learning_rate': '8.667e-05', 'epoch': '0.036'}
+{'loss': '2.9', 'grad_norm': '1.714', 'learning_rate': '8e-05', 'epoch': '0.038'}
+{'loss': '2.858', 'grad_norm': '1.81', 'learning_rate': '7.333e-05', 'epoch': '0.04'}
+{'loss': '2.831', 'grad_norm': '1.869', 'learning_rate': '6.667e-05', 'epoch': '0.042'}
+{'loss': '2.806', 'grad_norm': '1.952', 'learning_rate': '6e-05', 'epoch': '0.044'}
+{'loss': '2.776', 'grad_norm': '1.966', 'learning_rate': '5.333e-05', 'epoch': '0.046'}
+{'loss': '2.758', 'grad_norm': '2.004', 'learning_rate': '4.667e-05', 'epoch': '0.048'}
+{'loss': '2.736', 'grad_norm': '2.036', 'learning_rate': '4e-05', 'epoch': '0.05'}
+{'loss': '2.716', 'grad_norm': '2.075', 'learning_rate': '3.333e-05', 'epoch': '0.052'}
+{'loss': '2.704', 'grad_norm': '2.094', 'learning_rate': '2.667e-05', 'epoch': '0.054'}
+{'loss': '2.683', 'grad_norm': '2.125', 'learning_rate': '2e-05', 'epoch': '0.056'}
+{'loss': '2.677', 'grad_norm': '2.142', 'learning_rate': '1.333e-05', 'epoch': '0.058'}
+{'loss': '2.672', 'grad_norm': '2.116', 'learning_rate': '6.667e-06', 'epoch': '0.06'}
+{'train_runtime': '11.07', 'train_samples_per_second': '2.71', 'train_steps_per_second': '2.71', 'train_loss': '1.915', 'epoch': '0.06'}
+
+stderr=Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Map:   0%|          | 0/500 [00:00<?, ? examples/s]
+Map: 100%|██████████| 500/500 [00:00<00:00, 3919.72 examples/s]
+Map: 100%|██████████| 500/500 [00:00<00:00, 3208.24 examples/s]
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 290/290 [00:00<00:00, 11520.85it/s]
+[transformers] Warning: The following arguments do not match the ones in the `trainer_state.json` within the checkpoint directory: 
+	save_steps: 30 (from args) != 10 (from trainer_state.json)
+
+  0%|          | 0/30 [00:00<?, ?it/s]
+ 37%|███▋      | 11/30 [00:07<00:13,  1.38it/s]
+                                               
+
+ 37%|███▋      | 11/30 [00:07<00:13,  1.38it/s]
+                                               
+
+ 40%|████      | 12/30 [00:08<00:13,  1.38it/s]
+ 43%|████▎     | 13/30 [00:08<00:10,  1.70it/s]
+                                               
+
+ 43%|████▎     | 13/30 [00:08<00:10,  1.70it/s]
+                                               
+
+ 47%|████▋     | 14/30 [00:08<00:09,  1.70it/s]
+ 50%|█████     | 15/30 [00:08<00:07,  2.08it/s]
+                                               
+
+ 50%|█████     | 15/30 [00:08<00:07,  2.08it/s]
+                                               
+
+ 53%|█████▎    | 16/30 [00:08<00:06,  2.08it/s]
+ 57%|█████▋    | 17/30 [00:08<00:04,  2.63it/s]
+                                               
+
+ 57%|█████▋    | 17/30 [00:08<00:04,  2.63it/s]
+                                               
+
+ 60%|██████    | 18/30 [00:08<00:04,  2.63it/s]
+ 63%|██████▎   | 19/30 [00:08<00:03,  3.25it/s]
+                                               
+
+ 63%|██████▎   | 19/30 [00:08<00:03,  3.25it/s]
+                                               
+
+ 67%|██████▋   | 20/30 [00:08<00:03,  3.25it/s]
+ 70%|███████   | 21/30 [00:09<00:03,  2.92it/s]
+                                               
+
+ 70%|███████   | 21/30 [00:09<00:03,  2.92it/s]
+                                               
+
+ 73%|███████▎  | 22/30 [00:09<00:02,  2.92it/s]
+ 77%|███████▋  | 23/30 [00:09<00:01,  3.69it/s]
+                                               
+
+ 77%|███████▋  | 23/30 [00:09<00:01,  3.69it/s]
+ 80%|████████  | 24/30 [00:09<00:01,  3.99it/s]
+                                               
+
+ 80%|████████  | 24/30 [00:09<00:01,  3.99it/s]
+                                               
+
+ 83%|████████▎ | 25/30 [00:09<00:01,  3.99it/s]
+ 87%|████████▋ | 26/30 [00:10<00:00,  5.18it/s]
+                                               
+
+ 87%|████████▋ | 26/30 [00:10<00:00,  5.18it/s]
+                                               
+
+ 90%|█████████ | 27/30 [00:10<00:00,  5.18it/s]
+ 93%|█████████▎| 28/30 [00:10<00:00,  5.91it/s]
+                                               
+
+ 93%|█████████▎| 28/30 [00:10<00:00,  5.91it/s]
+                                               
+
+ 97%|█████████▋| 29/30 [00:10<00:00,  5.91it/s]
+100%|██████████| 30/30 [00:10<00:00,  7.31it/s]
+                                               
+
+100%|██████████| 30/30 [00:10<00:00,  7.31it/s]
+                                               
+
+100%|██████████| 30/30 [00:10<00:00,  7.31it/s]
+100%|██████████| 30/30 [00:10<00:00,  2.77it/s]
+Traceback (most recent call last):
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 708, in <module>
+    main()
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 704, in main
+    train(config)
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 653, in train
+    run_training(trainer, cfg, monitor)
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 682, in run_training
+    write_run_summary(trainer, cfg, monitor, runtime_seconds, runtime)
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 253, in write_run_summary
+    payload = meta_payload(trainer, cfg, monitor, runtime_seconds, runtime)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/michael/cross-vendor-mooncake-test/train_lora_migration.py", line 302, in meta_payload
+    "energy_kwh_per_million_tokens": ratio(1_000_000.0 * ratio(gpu.get("gpu_energy_joules"), 3_600_000.0), useful_tokens),
+                                           ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for *: 'float' and 'NoneType'
+
+
+Stack Trace:
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/utils.py", line 57, in op_execution_error_boundary
+    yield
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_utils/__init__.py", line 394, in iterate_with_context
+    next_output = next(iterator)
+                  ^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 136, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+             ^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 116, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 2889, in resume_on_target
+    run_shell(ssh_cmd(settings, settings.target_host, run), settings.command_retries, env=sshpass_env(settings))
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 490, in run_shell
+    raise RuntimeError(f"command failed: {joined}\nexit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}")
+

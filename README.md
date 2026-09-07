@@ -1,82 +1,149 @@
-# Setup Guide: Cross-OEM fine-tuning
 
-## Why? 
+# Odyn compute profiler and prediction engine
 
-This is the simplest test I could think of for integrating fine-tuning with the current GPUs on our demo environment. One aspect I'd like to add is a 2-node A100 test with a data-parallel section. The idea is that if we can resume from checkpoints across different OEMs, we've effectively written a unified compute layer for our current workload.
-There's a custom layer with a transfer schema that's agnostic to the machines available. It's worth noting that this setup demonstrates cross-OEM compute that is inherently sequential — i.e., we cannot split batches of training across machines. One way to work around this is to define many jobs, each of which can run on a single machine. However, that's likely the next step; for now, this repo exists purely for informative purposes, to guide our next steps.
+This repository demonstrates a controlled cross-OEM training workflow:
 
-I purposefully kept the flow limited to resumption from checkpoints, since that's the simplest thing to demonstrate and control at this stage, IMO. We could later add disaggregated prefill for inference, plus a data-parallel stage across the two A100s in the demo env, just to show both are feasible.
+- train on one machine,
+- transfer checkpoint artifacts,
+- resume on a different machine/vendor,
+- validate continuity with telemetry and summary checks.
 
-I also used Dagster to see if it's a useful tool for us to integrate into our workflow. The web UI is quite nice, and it can also integrate with Dagster Cloud for team-wide use. For now, just use localhost to test.
+Current scope is intentionally sequential (single active training phase at a time). This is designed to prove portability and recovery semantics first; data-parallel or multi-job orchestration can be layered on top.
 
+## What this repo is for
 
-## Prerequsites 
+- Validate checkpoint portability across heterogeneous GPU environments.
+- Keep machine-specific details out of orchestration logic via structured config.
+- Collect enough metrics to compare runtime, energy efficiency, and transfer overhead.
+- Provide a Dagster-based control plane for local experimentation.
+
+## What this repo is not
+
+- It is not yet a fully parallel cross-machine trainer.
+- It is not yet an inference disaggregation benchmark.
+- It is not yet a production scheduler for large job fleets.
+
+## Architecture at a glance
+
+- Run config: `configs/run.json`
+- Machine catalog: `configs/machines.json`
+- Dagster definitions: `src/cross_oem_migration/orchestration/dagster/definitions.py`
+- Legacy monolith (kept for migration/backward compatibility): `finetuning_sequential.py`
+
+## Prerequisites
+
+- Python 3.12
+- SSH access to participating machines (key-based authentication preferred)
+- `conda` or another environment manager
+
+Optional but commonly needed:
+
+- `sshpass` (only if you must use password-based SSH)
+- vendor GPU telemetry libraries (`nvidia-ml-py` and/or AMD SMI bindings)
+
+## Quickstart
 
 ```bash
-# Homebrew (macOS) or use your OS package manager
-brew install python@3.12          # macOS
-sudo apt-get install python3.12   # Ubuntu/Debian
+python3 --version
+conda create -y -n cross-oem-migration python=3.12
+conda activate cross-oem-migration
 
-# Conda (Miniconda or Anaconda)
-brew install --cask miniconda     # macOS
-
-# Git (optional, for cloning)
-brew install git                  # macOS
-```
-
----
-
-## Setup
-
-## SSH Access
-
-The NVIDIA and AMD machines can be accessed via SSH using the following credentials:
-
-- Username: `michael`
-- Password: `michael`
-
-```bash
-ssh michael@<nvidia-machine-host>
-ssh michael@<amd-machine-host>
-```
-
-Replace `<nvidia-machine-host>` and `<amd-machine-host>` with the appropriate hostnames or IPs (e.g., `dgx-spark` for NVIDIA, `a6000-london` for AMD) as defined in your SSH config.
-
-```bash
-# 1. Ensure Python 3.12 is the default python3
-python3 --version || { echo "Install Python 3.12 first"; exit 1; }
-
-# 2. Create a dedicated conda env (named after the project)
-conda create -y -n cross-vendor-mooncake-test python=3.12
-conda activate cross-vendor-mooncake-test
-
-# 3. Install Dagster + webserver (add any extra deps required by the pipeline)
 pip install --upgrade pip setuptools wheel
-pip install dagster dagster-webserver
+pip install -e ".[dev]"
 
-# 4. (Optional) Persist Dagster state across runs
+cp .env.example .env
+source .env
+
 export DAGSTER_HOME="${HOME}/.dagster_home"
-mkdir -p "$DAGSTER_HOME"
+mkdir -p "${DAGSTER_HOME}"
 
-# 5. Clone the repo (skip if already present)
-git clone https://github.com/<your-org>/cross-vendor-mooncake-test.git
-cd cross-vendor-mooncake-test
-
-# 6. Run Dagster — the CLI entry point is provided by the installed package
-dagster dev -f finetuning_sequential.py
+dagster dev -w workspace.yaml
 ```
 
-**Expected log fragment:**
+Expected output includes:
+
+```text
+Serving dagster-webserver on http://127.0.0.1:3000
 ```
-Serving dagster-webserver on http://127.0.0.1:3000 ...
+
+Open `http://127.0.0.1:3000`, materialize the job/assets, and inspect run metadata.
+
+<img width="1348" height="930" alt="Screenshot 2026-09-07 at 20 26 05" src="https://github.com/user-attachments/assets/8426355f-8115-4d16-a444-ef70170f92f1" />
+
+
+## Configuration model
+
+`configs/run.json` contains run-level concerns:
+
+- source/target host selection
+- model, steps, transfer backend
+- checkpoint and timeout controls
+- benchmark controls
+
+`configs/machines.json` contains machine-level concerns:
+
+- hostname, vendor, architecture expectations
+- Python path and runtime mode
+- optional transfer control-plane metadata
+- optional distributed topology information
+
+This split is deliberate: it keeps hardware details modular and avoids vendor-specific branching in orchestration paths.
+
+## Secrets and credentials
+
+Do not commit secrets into git-tracked config files.
+
+Use environment variables for sensitive values:
+
+```bash
+export CROSS_OEM_SSH_PASSWORD="<only-if-needed>"
 ```
 
-## 7. Open the UI
+Recommended authentication order:
 
-In a browser, go to: [http://127.0.0.1:3000](http://127.0.0.1:3000)
+1. SSH keys and `~/.ssh/config` aliases.
+2. SSH agent-backed keys.
+3. Password auth only when key auth is not available.
 
-Click launch runs to run the workflow:
+Operational rules:
 
-<img width="1713" height="935" alt="Screenshot 2026-09-01 at 20 41 11" src="https://github.com/user-attachments/assets/69d5e1fd-6519-4900-b193-25d0b216b93d" />
+- Keep `.env` local only.
+- Rotate secrets if any credential is accidentally committed.
+- Prefer per-user shell exports or secret managers over static plaintext files.
+
+## Telemetry and measurement
+
+The goal is to normalize comparable metrics across NVIDIA and AMD hosts.
+
+Core metrics include:
+
+- training tokens processed
+- runtime seconds
+- tokens/second
+- average and peak GPU power
+- GPU energy joules
+- tokens/joule
+- checkpoint transfer throughput
+
+Suggested packages:
+
+- Host metrics: `psutil`
+- Export format: `prometheus-client`
+- NVIDIA: `nvidia-ml-py`
+- AMD: ROCm AMD SMI Python bindings
+
+For NVIDIA, sample NVML counters at a fixed interval and integrate power over time for energy. For AMD, use AMD SMI equivalents; API field names can differ between ROCm versions and should be verified on the target environment.
+
+## Current roadmap
+
+- Add a two-node A100 data-parallel stage for direct comparison with sequential resume.
+- Add disaggregated prefill/inference profiling.
+- Add structured profiling flows (including planned Vidur-based inference analysis).
+
+## Troubleshooting
+
+- If Dagster cannot load definitions, verify `workspace.yaml` pathing and editable install (`pip install -e .`).
+- If SSH commands hang, check host aliases, key permissions, and timeout settings in `configs/run.json`.
+- If telemetry is sparse, reduce sample interval and verify GPU library availability on each host.
 
 

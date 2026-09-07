@@ -1,0 +1,39 @@
+2026-09-07 10:55:45 +0100 - dagster - DEBUG - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - 11404 - LOGS_CAPTURED - Capturing logs for process (pid: 11404).
+2026-09-07 10:55:45 +0100 - dagster - DEBUG - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - 11404 - copy_checkpoint - STEP_START - Started execution of step "copy_checkpoint".
+2026-09-07 10:55:45 +0100 - dagster - DEBUG - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - copy_checkpoint - Loading file from: /Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/storage/2e720d6c-a534-4a9a-890e-1e05624bf8f3/settings_op/result using PickledObjectFilesystemIOManager...
+2026-09-07 10:55:45 +0100 - dagster - DEBUG - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - 11404 - copy_checkpoint - LOADED_INPUT - Loaded input "settings" using input manager "io_manager", from output "result" of step "settings_op"
+2026-09-07 10:55:45 +0100 - dagster - DEBUG - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - 11404 - copy_checkpoint - STEP_INPUT - Got input "settings" of type "PortabilitySettings". (Type check passed).
+2026-09-07 10:55:56 +0100 - dagster - ERROR - finetuning_sequential_job - 2e720d6c-a534-4a9a-890e-1e05624bf8f3 - 11404 - copy_checkpoint - STEP_FAILURE - Execution of step "copy_checkpoint" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "copy_checkpoint"::
+
+KeyError: 'size_bytes'
+
+Stack Trace:
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/utils.py", line 57, in op_execution_error_boundary
+    yield
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_utils/__init__.py", line 394, in iterate_with_context
+    next_output = next(iterator)
+                  ^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 136, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+             ^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/.venv/lib/python3.12/site-packages/dagster/_core/execution/plan/compute_generator.py", line 116, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 2830, in copy_checkpoint
+    result = transfer_checkpoint(settings, settings.source_host, settings.target_host, settings.transfer.backend)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 1628, in transfer_checkpoint
+    return transfer_checkpoint_scp(settings, source, destination)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 1641, in transfer_checkpoint_scp
+    verified = verify_transfer_manifests(settings, source, source_ckpt, destination, destination_ckpt)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 2794, in verify_transfer_manifests
+    mismatches = strict_manifest_mismatches(source_manifest, destination_manifest)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning/finetuning_sequential.py", line 2812, in strict_manifest_mismatches
+    if int(source_item["size_bytes"]) != int(destination_item["size_bytes"]) or str(source_item["sha256"]) != str(destination_item["sha256"]):
+           ~~~~~~~~~~~^^^^^^^^^^^^^^
+

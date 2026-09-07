@@ -1,0 +1,7 @@
+2026-09-07T10:29:45Z START command
+host=runpod-mi300x-michael
+command=sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 runpod-mi300x-michael '/workspace/venvs/py312-rocm/bin/python ~/cross-vendor-mooncake-test/train_lora_migration.py --model-id Qwen/Qwen2.5-0.5B --dataset-path ~/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl --output-dir ~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b --resume-from ~/cross-vendor-mooncake-test/checkpoint-10 --stop-step 30 --max-steps 30 --telemetry-interval-seconds 0.25'
+timeout_seconds=600.0
+2026-09-07T10:32:35Z END command
+duration=170.271
+returncode=0

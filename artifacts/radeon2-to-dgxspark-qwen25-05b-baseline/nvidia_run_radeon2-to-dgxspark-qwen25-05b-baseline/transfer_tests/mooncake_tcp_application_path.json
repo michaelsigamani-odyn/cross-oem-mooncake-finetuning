@@ -1,0 +1,13 @@
+{
+  "test": "Mooncake TCP",
+  "path": "Mooncake application path",
+  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b-baseline/transfer_tests/mooncake_tcp_application_path.json",
+  "details": {
+    "backend": "mooncake_tcp",
+    "success": true,
+    "bytes_transferred": 18039859,
+    "elapsed_seconds": 0.25356143480166793,
+    "throughput_bytes_per_second": 71145909.92163503,
+    "manifest_path": "/tmp/mooncake_transfer_manifest_1788764363912_1789_0.json"
+  }
+}

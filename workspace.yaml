@@ -1,4 +1,5 @@
 load_from:
-  - python_file:
-      relative_path: definitions.py
-      location_name: finetuning_sequential
+  - python_module:
+      module_name: cross_oem_migration.orchestration.dagster.definitions
+      attribute: defs
+      working_directory: src

@@ -1,140 +1,140 @@
 {
   "saved_step": 30,
   "resume_loaded_from_step": 10,
-  "loss_before_migration": 2.671591281890869,
+  "loss_before_migration": 2.671475648880005,
   "loss_trace": [
     {
       "step": 1,
-      "loss": 3.4079389572143555
+      "loss": 3.575299024581909
     },
     {
       "step": 2,
-      "loss": 3.379634141921997
+      "loss": 3.5554215908050537
     },
     {
       "step": 3,
-      "loss": 3.3431594371795654
+      "loss": 3.428711414337158
     },
     {
       "step": 4,
-      "loss": 3.2956812381744385
+      "loss": 3.4270753860473633
     },
     {
       "step": 5,
-      "loss": 3.268167734146118
+      "loss": 3.373697280883789
     },
     {
       "step": 6,
-      "loss": 3.2238712310791016
+      "loss": 3.3383517265319824
     },
     {
       "step": 7,
-      "loss": 3.1955807209014893
+      "loss": 3.309544563293457
     },
     {
       "step": 8,
-      "loss": 3.1818222999572754
+      "loss": 3.177251100540161
     },
     {
       "step": 9,
-      "loss": 3.160775661468506
+      "loss": 3.318584680557251
     },
     {
       "step": 10,
-      "loss": 3.151432752609253
+      "loss": 3.2487246990203857
     },
     {
       "step": 11,
-      "loss": 3.1437621116638184
+      "loss": 3.2579028606414795
     },
     {
       "step": 12,
-      "loss": 3.1493029594421387
+      "loss": 3.175119161605835
     },
     {
       "step": 13,
-      "loss": 3.1011595726013184
+      "loss": 3.2229700088500977
     },
     {
       "step": 14,
-      "loss": 3.0686380863189697
+      "loss": 3.140613317489624
     },
     {
       "step": 15,
-      "loss": 3.0195729732513428
+      "loss": 3.052905321121216
     },
     {
       "step": 16,
-      "loss": 2.986290693283081
+      "loss": 3.016450881958008
     },
     {
       "step": 17,
-      "loss": 2.9525747299194336
+      "loss": 3.000398635864258
     },
     {
       "step": 18,
-      "loss": 2.9233310222625732
+      "loss": 2.9248015880584717
     },
     {
       "step": 19,
-      "loss": 2.899704933166504
+      "loss": 2.87941312789917
     },
     {
       "step": 20,
-      "loss": 2.857731342315674
+      "loss": 2.9160449504852295
     },
     {
       "step": 21,
-      "loss": 2.8307347297668457
+      "loss": 2.878483772277832
     },
     {
       "step": 22,
-      "loss": 2.805574655532837
+      "loss": 2.8167927265167236
     },
     {
       "step": 23,
-      "loss": 2.77567720413208
+      "loss": 2.7631189823150635
     },
     {
       "step": 24,
-      "loss": 2.7580838203430176
+      "loss": 2.72688627243042
     },
     {
       "step": 25,
-      "loss": 2.735736608505249
+      "loss": 2.7635209560394287
     },
     {
       "step": 26,
-      "loss": 2.7160985469818115
+      "loss": 2.664515256881714
     },
     {
       "step": 27,
-      "loss": 2.704047441482544
+      "loss": 2.6716949939727783
     },
     {
       "step": 28,
-      "loss": 2.683140993118286
+      "loss": 2.5919713973999023
     },
     {
       "step": 29,
-      "loss": 2.677237033843994
+      "loss": 2.717752695083618
     },
     {
       "step": 30,
-      "loss": 2.671591281890869
+      "loss": 2.671475648880005
     }
   ],
   "first_logged_step": 1,
   "last_logged_step": 30,
-  "optimizer_exp_avg_sq_norm": 0.0004367372092453072,
-  "optimizer_exp_avg_sq_norm_before_save": 0.0004367372092453072,
-  "optimizer_exp_avg_sq_norm_after_resume_load": 0.00015510240527867564,
+  "optimizer_exp_avg_sq_norm": 0.00026551734893027123,
+  "optimizer_exp_avg_sq_norm_before_save": 0.00026551734893027123,
+  "optimizer_exp_avg_sq_norm_after_resume_load": 0.00011210588631294145,
   "learning_rate": 0.0,
   "optimizer_learning_rate_before_save": 0.0,
   "optimizer_learning_rate_after_resume_load": 0.0,
   "seed": 17,
   "model_id": "Qwen/Qwen2.5-0.5B",
-  "dataset_path": "/home/michael/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl",
+  "dataset_path": "/root/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl",
   "hostname": "f3bab8d75c53",
   "python": "3.12.14",
   "device": "AMD Radeon Graphics",
@@ -142,14 +142,14 @@
   "gpu_architecture": "gfx942",
   "torch": "2.9.1+rocm6.3",
   "torch_version": "2.9.1+rocm6.3",
-  "resume_from": "/home/michael/cross-vendor-mooncake-test/checkpoint-10",
-  "runtime_seconds": 12.1428326619789,
-  "useful_training_tokens": 2560,
-  "tokens_per_second": 210.8239544481049,
-  "final_loss": 2.671591281890869,
-  "mean_gpu_utilization_percent": 6.806451612903226,
-  "peak_gpu_utilization_percent": 46.0,
-  "peak_accelerator_memory_bytes": 1553249792,
+  "resume_from": "/root/cross-vendor-mooncake-test/checkpoint-10",
+  "runtime_seconds": 15.142132042907178,
+  "useful_training_tokens": 40960,
+  "tokens_per_second": 2705.035188171294,
+  "final_loss": 2.671475648880005,
+  "mean_gpu_utilization_percent": 5.5675675675675675,
+  "peak_gpu_utilization_percent": 42.0,
+  "peak_accelerator_memory_bytes": 7475796480,
   "mean_power_watts": null,
   "peak_power_watts": null,
   "min_power_watts": null,
@@ -163,16 +163,16 @@
   "power_telemetry_reason": "no telemetry samples",
   "telemetry_source": "amd_smi",
   "sampling_interval_seconds": 0.25,
-  "telemetry_duration_seconds": 12.1428326619789,
-  "telemetry_sample_count": 31,
-  "raw_telemetry_sample_count": 31,
-  "telemetry_start_timestamp": "2026-09-07T14:01:24.619830+00:00",
-  "telemetry_end_timestamp": "2026-09-07T14:01:36.762681+00:00",
+  "telemetry_duration_seconds": 15.142132042907178,
+  "telemetry_sample_count": 37,
+  "raw_telemetry_sample_count": 37,
+  "telemetry_start_timestamp": "2026-09-07T19:23:57.317015+00:00",
+  "telemetry_end_timestamp": "2026-09-07T19:24:12.459143+00:00",
   "gpu_runtime_verified": true,
   "checkpoint_size_bytes": null,
   "checkpoint_save_seconds": null,
-  "checkpoint_load_seconds": 0.6320668179541826,
-  "resume_to_first_step_seconds": 9.109939682297409,
+  "checkpoint_load_seconds": 0.6354834763333201,
+  "resume_to_first_step_seconds": 12.136371699161828,
   "first_step_after_resume": 11,
-  "max_sequence_length": 128
+  "max_sequence_length": 512
 }
