@@ -1,0 +1,25 @@
+Cross-OEM LoRA Benchmark
+Qwen/Qwen2.5-1.5B
+
+                               odyn-dgx3    odyn-radeon2
+--------------------------------------------------------
+Training steps                        10              30
+Useful tokens                        N/A            1633
+Runtime                              N/A          5.49 s
+Tokens/sec                           N/A          297.30
+Mean GPU util                        N/A          57.33%
+Peak GPU util                        N/A          88.00%
+Peak accel memory                    N/A         7.46 GB
+Mean GPU power                       N/A         83.20 W
+GPU energy                           N/A        0.00 kWh
+Tokens/joule                         N/A            3.49
+Energy GBP / 1M                      N/A        0.02 GBP
+Energy break-even /1M                N/A        0.02 GBP
+
+checkpoint_save_seconds=N/A
+mooncake_transfer_seconds=0.41 s
+rsync_transfer_seconds=N/A
+checkpoint_load_seconds=0.00 s
+resume_to_first_step_seconds=1.36 s
+migration_to_first_step_seconds=1.77 s
+resume_continuity_verified=True

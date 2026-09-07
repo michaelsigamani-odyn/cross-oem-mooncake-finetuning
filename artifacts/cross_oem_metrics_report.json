@@ -1,0 +1,481 @@
+{
+  "run": {
+    "run_id": "amd-to-nvidia",
+    "model_id": "Qwen/Qwen2.5-1.5B",
+    "training_type": "lora",
+    "dataset_path": "data/alpaca_dataset.jsonl",
+    "electricity_price_gbp_per_kwh": 0.27,
+    "economic_scope": "energy-only break-even; excludes hardware, CPU/system energy, networking, storage, cooling, and operations",
+    "cross_oem_gpu_benchmark_valid": true
+  },
+  "source_training": {
+    "hostname": "odyn-radeon2",
+    "vendor": "amd",
+    "device_name": "AMD Radeon 8060S Graphics",
+    "gpu_architecture": "gfx1151",
+    "torch_version": "2.14.0+rocm10.1.0a20260906",
+    "gpu_requested": true,
+    "gpu_detected": true,
+    "gpu_kernel_test_passed": true,
+    "gpu_execution_verified": true,
+    "gpu_runtime_verified": true,
+    "first_step": 1,
+    "last_step": 10,
+    "useful_training_tokens": 1177,
+    "training_runtime_seconds": 3.2034,
+    "tokens_per_second": 367.4221140038709,
+    "mean_gpu_utilization_percent": 43.083333333333336,
+    "peak_gpu_utilization_percent": 83.0,
+    "peak_accelerator_memory_bytes": 8010821632,
+    "mean_gpu_power_watts": 72.12875000000001,
+    "peak_gpu_power_watts": 106.053,
+    "gpu_energy_joules": 253.0482102996883,
+    "gpu_energy_kwh": 7.02911695276912e-05,
+    "tokens_per_joule": 4.651287589056897,
+    "energy_cost_gbp": 1.8978615772476625e-05,
+    "energy_cost_per_million_tokens_gbp": 0.016124567351297046,
+    "energy_break_even_gbp_per_million_tokens": 0.016124567351297046,
+    "gpu_energy_cost_gbp": 1.8978615772476625e-05,
+    "gpu_energy_cost_per_million_tokens_gbp": 0.016124567351297046,
+    "gpu_energy_break_even_per_million_tokens_gbp": 0.016124567351297046,
+    "system_energy_kwh": null,
+    "system_energy_source": "not_measured",
+    "final_loss": 1.8125499486923218,
+    "learning_rate": 0.000182,
+    "optimizer_learning_rate_before_save": 0.00018,
+    "optimizer_learning_rate_after_resume_load": null,
+    "optimizer_exp_avg_sq_norm_before_save": 5.853049642720999e-05,
+    "optimizer_exp_avg_sq_norm_after_resume_load": null,
+    "loss_trace": [
+      {
+        "step": 1,
+        "loss": 1.816055417060852
+      },
+      {
+        "step": 2,
+        "loss": 1.7996160984039307
+      },
+      {
+        "step": 3,
+        "loss": 1.2418334484100342
+      },
+      {
+        "step": 4,
+        "loss": 1.2738927602767944
+      },
+      {
+        "step": 5,
+        "loss": 1.6975691318511963
+      },
+      {
+        "step": 6,
+        "loss": 1.151834487915039
+      },
+      {
+        "step": 7,
+        "loss": 1.0756784677505493
+      },
+      {
+        "step": 8,
+        "loss": 1.3531582355499268
+      },
+      {
+        "step": 9,
+        "loss": 1.7851403951644897
+      },
+      {
+        "step": 10,
+        "loss": 1.8125499486923218
+      }
+    ],
+    "telemetry_source": "amd_smi",
+    "telemetry_errors": [],
+    "telemetry_start_timestamp": "2026-09-06T14:06:24.399415+00:00",
+    "telemetry_end_timestamp": "2026-09-06T14:06:27.897809+00:00",
+    "telemetry_duration_seconds": 3.4983864601235837,
+    "telemetry_sample_count": 12,
+    "sampling_interval_seconds": 0.25,
+    "checkpoint_size_bytes": 17591943,
+    "checkpoint_save_seconds": 0.22663731197826564,
+    "hip_version": "7.16.26354",
+    "energy_validation": {
+      "telemetry_start_timestamp": "2026-09-06T14:06:24.399415+00:00",
+      "telemetry_end_timestamp": "2026-09-06T14:06:27.897809+00:00",
+      "telemetry_duration_seconds": 3.4983864601235837,
+      "training_runtime_seconds": 3.2034,
+      "telemetry_sample_count": 12,
+      "sampling_interval_seconds": 0.25,
+      "telemetry_coverage_percent": 100.0,
+      "mean_gpu_power_watts": 72.12875000000001,
+      "expected_energy_from_mean_power_joules": 231.05723775,
+      "integrated_gpu_energy_joules": 253.0482102996883,
+      "energy_consistency_error_percent": 9.517543256308697,
+      "minimum_telemetry_coverage_percent": 90.0,
+      "maximum_energy_consistency_error_percent": 10.0,
+      "minimum_power_samples": 10,
+      "coverage_check_passed": true,
+      "sample_count_check_passed": true,
+      "energy_consistency_check_passed": true,
+      "passed": true
+    },
+    "system_energy_cost_gbp": null,
+    "system_energy_cost_per_million_tokens_gbp": null,
+    "system_energy_break_even_per_million_tokens_gbp": null,
+    "system_energy_cost_estimated": false
+  },
+  "destination_training": {
+    "hostname": "odyn-dgx3",
+    "vendor": "nvidia",
+    "device_name": "NVIDIA GB10",
+    "gpu_architecture": "NVIDIA GB10",
+    "torch_version": "2.13.0+cu130",
+    "gpu_requested": true,
+    "gpu_detected": true,
+    "gpu_kernel_test_passed": true,
+    "gpu_execution_verified": true,
+    "gpu_runtime_verified": true,
+    "first_step": 11,
+    "last_step": 30,
+    "useful_training_tokens": 1633,
+    "training_runtime_seconds": 2.7242,
+    "tokens_per_second": 599.4420380295132,
+    "mean_gpu_utilization_percent": 41.714285714285715,
+    "peak_gpu_utilization_percent": 83.0,
+    "peak_accelerator_memory_bytes": 3721681408,
+    "mean_gpu_power_watts": 18.63242857142857,
+    "peak_gpu_power_watts": 28.879,
+    "gpu_energy_joules": 52.754025713261626,
+    "gpu_energy_kwh": 1.4653896031461563e-05,
+    "tokens_per_joule": 30.954983585062905,
+    "energy_cost_gbp": 3.956551928494622e-06,
+    "energy_cost_per_million_tokens_gbp": 0.00242287319564888,
+    "energy_break_even_gbp_per_million_tokens": 0.00242287319564888,
+    "gpu_energy_cost_gbp": 3.956551928494622e-06,
+    "gpu_energy_cost_per_million_tokens_gbp": 0.00242287319564888,
+    "gpu_energy_break_even_per_million_tokens_gbp": 0.00242287319564888,
+    "system_energy_kwh": null,
+    "system_energy_source": "not_measured",
+    "final_loss": 2.1631293296813965,
+    "learning_rate": 6.666666666666667e-06,
+    "optimizer_learning_rate_before_save": 0.0,
+    "optimizer_learning_rate_after_resume_load": 0.00018,
+    "optimizer_exp_avg_sq_norm_before_save": 0.00027722401985936693,
+    "optimizer_exp_avg_sq_norm_after_resume_load": 5.8530496197878125e-05,
+    "loss_trace": [
+      {
+        "step": 1,
+        "loss": 1.816055417060852
+      },
+      {
+        "step": 2,
+        "loss": 1.7996160984039307
+      },
+      {
+        "step": 3,
+        "loss": 1.2418334484100342
+      },
+      {
+        "step": 4,
+        "loss": 1.2738927602767944
+      },
+      {
+        "step": 5,
+        "loss": 1.6975691318511963
+      },
+      {
+        "step": 6,
+        "loss": 1.151834487915039
+      },
+      {
+        "step": 7,
+        "loss": 1.0756784677505493
+      },
+      {
+        "step": 8,
+        "loss": 1.3531582355499268
+      },
+      {
+        "step": 9,
+        "loss": 1.7851403951644897
+      },
+      {
+        "step": 10,
+        "loss": 1.8125499486923218
+      },
+      {
+        "step": 11,
+        "loss": 3.134340524673462
+      },
+      {
+        "step": 12,
+        "loss": 1.7690836191177368
+      },
+      {
+        "step": 13,
+        "loss": 2.444568157196045
+      },
+      {
+        "step": 14,
+        "loss": 1.3615585565567017
+      },
+      {
+        "step": 15,
+        "loss": 1.5872880220413208
+      },
+      {
+        "step": 16,
+        "loss": 1.8091058731079102
+      },
+      {
+        "step": 17,
+        "loss": 1.472876787185669
+      },
+      {
+        "step": 18,
+        "loss": 1.3812826871871948
+      },
+      {
+        "step": 19,
+        "loss": 1.4504889249801636
+      },
+      {
+        "step": 20,
+        "loss": 1.8447215557098389
+      },
+      {
+        "step": 21,
+        "loss": 2.4968881607055664
+      },
+      {
+        "step": 22,
+        "loss": 1.5523347854614258
+      },
+      {
+        "step": 23,
+        "loss": 1.9103410243988037
+      },
+      {
+        "step": 24,
+        "loss": 2.9096267223358154
+      },
+      {
+        "step": 25,
+        "loss": 0.6817977428436279
+      },
+      {
+        "step": 26,
+        "loss": 1.4058144092559814
+      },
+      {
+        "step": 27,
+        "loss": 1.8574552536010742
+      },
+      {
+        "step": 28,
+        "loss": 1.1233141422271729
+      },
+      {
+        "step": 29,
+        "loss": 1.6619714498519897
+      },
+      {
+        "step": 30,
+        "loss": 2.1631293296813965
+      }
+    ],
+    "telemetry_source": "nvml",
+    "telemetry_errors": [],
+    "telemetry_start_timestamp": "2026-09-06T14:09:07.005138+00:00",
+    "telemetry_end_timestamp": "2026-09-06T14:09:09.849924+00:00",
+    "telemetry_duration_seconds": 2.844781197956763,
+    "telemetry_sample_count": 14,
+    "sampling_interval_seconds": 0.25,
+    "checkpoint_load_seconds": 0.003315752954222262,
+    "resume_to_first_step_seconds": 1.0158609519712627,
+    "cuda_version": "13.0",
+    "energy_validation": {
+      "telemetry_start_timestamp": "2026-09-06T14:09:07.005138+00:00",
+      "telemetry_end_timestamp": "2026-09-06T14:09:09.849924+00:00",
+      "telemetry_duration_seconds": 2.844781197956763,
+      "training_runtime_seconds": 2.7242,
+      "telemetry_sample_count": 14,
+      "sampling_interval_seconds": 0.25,
+      "telemetry_coverage_percent": 100.0,
+      "mean_gpu_power_watts": 18.63242857142857,
+      "expected_energy_from_mean_power_joules": 50.75846191428571,
+      "integrated_gpu_energy_joules": 52.754025713261626,
+      "energy_consistency_error_percent": 3.931489890977713,
+      "minimum_telemetry_coverage_percent": 90.0,
+      "maximum_energy_consistency_error_percent": 10.0,
+      "minimum_power_samples": 10,
+      "coverage_check_passed": true,
+      "sample_count_check_passed": true,
+      "energy_consistency_check_passed": true,
+      "passed": true
+    },
+    "system_energy_cost_gbp": null,
+    "system_energy_cost_per_million_tokens_gbp": null,
+    "system_energy_break_even_per_million_tokens_gbp": null,
+    "system_energy_cost_estimated": false
+  },
+  "migration": {
+    "checkpoint_logical_size_bytes": 17591943,
+    "transfer_payload_bytes": 17589859,
+    "checkpoint_save_seconds": 0.22663731197826564,
+    "iperf3": {
+      "success": true,
+      "throughput_bits_per_second": 941339779.7543888
+    },
+    "rsync": {
+      "success": true,
+      "bytes_transferred": 17591943,
+      "elapsed_seconds": 0.6567198339907918,
+      "throughput_bytes_per_second": 26787592.043773517
+    },
+    "mooncake": {
+      "success": true,
+      "bytes_transferred": 17589859,
+      "elapsed_seconds": 0.23013569600880146,
+      "throughput_bytes_per_second": 76432553.945596
+    },
+    "mooncake_vs_iperf_percent": 64.96,
+    "mooncake_vs_rsync_percent": 285.33,
+    "checkpoint_load_seconds": 0.003315752954222262,
+    "resume_to_first_step_seconds": 1.0158609519712627,
+    "transfer_seconds": 0.23013569600880146,
+    "checksum_verified": true,
+    "transfer_to_first_step_seconds": 1.2493124009342864,
+    "migration_to_first_step_seconds": 1.475949712912552
+  },
+  "continuity": {
+    "last_source_step": 10,
+    "first_destination_step": 11,
+    "loss_before_checkpoint": 1.8125499486923218,
+    "loss_after_resume": 3.134340524673462,
+    "optimizer_state_before_save": 5.853049642720999e-05,
+    "optimizer_state_after_load": 5.8530496197878125e-05,
+    "learning_rate_before": 0.00018,
+    "learning_rate_after": 0.00018,
+    "continuity_verification_result": "pass",
+    "continuity_policy": {
+      "step_required": true,
+      "optimizer_state_required": true,
+      "learning_rate_required": true,
+      "scheduler_state_required": true
+    },
+    "step_continuity_verified": true,
+    "optimizer_state_verified": true,
+    "learning_rate_continuity_verified": true,
+    "resume_continuity_verified": true
+  },
+  "system_energy": {
+    "source": {
+      "energy_joules": null,
+      "energy_kwh": null,
+      "type": "not_measured",
+      "method": null,
+      "assumptions": null,
+      "confidence": null
+    },
+    "target": {
+      "energy_joules": null,
+      "energy_kwh": null,
+      "type": "not_measured",
+      "method": null,
+      "assumptions": null,
+      "confidence": null
+    }
+  },
+  "comparison": {
+    "higher_tokens_per_second": "destination_training",
+    "higher_tokens_per_joule": "destination_training",
+    "lower_energy_cost_per_million_tokens": "destination_training",
+    "tokens_per_second_ratio_destination_vs_source": 1.631480564676077,
+    "tokens_per_joule_ratio_destination_vs_source": 6.655142902341884,
+    "energy_cost_per_million_tokens_ratio_destination_vs_source": 0.1502597336637368
+  },
+  "validation": {
+    "benchmark_complete": true,
+    "cross_oem_gpu_benchmark_valid": true,
+    "functional_benchmark_complete": true,
+    "cross_oem_resume_valid": true,
+    "transfer_benchmark_valid": true,
+    "energy_benchmark_valid": true,
+    "economic_comparison_valid": true,
+    "required_metrics_missing": [],
+    "validation_errors": [],
+    "validation_warnings": [
+      "Destination training phase is only 2.72 seconds; power-efficiency result may be noisy",
+      "Source training phase is only 3.20 seconds; power-efficiency result may be noisy",
+      "Whole-system energy is not measured"
+    ],
+    "field_classification": {
+      "source_training.hostname": "REQUIRED",
+      "source_training.vendor": "REQUIRED",
+      "source_training.device_name": "REQUIRED",
+      "source_training.gpu_architecture": "REQUIRED",
+      "source_training.torch_version": "REQUIRED",
+      "source_training.gpu_requested": "REQUIRED",
+      "source_training.gpu_detected": "REQUIRED",
+      "source_training.gpu_kernel_test_passed": "REQUIRED",
+      "source_training.gpu_execution_verified": "REQUIRED",
+      "source_training.first_step": "REQUIRED",
+      "source_training.last_step": "REQUIRED",
+      "source_training.useful_training_tokens": "REQUIRED",
+      "source_training.training_runtime_seconds": "REQUIRED",
+      "source_training.tokens_per_second": "REQUIRED",
+      "source_training.mean_gpu_utilization_percent": "REQUIRED",
+      "source_training.peak_gpu_utilization_percent": "REQUIRED",
+      "source_training.peak_accelerator_memory_bytes": "REQUIRED",
+      "source_training.mean_gpu_power_watts": "REQUIRED",
+      "source_training.peak_gpu_power_watts": "REQUIRED",
+      "source_training.gpu_energy_joules": "REQUIRED",
+      "source_training.gpu_energy_kwh": "REQUIRED",
+      "source_training.tokens_per_joule": "REQUIRED",
+      "source_training.energy_cost_gbp": "REQUIRED",
+      "source_training.energy_cost_per_million_tokens_gbp": "REQUIRED",
+      "source_training.energy_break_even_gbp_per_million_tokens": "REQUIRED",
+      "source_training.final_loss": "REQUIRED",
+      "source_training.checkpoint_size_bytes": "REQUIRED",
+      "source_training.checkpoint_save_seconds": "REQUIRED",
+      "destination_training.hostname": "REQUIRED",
+      "destination_training.vendor": "REQUIRED",
+      "destination_training.device_name": "REQUIRED",
+      "destination_training.gpu_architecture": "REQUIRED",
+      "destination_training.torch_version": "REQUIRED",
+      "destination_training.gpu_requested": "REQUIRED",
+      "destination_training.gpu_detected": "REQUIRED",
+      "destination_training.gpu_kernel_test_passed": "REQUIRED",
+      "destination_training.gpu_execution_verified": "REQUIRED",
+      "destination_training.first_step": "REQUIRED",
+      "destination_training.last_step": "REQUIRED",
+      "destination_training.useful_training_tokens": "REQUIRED",
+      "destination_training.training_runtime_seconds": "REQUIRED",
+      "destination_training.tokens_per_second": "REQUIRED",
+      "destination_training.mean_gpu_utilization_percent": "REQUIRED",
+      "destination_training.peak_gpu_utilization_percent": "REQUIRED",
+      "destination_training.peak_accelerator_memory_bytes": "REQUIRED",
+      "destination_training.mean_gpu_power_watts": "REQUIRED",
+      "destination_training.peak_gpu_power_watts": "REQUIRED",
+      "destination_training.gpu_energy_joules": "REQUIRED",
+      "destination_training.gpu_energy_kwh": "REQUIRED",
+      "destination_training.tokens_per_joule": "REQUIRED",
+      "destination_training.energy_cost_gbp": "REQUIRED",
+      "destination_training.energy_cost_per_million_tokens_gbp": "REQUIRED",
+      "destination_training.energy_break_even_gbp_per_million_tokens": "REQUIRED",
+      "destination_training.final_loss": "REQUIRED",
+      "destination_training.checkpoint_load_seconds": "REQUIRED",
+      "destination_training.resume_to_first_step_seconds": "REQUIRED",
+      "source_training.system_energy_kwh": "OPTIONAL_UNAVAILABLE",
+      "destination_training.system_energy_kwh": "OPTIONAL_UNAVAILABLE",
+      "source_training.cuda_version": "NOT_APPLICABLE",
+      "destination_training.hip_version": "NOT_APPLICABLE"
+    },
+    "optional_unavailable_reasons": {
+      "source_training.system_energy_kwh": "not_measured",
+      "destination_training.system_energy_kwh": "not_measured",
+      "system_energy.source": "not_measured",
+      "system_energy.target": "not_measured"
+    }
+  }
+}

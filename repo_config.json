@@ -17,7 +17,7 @@
       "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
       "michael@odyn-dgx3": "/usr/bin/python3.12"
     },
-    "ssh_password": "michael",
+    "ssh_password": null,
     "transfer_backend": "mooncake_tcp",
     "asset_paths": [
       "data/quant_mentor_500_alpaca.jsonl"
@@ -47,6 +47,73 @@
     "max_loss_delta": 2.0,
     "max_optimizer_norm_delta": 0.0001,
     "electricity_price_gbp_per_kwh": 0.27
+  },
+  "machine_catalog": {
+    "nvidia_control": {
+      "hostname": "michael@odyn-dgx3",
+      "vendor": "nvidia",
+      "device_name": "NVIDIA GB10",
+      "expected_gpu_architecture": "gb10",
+      "container_image": null,
+      "electricity_price_per_kwh": 0.27,
+      "currency": "GBP",
+      "python_cmd": "/usr/bin/python3.12",
+      "transfer": {
+        "control_host": "10.6.45.106",
+        "control_port": 56001
+      }
+    },
+    "amd_existing": {
+      "hostname": "michael@odyn-radeon2",
+      "vendor": "amd",
+      "device_name": "AMD Radeon 8060S Graphics",
+      "expected_gpu_architecture": "gfx1151",
+      "container_image": null,
+      "electricity_price_per_kwh": 0.27,
+      "currency": "GBP",
+      "python_cmd": "/home/michael/torch-env/bin/python",
+      "transfer": {
+        "control_host": "10.6.45.118",
+        "control_port": 56000
+      }
+    },
+    "mi300x": {
+      "hostname": "runpod-mi300x",
+      "vendor": "amd",
+      "device_name": "AMD Instinct MI300X",
+      "expected_gpu_architecture": "gfx942",
+      "container_image": "rocm/pytorch:rocm10.0_ubuntu24.04_py3.12_pytorch_release_2.12.0",
+      "execution_mode": "host",
+      "torch_install_command": "python3 -m pip install --index-url https://download.pytorch.org/whl/rocm6.3 torch==2.9.1+rocm6.3",
+      "hf_cache_dir": "/workspace/.cache/huggingface",
+      "rocm_path": "/opt/rocm-5.7.0",
+      "electricity_price_per_kwh": 0.27,
+      "currency": "GBP",
+      "python_cmd": "python3",
+      "transfer": {
+        "control_host": null,
+        "control_port": null
+      }
+    }
+  },
+  "standalone_benchmark": {
+    "enabled": true,
+    "machine_keys": [
+      "nvidia_control",
+      "amd_existing",
+      "mi300x"
+    ],
+    "run_id_suffix": "baseline",
+    "steps": 10,
+    "max_steps": 10,
+    "max_length": 128,
+    "per_device_batch_size": 1,
+    "learning_rate": 0.0002,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "telemetry_interval_seconds": 0.25,
+    "model_id": "Qwen/Qwen2.5-7B"
   },
   "story3": {
     "plan_path": "./experiments/story3_preregistration.json",

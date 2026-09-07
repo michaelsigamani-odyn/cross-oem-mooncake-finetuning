@@ -1,0 +1,44 @@
+Cross-OEM LoRA Benchmark
+========================
+
+Model: Qwen/Qwen2.5-1.5B
+Path: odyn-radeon2 -> Mooncake -> odyn-dgx3
+
+                                  Source     Destination
+------------------------------------------------
+GPU execution                       PASS            PASS
+Training steps                      1-10           11-30
+Useful tokens                       1177            1633
+Runtime                           3.20 s          2.72 s
+Tokens/sec                        367.42          599.44
+Mean GPU util                     43.08%          41.71%
+Peak accel memory                7.46 GB         3.47 GB
+Mean GPU power                   72.13 W         18.63 W
+GPU energy                       0.25 kJ         0.05 kJ
+Tokens/joule                        4.65           30.95
+Energy GBP / 1M                 0.02 GBP        0.00 GBP
+Energy break-even /1M           0.02 GBP        0.00 GBP
+
+Migration
+------------------------------------------------
+Checkpoint size           0.02 GB
+iperf3 ceiling            941.34 Mbit/s
+rsync                     214.30 Mbit/s
+Mooncake                  611.46 Mbit/s
+Mooncake / TCP ceiling    64.96%
+Mooncake / rsync          285.33%
+
+Save checkpoint           0.23 s
+Transfer                  0.23 s
+Load checkpoint           0.00 s
+Resume -> first step      1.02 s
+Total migration           1.48 s
+
+Checksum                  PASS
+Optimizer continuity      PASS
+Training continuity       PASS
+
+Functional benchmark      PASS
+Transfer benchmark        PASS
+GPU energy benchmark      PASS
+Economic comparison       PASS
