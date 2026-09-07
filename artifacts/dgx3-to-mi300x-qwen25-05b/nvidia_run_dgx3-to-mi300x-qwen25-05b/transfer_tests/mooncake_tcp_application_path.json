@@ -1,0 +1,15 @@
+{
+  "test": "Mooncake TCP",
+  "path": "Mooncake application path",
+  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",
+  "details": {
+    "backend": "scp",
+    "success": true,
+    "bytes_transferred": 18039793,
+    "elapsed_seconds": 14.265807749994565,
+    "throughput_bytes_per_second": 1264547.6033424656,
+    "manifest_path": "",
+    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+  }
+}

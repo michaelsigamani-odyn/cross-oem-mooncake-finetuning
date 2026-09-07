@@ -1,0 +1,63 @@
+Cross-OEM LoRA Migration Benchmark
+=================================
+
+Model: Qwen/Qwen2.5-0.5B
+Path: odyn-dgx3 -> migration -> f3bab8d75c53
+
+TRAINING
+                             NVIDIA SOURCE      AMD TARGET      END-TO-END
+                                 odyn-dgx3    f3bab8d75c53        MIGRATED
+--------------------------------------------------------------------------
+Backend                             NVIDIA             AMD   NVIDIA -> AMD
+Start step                               0              10               0
+End step                                10              30              30
+Steps executed                          10              20              30
+Useful tokens                         1280            2560            3840
+Training runtime                    1.73 s         12.14 s         13.87 s
+Training tokens/sec                 739.91          210.82          276.80
+Wall-clock tokens/sec                                               100.58
+
+GPU / ENERGY
+                                 odyn-dgx3    f3bab8d75c53      END-TO-END
+--------------------------------------------------------------------------
+Mean GPU util                       22.00%           6.81%                
+Peak GPU util                       65.00%          46.00%                
+Peak accel memory                  1.36 GB         1.45 GB                
+Mean GPU power                     12.38 W     UNAVAILABLE                
+GPU energy (J)                     17.64 J     UNAVAILABLE         17.64 J
+GPU energy (Wh)                  0.0049 Wh     UNAVAILABLE       0.0049 Wh
+GPU energy (kWh)              0.000005 kWh     UNAVAILABLE    0.000005 kWh
+Tokens/joule                         72.57     UNAVAILABLE          217.72
+Electricity GBP/kWh                   0.27            0.27                
+Energy cost / 1M tokens           0.00 GBP     UNAVAILABLE        0.00 GBP
+
+Migration
+--------------------------------------------------------------------------
+Checkpoint size           0.02 GB
+iperf3 ceiling            UNAVAILABLE
+rsync                     UNAVAILABLE
+Mooncake                  10.12 Mbit/s
+Bytes transferred         18039793 B
+Effective bandwidth       10.12 Mbit/s
+Mooncake / TCP ceiling    UNAVAILABLE
+Mooncake / rsync          UNAVAILABLE
+
+Save checkpoint           0.30 s
+Transfer                  14.27 s
+Load checkpoint           0.63 s
+Resume -> first step      9.11 s
+Total migration           24.30 s
+Migration overhead        175.19%
+
+VALIDATION
+--------------------------------------------------------------------------
+Checkpoint continuity     PASS
+NVIDIA -> AMD resume       PASS
+Expected final step       30
+Actual final step         30
+Metrics complete          PASS
+Formula validation        PASS
+Control runs              SKIPPED
+Benchmark valid           PASS
+Source power reason       AVAILABLE
+Target power reason       no telemetry samples

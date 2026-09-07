@@ -1,0 +1,52 @@
+{
+  "tests": [
+    {
+      "test": "iperf3",
+      "path": "Maximum TCP capability",
+      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",
+      "details": {
+        "success": true,
+        "elapsed_seconds": 10.004112,
+        "throughput_bits_per_second": 941443841.4923784,
+        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",
+        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"
+      }
+    },
+    {
+      "test": "SCP/rsync",
+      "path": "File-transfer baseline",
+      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",
+      "details": {
+        "success": true,
+        "bytes_transferred": 18039874,
+        "elapsed_seconds": 0.7324360840138979,
+        "throughput_bytes_per_second": 24629963.47904904,
+        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",
+        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"
+      }
+    },
+    {
+      "test": "Mooncake TCP",
+      "path": "Mooncake application path",
+      "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",
+      "details": {
+        "backend": "scp",
+        "success": true,
+        "bytes_transferred": 18039874,
+        "elapsed_seconds": 8.689091583975824,
+        "throughput_bytes_per_second": 2076151.8998451603,
+        "manifest_path": "",
+        "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",
+        "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"
+      }
+    }
+  ],
+  "comparison": {
+    "mooncake_vs_iperf_percent": 1.76,
+    "mooncake_vs_rsync_percent": 8.43
+  },
+  "machines": {
+    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",
+    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"
+  }
+}

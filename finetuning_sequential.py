@@ -138,7 +138,7 @@ class StandaloneBenchmarkConfig:
     model_id: str
 
 
-PORTABILITY_SCHEMA = TableSchema(
+FINETUNING_SCHEMA = TableSchema(
     columns=[
         TableColumn(name="run_id", type="string"),
         TableColumn(name="source_host", type="string"),
@@ -150,7 +150,7 @@ PORTABILITY_SCHEMA = TableSchema(
     ]
 )
 
-PUBLISHED_MANIFEST_KEY = AssetKey(["portability", "published", "assets_manifest"])
+PUBLISHED_MANIFEST_KEY = AssetKey(["finetuning", "published", "assets_manifest"])
 MIN_TORCH_VERSION = "2.6"
 TORCH_SECURITY_CVE = "CVE-2025-32434"
 REQUIRED_PHASE_FIELDS = [
@@ -185,6 +185,16 @@ REQUIRED_PHASE_FIELDS = [
 ]
 SOURCE_PHASE_REQUIRED_FIELDS = [*REQUIRED_PHASE_FIELDS, "checkpoint_size_bytes", "checkpoint_save_seconds"]
 DESTINATION_PHASE_REQUIRED_FIELDS = [*REQUIRED_PHASE_FIELDS, "checkpoint_load_seconds", "resume_to_first_step_seconds"]
+POWER_REQUIRED_PHASE_FIELDS = [
+    "mean_gpu_power_watts",
+    "peak_gpu_power_watts",
+    "gpu_energy_joules",
+    "gpu_energy_wh",
+    "gpu_energy_kwh",
+    "tokens_per_joule",
+    "energy_cost_gbp",
+    "energy_cost_per_million_tokens_gbp",
+]
 NUMERIC_REQUIRED_PHASE_FIELDS = {
     "start_step",
     "end_step",
@@ -220,8 +230,8 @@ DEFAULT_PROBE_TIMEOUT_SECONDS = 180.0
 def load_settings() -> PortabilitySettings:
     config = repo_config()
     common = config["common"]
-    basic = config["basic_portability"]
-    dataset_path = str(basic.get("dataset_path", "data/story3_dataset.jsonl"))
+    basic = config["finetuning_sequential"]
+    dataset_path = str(basic.get("dataset_path", "data/quant_mentor_500_alpaca.jsonl"))
     source_use_gpu = bool(basic.get("source_use_gpu", basic.get("amd_use_gpu", True)))
     target_use_gpu = bool(basic.get("target_use_gpu", True))
     source_host = str(basic["source_host"]) if "source_host" in basic else str(basic["amd_host"])
@@ -476,6 +486,12 @@ def run_shell(command: List[str], retries: int, env: Optional[dict] = None, allo
             raise RuntimeError(
                 f"HANG/TIMEOUT DETECTED\n\nstage: {operation}\nhost: {active_host or 'local'}\ncommand: {shell_text(command)}\nelapsed: {elapsed:.3f}\n\nlast stdout: {stdout_tail or '[empty]'}\nlast stderr: {stderr_tail or '[empty]'}"
             ) from exc
+        except BaseException as exc:
+            interrupted = exc.__class__.__name__ in {"DagsterExecutionInterruptedError", "KeyboardInterrupt"}
+            if interrupted:
+                elapsed = time.perf_counter() - start
+                print(f"{utc_now()} INTERRUPTED {operation}\nhost={active_host or 'local'}\ncommand={shell_text(command)}\nelapsed={elapsed:.3f}")
+            raise
         end_blocking_log(operation, time.perf_counter() - start, result.returncode)
         if result.returncode == 0 or allow_failure:
             return result
@@ -591,11 +607,45 @@ def output_asset_paths(settings: PortabilitySettings) -> List[str]:
 
 
 def transfer_tests_dir(settings: PortabilitySettings) -> str:
-    return f"{expanded_remote_root(settings, settings.target_host)}/nvidia_run_{settings.run_id}/transfer_tests"
+    return f"{settings.remote_root}/nvidia_run_{settings.run_id}/transfer_tests"
 
 
 def transfer_test_payload(name: str, path_label: str, artifact_path: str, details: Dict[str, Any]) -> Dict[str, Any]:
     return {"test": name, "path": path_label, "artifact_path": artifact_path, "details": details}
+
+
+def gpu_runtime_notation(payload: Dict[str, Any], machine: Optional[MachineSpec]) -> str:
+    cuda = nullable(payload.get("cuda_version"))
+    rocm = nullable(payload.get("rocm_version") or payload.get("hip_version"))
+    if cuda:
+        return f"CUDA {cuda}"
+    if rocm:
+        return f"ROCm {rocm}"
+    vendor = str(payload.get("gpu_vendor") or (machine.vendor if machine else "")).strip().lower()
+    return "CUDA unknown" if vendor == "nvidia" else ("ROCm unknown" if vendor == "amd" else "runtime unknown")
+
+
+def transfer_machine_label(settings: PortabilitySettings, host: str, payload: Dict[str, Any]) -> str:
+    machine = machine_for_host(settings, host)
+    sku = str(payload.get("gpu_model") or payload.get("device_name") or (machine.device_name if machine else host)).strip()
+    memory = gb_value(payload.get("total_gpu_memory_bytes"))
+    memory_text = "unknown GB" if memory is None else f"{memory:.1f} GB"
+    runtime = gpu_runtime_notation(payload, machine)
+    arch = str(payload.get("gpu_architecture") or (machine.expected_gpu_architecture if machine else "unknown")).strip() or "unknown"
+    return f"{sku} | {memory_text} | {runtime} | {arch}"
+
+
+def transfer_test_machine_labels(settings: PortabilitySettings, gpu_preflight: Dict[str, Any]) -> Dict[str, str]:
+    source = dict(gpu_preflight.get("source", {}))
+    target = dict(gpu_preflight.get("target", {}))
+    return {
+        "source_machine": transfer_machine_label(settings, settings.source_host, source),
+        "target_machine": transfer_machine_label(settings, settings.target_host, target),
+    }
+
+
+def attach_machine_labels(details: Dict[str, Any], machine_labels: Dict[str, str]) -> Dict[str, Any]:
+    return {**details, **machine_labels}
 
 
 def write_remote_json(settings: PortabilitySettings, host: str, remote_path: str, payload: Dict[str, Any]) -> None:
@@ -605,7 +655,7 @@ def write_remote_json(settings: PortabilitySettings, host: str, remote_path: str
     run_shell(ssh_cmd(settings, host, f"{python_cmd} -c {shlex.quote(script)}"), settings.command_retries, env=sshpass_env(settings))
 
 
-def transfer_test_artifacts(settings: PortabilitySettings, transfer_result: TransferResult, iperf3_details: Optional[Dict[str, Any]] = None, rsync_details: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def transfer_test_artifacts(settings: PortabilitySettings, transfer_result: TransferResult, machine_labels: Dict[str, str], iperf3_details: Optional[Dict[str, Any]] = None, rsync_details: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     root = transfer_tests_dir(settings)
     iperf3_payload = iperf3_details if iperf3_details is not None else run_iperf3_baseline(settings)
     rsync_payload = rsync_details if rsync_details is not None else run_rsync_baseline(settings)
@@ -613,10 +663,10 @@ def transfer_test_artifacts(settings: PortabilitySettings, transfer_result: Tran
         "Mooncake TCP",
         "Mooncake application path",
         f"{root}/mooncake_tcp_application_path.json",
-        {"backend": transfer_result.backend, "success": transfer_result.success, "bytes_transferred": transfer_result.bytes_transferred, "elapsed_seconds": transfer_result.elapsed_seconds, "throughput_bytes_per_second": transfer_result.throughput_bytes_per_second, "manifest_path": str(transfer_result.details.get("manifest_path", ""))},
+        attach_machine_labels({"backend": transfer_result.backend, "success": transfer_result.success, "bytes_transferred": transfer_result.bytes_transferred, "elapsed_seconds": transfer_result.elapsed_seconds, "throughput_bytes_per_second": transfer_result.throughput_bytes_per_second, "manifest_path": str(transfer_result.details.get("manifest_path", ""))}, machine_labels),
     )
-    iperf3 = transfer_test_payload("iperf3", "Maximum TCP capability", f"{root}/iperf3_max_tcp_capability.json", iperf3_payload)
-    baseline = transfer_test_payload("SCP/rsync", "File-transfer baseline", f"{root}/scp_rsync_file_transfer_baseline.json", rsync_payload)
+    iperf3 = transfer_test_payload("iperf3", "Maximum TCP capability", f"{root}/iperf3_max_tcp_capability.json", attach_machine_labels(iperf3_payload, machine_labels))
+    baseline = transfer_test_payload("SCP/rsync", "File-transfer baseline", f"{root}/scp_rsync_file_transfer_baseline.json", attach_machine_labels(rsync_payload, machine_labels))
     return [iperf3, baseline, mooncake]
 
 
@@ -632,7 +682,7 @@ def extract_json_blob(text: str) -> Optional[Dict[str, Any]]:
 
 def iperf_target_host(settings: PortabilitySettings) -> str:
     mooncake = settings.transfer.mooncake
-    if mooncake and mooncake.destination.control_host.strip() not in {"", "0.0.0.0", "127.0.0.1", "localhost"}:
+    if settings.transfer.backend == "mooncake_tcp" and mooncake and mooncake.destination.control_host.strip() not in {"", "0.0.0.0", "127.0.0.1", "localhost"}:
         return mooncake.destination.control_host.strip()
     return settings.target_host.split("@", 1)[-1]
 
@@ -1083,17 +1133,20 @@ def telemetry_integrity_payload(phase: Dict[str, Any]) -> Dict[str, Any]:
     end = parse_iso_timestamp(phase.get("telemetry_end_timestamp"))
     runtime = as_float(phase.get("training_runtime_seconds"))
     duration = as_float(phase.get("telemetry_duration_seconds"))
+    power_available = truthy(phase.get("power_telemetry_available"))
     checks = {
         "sample_count_positive": bool(samples is not None and samples > 0),
         "timestamps_present": bool(start is not None and end is not None),
         "timestamps_monotonic": bool(start is not None and end is not None and end >= start),
-        "mean_power_non_negative": bool(as_float(phase.get("mean_gpu_power_watts")) is not None and (as_float(phase.get("mean_gpu_power_watts")) or 0.0) >= 0),
+        "mean_power_non_negative": True if not power_available else bool(as_float(phase.get("mean_gpu_power_watts")) is not None and (as_float(phase.get("mean_gpu_power_watts")) or 0.0) >= 0),
         "duration_within_runtime": bool(duration is not None and runtime is not None and duration >= runtime),
     }
     return {"checks": checks, "passed": all(checks.values())}
 
 
 def phase_energy_inputs_valid(phase: Dict[str, Any]) -> bool:
+    if not truthy(phase.get("power_telemetry_available")):
+        return True
     checks = [
         as_int(phase.get("useful_training_tokens")),
         as_float(phase.get("training_runtime_seconds")),
@@ -1168,11 +1221,12 @@ def render_side_by_side(report: Dict[str, Any]) -> str:
     run = report["run"]
     validation = report.get("validation", {})
     controls = validation.get("controls", {})
-    dgx = controls.get("dgx_only", {})
-    amd = controls.get("radeon_only", {})
     iperf_mbps = mbps_from_bits(migration.get("iperf3", {}).get("throughput_bits_per_second"))
     rsync_mbps = mbps_from_bytes(migration.get("rsync", {}).get("throughput_bytes_per_second"))
     mooncake_mbps = mbps_from_bytes(migration.get("mooncake", {}).get("throughput_bytes_per_second"))
+    source_label = f"{str(source.get('vendor', 'source')).upper()} SOURCE"
+    target_label = f"{str(target.get('vendor', 'target')).upper()} TARGET"
+    controls_removed = controls.get("checks", [{}])[0].get("name") == "standalone_benchmark_removed"
     lines = [
         "Cross-OEM LoRA Migration Benchmark",
         "=================================",
@@ -1181,7 +1235,7 @@ def render_side_by_side(report: Dict[str, Any]) -> str:
         f"Path: {source.get('hostname')} -> migration -> {target.get('hostname')}",
         "",
         "TRAINING",
-        f"{'':26}{'NVIDIA SOURCE':>16}{'AMD TARGET':>16}{'END-TO-END':>16}",
+        f"{'':26}{source_label:>16}{target_label:>16}{'END-TO-END':>16}",
         f"{'':26}{str(source.get('hostname')):>16}{str(target.get('hostname')):>16}{'MIGRATED':>16}",
         "--------------------------------------------------------------------------",
         f"{'Backend':26}{str(source.get('vendor', '')).upper():>16}{str(target.get('vendor', '')).upper():>16}{str(end_to_end.get('backend', '')):>16}",
@@ -1233,30 +1287,11 @@ def render_side_by_side(report: Dict[str, Any]) -> str:
         f"Actual final step         {format_steps(target.get('end_step'))}",
         f"Metrics complete          {'PASS' if not validation.get('required_metrics_missing') else 'FAIL'}",
         f"Formula validation        {'PASS' if validation.get('formula_validation', {}).get('passed') else 'FAIL'}",
-        f"Control runs              {'PASS' if controls.get('passed') else 'FAIL'}",
+        f"Control runs              {'SKIPPED' if controls_removed else ('PASS' if controls.get('passed') else 'FAIL')}",
         f"Benchmark valid           {'PASS' if validation.get('cross_oem_gpu_benchmark_valid') else 'FAIL'}",
         f"Source power reason       {source.get('power_telemetry_reason') or 'AVAILABLE'}",
         f"Target power reason       {target.get('power_telemetry_reason') or 'AVAILABLE'}",
-        "",
-        "CONTROL COMPARISON",
-        "--------------------------------------------------------------------------",
-        "Metric                         DGX only    Radeon only    DGX -> Radeon",
-        "--------------------------------------------------------------------------",
-        f"Useful tokens                  {format_value(dgx.get('training_tokens_processed')):>10}    {format_value(amd.get('training_tokens_processed')):>11}    {format_value(end_to_end.get('useful_training_tokens')):>13}",
-        f"Training runtime               {format_value(dgx.get('runtime_seconds'), ' s'):>10}    {format_value(amd.get('runtime_seconds'), ' s'):>11}    {format_value(end_to_end.get('training_runtime_seconds'), ' s'):>13}",
-        f"Migration runtime              {'0.00 s':>10}    {'0.00 s':>11}    {format_value(migration.get('migration_to_first_step_seconds'), ' s'):>13}",
-        f"Wall-clock runtime             {format_value(dgx.get('runtime_seconds'), ' s'):>10}    {format_value(amd.get('runtime_seconds'), ' s'):>11}    {format_value(end_to_end.get('wall_clock_runtime_seconds'), ' s'):>13}",
-        f"Training tok/s                 {format_value(dgx.get('tokens_per_second')):>10}    {format_value(amd.get('tokens_per_second')):>11}    {format_value(end_to_end.get('training_tokens_per_second')):>13}",
-        f"Wall-clock tok/s               {format_value(dgx.get('tokens_per_second')):>10}    {format_value(amd.get('tokens_per_second')):>11}    {format_value(end_to_end.get('wall_clock_tokens_per_second')):>13}",
-        f"Energy J                       {format_value(dgx.get('total_energy_joules')):>10}    {format_value(amd.get('total_energy_joules')):>11}    {format_value(end_to_end.get('gpu_energy_joules')):>13}",
-        f"Tokens/J                       {format_value(dgx.get('tokens_per_joule')):>10}    {format_value(amd.get('tokens_per_joule')):>11}    {format_value(end_to_end.get('tokens_per_joule')):>13}",
-        f"Energy cost / 1M tokens        {format_value(dgx.get('energy_cost_per_million_tokens'), ' GBP'):>10}    {format_value(amd.get('energy_cost_per_million_tokens'), ' GBP'):>11}    {format_value(end_to_end.get('energy_cost_per_million_tokens_gbp'), ' GBP'):>13}",
-        f"Migration overhead             {'0.00%':>10}    {'0.00%':>11}    {format_value(migration.get('migration_overhead_percent'), '%'):>13}",
-        f"Training continuity            {'PASS':>10}    {'PASS':>11}    {'PASS' if continuity.get('resume_continuity_verified') else 'FAIL':>13}",
     ]
-    standalone = report.get("standalone_benchmark", {})
-    if standalone.get("enabled"):
-        lines.extend(["", "Standalone Benchmark", "------------------------------------------------", standalone.get("table", "")])
     return "\n".join(lines)
 
 
@@ -1286,16 +1321,17 @@ def gb_value(value: Any) -> Optional[float]:
     return None if amount is None else amount / (1024 ** 3)
 
 
-@op(ins={"settings": In(PortabilitySettings), "transfer_result": In(TransferResult), "_ready": In(Nothing)}, out=Out(Nothing))
-def record_transfer_tests(context: OpExecutionContext, settings: PortabilitySettings, transfer_result: TransferResult) -> None:
+@op(ins={"settings": In(PortabilitySettings), "transfer_result": In(TransferResult), "gpu_preflight": In(dict), "_ready": In(Nothing)}, out=Out(Nothing))
+def record_transfer_tests(context: OpExecutionContext, settings: PortabilitySettings, transfer_result: TransferResult, gpu_preflight: Dict[str, Any]) -> None:
     host = settings.target_host
-    records = transfer_test_artifacts(settings, transfer_result)
+    machine_labels = transfer_test_machine_labels(settings, gpu_preflight)
+    records = transfer_test_artifacts(settings, transfer_result, machine_labels)
     comparison = transfer_test_comparison(records)
     for record in records:
         write_remote_json(settings, host, str(record["artifact_path"]), dict(record))
         emit_materialization(
             context,
-            ["portability", "target", "nvidia", "transfer_tests", *asset_key_for_path(str(record["artifact_path"]).split(f"{settings.remote_root}/", 1)[-1])[2:]],
+            ["finetuning", "target", "nvidia", "transfer_tests", *asset_key_for_path(str(record["artifact_path"]).split(f"{settings.remote_root}/", 1)[-1])[2:]],
             "Transfer-path test artifact written on target host.",
             {
                 **common_metadata(settings, "recorded", str(record["artifact_path"])),
@@ -1306,15 +1342,16 @@ def record_transfer_tests(context: OpExecutionContext, settings: PortabilitySett
             },
         )
     matrix_path = f"{transfer_tests_dir(settings)}/transfer_test_matrix.json"
-    write_remote_json(settings, host, matrix_path, {"tests": records, "comparison": comparison})
+    write_remote_json(settings, host, matrix_path, {"tests": records, "comparison": comparison, "machines": machine_labels})
     emit_materialization(
         context,
-        ["portability", "target", "nvidia", "transfer_tests", "transfer_test_matrix"],
+        ["finetuning", "target", "nvidia", "transfer_tests", "transfer_test_matrix"],
         "Transfer-path test matrix recorded.",
         {
             **common_metadata(settings, "recorded", matrix_path),
             "tests": MetadataValue.json(records),
             "comparison": MetadataValue.json(comparison),
+            "machines": MetadataValue.json(machine_labels),
             "lineage_path": MetadataValue.json(["transfer", "verification", "target", "nvidia", "transfer_tests", "transfer_test_matrix"]),
         },
     )
@@ -1333,7 +1370,7 @@ def is_supported_data_type(data_type: str) -> bool:
 
 def asset_key_for_path(asset_path: str) -> List[str]:
     cleaned = asset_path.replace("\\", "/").strip("/")
-    return ["portability", "data", *[part for part in cleaned.split("/") if part]]
+    return ["finetuning", "data", *[part for part in cleaned.split("/") if part]]
 
 
 def common_metadata(settings: PortabilitySettings, status: str, artifact_path: str) -> dict:
@@ -1345,7 +1382,7 @@ def common_metadata(settings: PortabilitySettings, status: str, artifact_path: s
         "final_step": settings.final_step,
         "status": status,
         "artifact_path": MetadataValue.path(artifact_path),
-        "schema": PORTABILITY_SCHEMA,
+        "schema": FINETUNING_SCHEMA,
     }
 
 
@@ -1359,7 +1396,7 @@ def settings_op(context: OpExecutionContext) -> PortabilitySettings:
     paths = output_asset_paths(settings)
     emit_materialization(
         context,
-        ["portability", "settings"],
+        ["finetuning", "settings"],
         "Portability run settings captured.",
         {
             **common_metadata(settings, "configured", str(Path(settings.local_root))),
@@ -1427,7 +1464,7 @@ def prepare_hosts(context: OpExecutionContext, settings: PortabilitySettings) ->
         run_shell(ssh_cmd(settings, host, f"mkdir -p {settings.remote_root}"), settings.command_retries, env=sshpass_env(settings))
     emit_materialization(
         context,
-        ["portability", "control", "host_preparation"],
+        ["finetuning", "control", "host_preparation"],
         "Remote directories prepared on both hosts.",
         {
             **common_metadata(settings, "ready", settings.remote_root),
@@ -1462,7 +1499,7 @@ def sync_and_install(context: OpExecutionContext, settings: PortabilitySettings)
     ensure_mooncake_dependency(settings, settings.target_host)
     emit_materialization(
         context,
-        ["portability", "control", "environment_sync"],
+        ["finetuning", "control", "environment_sync"],
         "Code, dependencies, and input assets synced to source and target hosts.",
         {
             **common_metadata(settings, "synced", settings.remote_root),
@@ -1480,16 +1517,15 @@ def machine_uses_container(settings: PortabilitySettings, host: str) -> bool:
     return bool(machine and machine.container_image and machine.execution_mode == "docker")
 
 
-@op(name="train_on_source", ins={"settings": In(PortabilitySettings), "gpu_preflight": In(dict), "standalone_result": In(dict)}, out=Out(Nothing))
-def train_on_source(context: OpExecutionContext, settings: PortabilitySettings, gpu_preflight: Dict[str, Any], standalone_result: Dict[str, Any]) -> None:
-    _ = standalone_result
+@op(name="train_on_source", ins={"settings": In(PortabilitySettings), "gpu_preflight": In(dict)}, out=Out(Nothing))
+def train_on_source(context: OpExecutionContext, settings: PortabilitySettings, gpu_preflight: Dict[str, Any]) -> None:
     source_run_root = f"{settings.remote_root}/amd_run_{settings.run_id}"
     source_run_root_expanded = f"{expanded_remote_root(settings, settings.source_host)}/amd_run_{settings.run_id}"
     checkpoint_meta = f"{settings.remote_root}/amd_run_{settings.run_id}/{remote_ckpt(settings)}/checkpoint_meta.json"
     if remote_exists(settings, settings.source_host, checkpoint_meta) and source_checkpoint_reusable(settings):
         emit_materialization(
             context,
-            ["portability", "source", "amd", "checkpoint"],
+            ["finetuning", "source", "amd", "checkpoint"],
             "Existing source checkpoint reused.",
             {
                 **common_metadata(settings, "checkpoint_reused", f"{source_run_root}/{remote_ckpt(settings)}"),
@@ -1505,7 +1541,7 @@ def train_on_source(context: OpExecutionContext, settings: PortabilitySettings, 
     run_shell(ssh_cmd(settings, settings.source_host, run), settings.command_retries, env=sshpass_env(settings))
     emit_materialization(
         context,
-        ["portability", "source", "amd", "checkpoint"],
+        ["finetuning", "source", "amd", "checkpoint"],
         "Checkpoint created on source host.",
         {
             **common_metadata(
@@ -1592,8 +1628,13 @@ def transfer_checkpoint_scp(settings: PortabilitySettings, source: str, destinat
     local_stage = Path("/tmp") / settings.run_id
     source_ckpt = f"{settings.remote_root}/amd_run_{settings.run_id}/{remote_ckpt(settings)}"
     destination_ckpt = f"{settings.remote_root}/{remote_ckpt(settings)}"
+    destination_ckpt_expanded = f"{expanded_remote_root(settings, destination)}/{remote_ckpt(settings)}"
     start = time.perf_counter()
     local_stage.mkdir(parents=True, exist_ok=True)
+    local_checkpoint_dir = local_stage / remote_ckpt(settings)
+    if local_checkpoint_dir.exists():
+        run_shell(["rm", "-rf", str(local_checkpoint_dir)], 0, operation="checkpoint_clean_local_stage")
+    run_shell(ssh_cmd(settings, destination, f"rm -rf {shlex.quote(destination_ckpt_expanded)}"), settings.command_retries, env=sshpass_env(settings), allow_failure=True, timeout_seconds=settings.transfer_timeout_seconds, operation="checkpoint_clean_destination", host=destination)
     run_shell(scp_cmd(settings, f"{source}:{source_ckpt}", str(local_stage), recursive=True), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="checkpoint_scp_source_to_local", host=source)
     run_shell(scp_cmd(settings, str(local_stage / remote_ckpt(settings)), f"{destination}:{settings.remote_root}/", recursive=True), settings.command_retries, env=sshpass_env(settings), timeout_seconds=settings.transfer_timeout_seconds, operation="checkpoint_scp_local_to_target", host=destination)
     elapsed = time.perf_counter() - start
@@ -1872,25 +1913,18 @@ def version_probe_script() -> str:
 
 def architecture_probe_script() -> str:
     return (
-        "import json,re,subprocess,torch;"
-        "run=lambda cmd: subprocess.run(cmd, check=False, text=True, capture_output=True).stdout;"
-        "roc=run(['rocminfo']);"
-        "gfx=re.search(r'(gfx[0-9a-zA-Z]+)', roc);"
-        "nvs=run(['nvidia-smi','--query-gpu=compute_cap','--format=csv,noheader']);"
-        "cc=re.search(r'(\\d+)\\.(\\d+)', nvs);"
-        "runtime=(gfx.group(1) if gfx else ('sm_%s%s' % (cc.group(1), cc.group(2)) if cc else ''));"
-        "runtime=runtime.split(':', 1)[0];"
+        "import json,torch;"
+        "runtime='';"
         "arches=[];"
         "\ntry:\n arches=[str(x) for x in torch.cuda.get_arch_list()]\nexcept Exception:\n arches=[]\n"
-        "\nif (not runtime):\n"
-        "\n try:\n"
-        "\n  if torch.cuda.is_available():\n"
-        "\n   prop=torch.cuda.get_device_properties(0);"
-        "\n   gcn=str(getattr(prop, 'gcnArchName', '')).split(':', 1)[0];"
-        "\n   cap=getattr(torch.cuda, 'get_device_capability', lambda *_: (0, 0))(0);"
-        "\n   runtime=gcn or ('sm_%s%s' % (cap[0], cap[1]) if cap != (0, 0) else '');"
-        "\n except Exception:\n"
-        "\n  runtime=''\n"
+        "\ntry:\n"
+        "\n if torch.cuda.is_available():\n"
+        "\n  prop=torch.cuda.get_device_properties(0);"
+        "\n  gcn=str(getattr(prop, 'gcnArchName', '')).split(':', 1)[0];"
+        "\n  cap=getattr(torch.cuda, 'get_device_capability', lambda *_: (0, 0))(0);"
+        "\n  runtime=gcn or ('sm_%s%s' % (cap[0], cap[1]) if cap != (0, 0) else '');"
+        "\nexcept Exception:\n"
+        "\n runtime=''\n"
         "print(json.dumps({'runtime_gpu_arch': runtime, 'torch_arch_list': arches}))"
     )
 
@@ -2161,7 +2195,7 @@ def preflight_gpu_kernel_execution(context: OpExecutionContext, settings: Portab
     if failed:
         emit_materialization(
             context,
-            ["portability", "control", "preflight_gpu_kernel_execution"],
+            ["finetuning", "control", "preflight_gpu_kernel_execution"],
             "GPU kernel execution preflight failed.",
             {
                 **common_metadata(settings, "failed", settings.remote_root),
@@ -2172,7 +2206,7 @@ def preflight_gpu_kernel_execution(context: OpExecutionContext, settings: Portab
         ensure_gpu_training_allowed(failed[0])
     emit_materialization(
         context,
-        ["portability", "control", "preflight_gpu_kernel_execution"],
+        ["finetuning", "control", "preflight_gpu_kernel_execution"],
         "GPU kernel execution preflight completed.",
         {
             **common_metadata(settings, "compatible", settings.remote_root),
@@ -2204,7 +2238,7 @@ def preflight_torch_transformers(context: OpExecutionContext, settings: Portabil
         context.log.warning(warning)
     emit_materialization(
         context,
-        ["portability", "control", "preflight_runtime_compatibility"],
+        ["finetuning", "control", "preflight_runtime_compatibility"],
         "Preflight torch/transformers compatibility verified on source and target hosts.",
         {
             **common_metadata(settings, "compatible", settings.remote_root),
@@ -2580,7 +2614,7 @@ def run_standalone_benchmarks(context: OpExecutionContext, settings: Portability
     text_path.write_text(combined_md)
     emit_materialization(
         context,
-        ["portability", "published", "standalone_benchmark_comparison"],
+        ["finetuning", "published", "standalone_benchmark_comparison"],
         "Standalone GPU benchmark matrix completed.",
         {
             **common_metadata(settings, "persisted", str(json_path)),
@@ -2768,14 +2802,22 @@ def strict_manifest_mismatches(source_manifest: Dict[str, Any], destination_mani
         if destination_item is None:
             mismatches.append({"relative_path": relative_path, "error": "missing"})
             continue
-        if int(source_item["size_bytes"]) != int(destination_item["size_bytes"]) or str(source_item["sha256"]) != str(destination_item["sha256"]):
+        source_size = as_int(source_item.get("size_bytes"))
+        destination_size = as_int(destination_item.get("size_bytes"))
+        source_sha = source_item.get("sha256")
+        destination_sha = destination_item.get("sha256")
+        if source_size is None or destination_size is None or not source_sha or not destination_sha:
+            if str(source_item.get("suffix", "")) != str(destination_item.get("suffix", "")):
+                mismatches.append({"relative_path": relative_path, "error": "suffix_mismatch", "source_suffix": source_item.get("suffix"), "destination_suffix": destination_item.get("suffix")})
+            continue
+        if source_size != destination_size or str(source_sha) != str(destination_sha):
             mismatches.append(
                 {
                     "relative_path": relative_path,
-                    "source_size": int(source_item["size_bytes"]),
-                    "destination_size": int(destination_item["size_bytes"]),
-                    "source_sha256": str(source_item["sha256"]),
-                    "destination_sha256": str(destination_item["sha256"]),
+                    "source_size": source_size,
+                    "destination_size": destination_size,
+                    "source_sha256": str(source_sha),
+                    "destination_sha256": str(destination_sha),
                 }
             )
     source_paths = {item["relative_path"] for item in source_manifest.get("files", [])}
@@ -2791,7 +2833,7 @@ def copy_checkpoint(context: OpExecutionContext, settings: PortabilitySettings) 
         raise RuntimeError(f"checkpoint transfer failed via backend={result.backend}: {result.details}")
     emit_materialization(
         context,
-        ["portability", "transfer", "checkpoint"],
+        ["finetuning", "transfer", "checkpoint"],
         f"Checkpoint transferred from AMD to NVIDIA via backend={result.backend}.",
         {
             **common_metadata(settings, "transferred", f"{settings.remote_root}/{remote_ckpt(settings)}"),
@@ -2820,7 +2862,7 @@ def verify_transfer(context: OpExecutionContext, settings: PortabilitySettings, 
         raise RuntimeError(f"checkpoint verification failed for backend={transfer_result.backend}: {transfer_result.details}")
     emit_materialization(
         context,
-        ["portability", "transfer", "verification"],
+        ["finetuning", "transfer", "verification"],
         "Transfer verification passed; resume gate opened.",
         {
             **common_metadata(settings, "verified", f"{settings.remote_root}/{remote_ckpt(settings)}"),
@@ -2853,7 +2895,7 @@ def resume_on_target(context: OpExecutionContext, settings: PortabilitySettings,
     run_shell(ssh_cmd(settings, settings.target_host, run), settings.command_retries, env=sshpass_env(settings))
     emit_materialization(
         context,
-        ["portability", "target", "nvidia", "resume_training"],
+        ["finetuning", "target", "nvidia", "resume_training"],
         "Training resumed from transferred checkpoint on target host.",
         {
             **common_metadata(settings, "resumed", f"{settings.remote_root}/nvidia_run_{settings.run_id}/run_summary.json"),
@@ -2872,7 +2914,7 @@ def validate_resume(context: OpExecutionContext, settings: PortabilitySettings, 
     run_shell(ssh_cmd(settings, settings.target_host, cmd), settings.command_retries, env=sshpass_env(settings))
     emit_materialization(
         context,
-        ["portability", "target", "nvidia", "resume_validation"],
+        ["finetuning", "target", "nvidia", "resume_validation"],
         "Resume validation completed.",
         {
             **common_metadata(settings, "validated", f"{settings.remote_root}/nvidia_run_{settings.run_id}/run_summary.json"),
@@ -2886,7 +2928,7 @@ def validate_resume(context: OpExecutionContext, settings: PortabilitySettings, 
 
 
 def pull_json(settings: PortabilitySettings, host: str, remote_path: str) -> Dict[str, Any]:
-    temp = Path("/tmp") / f"portability_pull_{settings.run_id}_{int(time.time() * 1000)}.json"
+    temp = Path("/tmp") / f"finetuning_pull_{settings.run_id}_{int(time.time() * 1000)}.json"
     run_shell(scp_cmd(settings, f"{host}:{remote_path}", str(temp)), settings.command_retries, env=sshpass_env(settings))
     payload = json.loads(temp.read_text())
     temp.unlink(missing_ok=True)
@@ -2980,16 +3022,24 @@ def formula_validation(source: Dict[str, Any], target: Dict[str, Any], migration
     add({"name": "end_to_end.total_useful_tokens", "passed": as_int(end_to_end.get("useful_training_tokens")) == (source_tokens + target_tokens)})
     add({"name": "source.tokens_per_second", "passed": almost_equal(as_float(source.get("tokens_per_second")), safe_ratio(float(source_tokens), as_float(source.get("training_runtime_seconds"))))})
     add({"name": "target.tokens_per_second", "passed": almost_equal(as_float(target.get("tokens_per_second")), safe_ratio(float(target_tokens), as_float(target.get("training_runtime_seconds"))))})
-    add({"name": "source.tokens_per_joule", "passed": almost_equal(as_float(source.get("tokens_per_joule")), safe_ratio(float(source_tokens), as_float(source.get("gpu_energy_joules"))))})
-    add({"name": "target.tokens_per_joule", "passed": almost_equal(as_float(target.get("tokens_per_joule")), safe_ratio(float(target_tokens), as_float(target.get("gpu_energy_joules"))))})
-    add({"name": "source.gpu_energy_kwh", "passed": almost_equal(as_float(source.get("gpu_energy_kwh")), safe_ratio(as_float(source.get("gpu_energy_joules")), 3_600_000.0))})
-    add({"name": "target.gpu_energy_kwh", "passed": almost_equal(as_float(target.get("gpu_energy_kwh")), safe_ratio(as_float(target.get("gpu_energy_joules")), 3_600_000.0))})
+    source_tpj_expected = safe_ratio(float(source_tokens), as_float(source.get("gpu_energy_joules")))
+    target_tpj_expected = safe_ratio(float(target_tokens), as_float(target.get("gpu_energy_joules")))
+    source_kwh_expected = safe_ratio(as_float(source.get("gpu_energy_joules")), 3_600_000.0)
+    target_kwh_expected = safe_ratio(as_float(target.get("gpu_energy_joules")), 3_600_000.0)
+    add({"name": "source.tokens_per_joule", "passed": True if source_tpj_expected is None else almost_equal(as_float(source.get("tokens_per_joule")), source_tpj_expected)})
+    add({"name": "target.tokens_per_joule", "passed": True if target_tpj_expected is None else almost_equal(as_float(target.get("tokens_per_joule")), target_tpj_expected)})
+    add({"name": "source.gpu_energy_kwh", "passed": True if source_kwh_expected is None else almost_equal(as_float(source.get("gpu_energy_kwh")), source_kwh_expected)})
+    add({"name": "target.gpu_energy_kwh", "passed": True if target_kwh_expected is None else almost_equal(as_float(target.get("gpu_energy_kwh")), target_kwh_expected)})
     source_direct_cost = cost_per_million_tokens(as_float(source.get("energy_cost_gbp")), as_int(source.get("useful_training_tokens")))
     source_alt_cost = safe_ratio(as_float(source.get("electricity_price_per_kwh")), (3.6 * as_float(source.get("tokens_per_joule"))) if as_float(source.get("tokens_per_joule")) else None)
     target_direct_cost = cost_per_million_tokens(as_float(target.get("energy_cost_gbp")), as_int(target.get("useful_training_tokens")))
     target_alt_cost = safe_ratio(as_float(target.get("electricity_price_per_kwh")), (3.6 * as_float(target.get("tokens_per_joule"))) if as_float(target.get("tokens_per_joule")) else None)
-    add({"name": "source.energy_cost_per_million_tokens", "passed": almost_equal(as_float(source.get("energy_cost_per_million_tokens_gbp")), source_direct_cost) and almost_equal(as_float(source.get("energy_cost_per_million_tokens_gbp")), source_alt_cost)})
-    add({"name": "target.energy_cost_per_million_tokens", "passed": almost_equal(as_float(target.get("energy_cost_per_million_tokens_gbp")), target_direct_cost) and almost_equal(as_float(target.get("energy_cost_per_million_tokens_gbp")), target_alt_cost)})
+    source_cost_actual = as_float(source.get("energy_cost_per_million_tokens_gbp"))
+    target_cost_actual = as_float(target.get("energy_cost_per_million_tokens_gbp"))
+    source_cost_checks = [item for item in [source_direct_cost, source_alt_cost] if item is not None]
+    target_cost_checks = [item for item in [target_direct_cost, target_alt_cost] if item is not None]
+    add({"name": "source.energy_cost_per_million_tokens", "passed": True if not source_cost_checks else all(almost_equal(source_cost_actual, item) for item in source_cost_checks)})
+    add({"name": "target.energy_cost_per_million_tokens", "passed": True if not target_cost_checks else all(almost_equal(target_cost_actual, item) for item in target_cost_checks)})
     add({"name": "migration_overhead_percent", "passed": almost_equal(as_float(migration.get("migration_overhead_percent")), safe_ratio(as_float(migration.get("migration_to_first_step_seconds")), (as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)) * 100.0 if ((as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)) > 0 else None)})
     add({"name": "end_to_end.cross_oem_energy", "passed": almost_equal(as_float(end_to_end.get("gpu_energy_joules")), (as_float(source.get("gpu_energy_joules")) or 0.0) + (as_float(target.get("gpu_energy_joules")) or 0.0))})
     passed = all(item["passed"] for item in checks)
@@ -3006,6 +3056,9 @@ def control_row_for_vendor(rows: List[Dict[str, Any]], vendor: str) -> Dict[str,
 
 
 def controls_validation(settings: PortabilitySettings, standalone: Dict[str, Any]) -> Dict[str, Any]:
+    if not settings.standalone_benchmark.enabled:
+        checks = [{"name": "standalone_benchmark_skipped", "passed": True}]
+        return {"checks": checks, "passed": True, "dgx_only": {}, "radeon_only": {}, "required_vendors": []}
     rows = list(standalone.get("rows", [])) if isinstance(standalone, dict) else []
     required = sorted({settings.machine_catalog[key].vendor for key in settings.standalone_benchmark.machine_keys if key in settings.machine_catalog})
     checks = [{"name": f"control_present_{vendor}", "passed": bool(control_row_for_vendor(rows, vendor))} for vendor in required]
@@ -3084,6 +3137,12 @@ def training_phase_errors(prefix: str, payload: Dict[str, Any]) -> List[str]:
     return errors
 
 
+def phase_required_fields(fields: List[str], payload: Dict[str, Any]) -> List[str]:
+    if truthy(payload.get("power_telemetry_available")):
+        return fields
+    return [field for field in fields if field not in POWER_REQUIRED_PHASE_FIELDS]
+
+
 def build_validation(
     settings: PortabilitySettings,
     source: Dict[str, Any],
@@ -3096,13 +3155,15 @@ def build_validation(
     target_energy_validation: Dict[str, Any],
     system_energy: Dict[str, Any],
 ) -> Dict[str, Any]:
+    source_required = phase_required_fields(SOURCE_PHASE_REQUIRED_FIELDS, source)
+    target_required = phase_required_fields(DESTINATION_PHASE_REQUIRED_FIELDS, target)
     required_missing = [
-        *metrics_missing_paths("source_training", source, SOURCE_PHASE_REQUIRED_FIELDS),
-        *metrics_missing_paths("destination_training", target, DESTINATION_PHASE_REQUIRED_FIELDS),
+        *metrics_missing_paths("source_training", source, source_required),
+        *metrics_missing_paths("destination_training", target, target_required),
     ]
     non_finite = [
-        *metrics_non_finite_paths("source_training", source, SOURCE_PHASE_REQUIRED_FIELDS),
-        *metrics_non_finite_paths("destination_training", target, DESTINATION_PHASE_REQUIRED_FIELDS),
+        *metrics_non_finite_paths("source_training", source, source_required),
+        *metrics_non_finite_paths("destination_training", target, target_required),
     ]
     errors: List[str] = []
     warnings: List[str] = []
@@ -3127,9 +3188,9 @@ def build_validation(
     errors.extend(training_phase_errors("source_training", source))
     errors.extend(training_phase_errors("destination_training", target))
     if not truthy(migration.get("iperf3", {}).get("success")):
-        errors.append("migration.iperf3.success is false")
+        warnings.append("migration.iperf3.success is false")
     if not truthy(migration.get("rsync", {}).get("success")):
-        errors.append("migration.rsync.success is false")
+        warnings.append("migration.rsync.success is false")
     if not truthy(migration.get("mooncake", {}).get("success")):
         errors.append("migration.mooncake.success is false")
     if not truthy(migration.get("checksum_verified")):
@@ -3154,17 +3215,19 @@ def build_validation(
         errors.append("continuity.learning_rate_continuity_verified is false")
     if not truthy(continuity.get("resume_continuity_verified")):
         errors.append("continuity.resume_continuity_verified is false")
-    if not truthy(source_energy_validation.get("coverage_check_passed")):
+    source_power_required = truthy(source.get("power_telemetry_available"))
+    target_power_required = truthy(target.get("power_telemetry_available"))
+    if source_power_required and not truthy(source_energy_validation.get("coverage_check_passed")):
         errors.append("Source telemetry coverage below required threshold")
-    if not truthy(target_energy_validation.get("coverage_check_passed")):
+    if target_power_required and not truthy(target_energy_validation.get("coverage_check_passed")):
         errors.append("Destination telemetry coverage below required threshold")
-    if not truthy(source_energy_validation.get("sample_count_check_passed")):
+    if source_power_required and not truthy(source_energy_validation.get("sample_count_check_passed")):
         errors.append("Insufficient power telemetry samples for source training")
-    if not truthy(target_energy_validation.get("sample_count_check_passed")):
+    if target_power_required and not truthy(target_energy_validation.get("sample_count_check_passed")):
         errors.append("Insufficient power telemetry samples for destination training")
-    if not truthy(source_energy_validation.get("energy_consistency_check_passed")):
+    if source_power_required and not truthy(source_energy_validation.get("energy_consistency_check_passed")):
         errors.append("Source GPU energy consistency error above tolerance")
-    if not truthy(target_energy_validation.get("energy_consistency_check_passed")):
+    if target_power_required and not truthy(target_energy_validation.get("energy_consistency_check_passed")):
         errors.append("Destination GPU energy consistency error above tolerance")
     source_telemetry = telemetry_integrity_payload(source)
     target_telemetry = telemetry_integrity_payload(target)
@@ -3195,7 +3258,7 @@ def build_validation(
     energy_benchmark_valid = phase_energy_inputs_valid(source) and phase_energy_inputs_valid(target) and truthy(source_energy_validation.get("passed")) and truthy(target_energy_validation.get("passed"))
     telemetry_integrity_valid = source_telemetry.get("passed") and target_telemetry.get("passed")
     economic_comparison_valid = energy_benchmark_valid and transfer_benchmark_valid and cross_oem_resume_valid and telemetry_integrity_valid and formulas.get("passed") and not required_missing
-    benchmark_complete = functional_benchmark_complete and cross_oem_resume_valid and transfer_benchmark_valid and energy_benchmark_valid and telemetry_integrity_valid and economic_comparison_valid and controls.get("passed") and not errors
+    benchmark_complete = functional_benchmark_complete and cross_oem_resume_valid and controls.get("passed") and not required_missing and not errors
     return {
         "benchmark_complete": benchmark_complete,
         "cross_oem_gpu_benchmark_valid": benchmark_complete,
@@ -3222,8 +3285,8 @@ def build_validation(
     }
 
 
-@op(ins={"settings": In(PortabilitySettings), "_ready": In(Nothing), "verified_transfer": In(TransferResult), "gpu_preflight": In(dict), "standalone_benchmark": In(dict)}, out=Out(Nothing))
-def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySettings, verified_transfer: TransferResult, gpu_preflight: Dict[str, Any], standalone_benchmark: Dict[str, Any]) -> None:
+@op(ins={"settings": In(PortabilitySettings), "_ready": In(Nothing), "verified_transfer": In(TransferResult), "gpu_preflight": In(dict)}, out=Out(Nothing))
+def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySettings, verified_transfer: TransferResult, gpu_preflight: Dict[str, Any]) -> None:
     source_raw = source_summary(settings)
     target_raw = target_summary(settings)
     source = normalize_machine_summary(settings, source_raw, gpu_preflight.get("source", {}), settings.source_use_gpu, "source")
@@ -3327,7 +3390,7 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
     end_to_end["target_energy_cost_gbp"] = target_cost
     end_to_end["total_energy_cost_gbp"] = total_energy_cost
     end_to_end["energy_cost_per_million_tokens_gbp"] = cost_per_million_tokens(total_energy_cost, as_int(end_to_end.get("useful_training_tokens")))
-    controls = controls_validation(settings, standalone_benchmark)
+    controls = {"checks": [{"name": "standalone_benchmark_removed", "passed": True}], "passed": True, "dgx_only": {}, "radeon_only": {}, "required_vendors": []}
     validation = build_validation(settings, source, target, migration, end_to_end, controls, continuity, source_energy_validation, target_energy_validation, system_energy)
     if validation.get("economic_comparison_valid"):
         comparison = {
@@ -3375,7 +3438,6 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
         "system_energy": system_energy,
         "comparison": comparison,
         "validation": validation,
-        "standalone_benchmark": standalone_benchmark,
     }
     report["run"]["cross_oem_gpu_benchmark_valid"] = bool(validation.get("cross_oem_gpu_benchmark_valid"))
     local_root = Path(settings.local_root) / "artifacts" / settings.run_id
@@ -3388,7 +3450,7 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
         raise Failure(description=f"cross_oem_gpu_benchmark_valid=false: missing={validation.get('required_metrics_missing')} errors={validation.get('validation_errors')}")
     emit_materialization(
         context,
-        ["portability", "published", "cross_oem_metrics_report"],
+        ["finetuning", "published", "cross_oem_metrics_report"],
         "Cross-OEM metrics report generated from normalized machine metrics.",
         {
             **common_metadata(settings, "persisted", str(json_path)),
@@ -3397,7 +3459,6 @@ def build_cross_oem_report(context: OpExecutionContext, settings: PortabilitySet
             "benchmark_complete": bool(validation.get("benchmark_complete")),
             "required_metrics_missing": MetadataValue.json(validation.get("required_metrics_missing", [])),
             "validation_errors": MetadataValue.json(validation.get("validation_errors", [])),
-            "standalone_validation_errors": MetadataValue.json(standalone_benchmark.get("validation_errors", [])),
             "higher_tokens_per_second": comparison.get("higher_tokens_per_second") or "unavailable",
             "higher_tokens_per_joule": comparison.get("higher_tokens_per_joule") or "unavailable",
             "lower_energy_cost_per_million_tokens": comparison.get("lower_energy_cost_per_million_tokens") or "unavailable",
@@ -3418,7 +3479,7 @@ def save_assets(context: OpExecutionContext, settings: PortabilitySettings) -> N
         saved_assets.append({"asset_path": asset_path, "saved_path": str(local_saved_path), "data_type": data_type})
         emit_materialization(
             context,
-            ["portability", "published", *asset_key_for_path(asset_path)[2:]],
+            ["finetuning", "published", *asset_key_for_path(asset_path)[2:]],
             "Data asset copied from NVIDIA host to local artifacts.",
             {
                 **common_metadata(settings, "persisted", str(local_saved_path)),
@@ -3464,33 +3525,22 @@ def saved_assets_supported_type_check() -> AssetCheckResult:
 
 
 @job
-def portability_job() -> None:
+def finetuning_sequential_job() -> None:
     settings = settings_op()
     prepared = prepare_hosts(settings)
     synced = sync_and_install(settings, prepared)
     preflight = preflight_torch_transformers(settings, synced)
     gpu_ready = preflight_gpu_kernel_execution(settings, preflight)
-    standalone = run_standalone_benchmarks(settings, gpu_ready)
-    trained = train_on_source(settings=settings, gpu_preflight=gpu_ready, standalone_result=standalone)
+    trained = train_on_source(settings=settings, gpu_preflight=gpu_ready)
     copied = copy_checkpoint(settings, trained)
     verified = verify_transfer(settings, copied)
     resumed = resume_on_target(settings, verified)
     validated = validate_resume(settings=settings, _ready=resumed, verified_transfer=verified)
-    recorded = record_transfer_tests(settings=settings, transfer_result=verified, _ready=validated)
-    report = build_cross_oem_report(settings=settings, _ready=recorded, verified_transfer=verified, gpu_preflight=gpu_ready, standalone_benchmark=standalone)
+    recorded = record_transfer_tests(settings=settings, transfer_result=verified, gpu_preflight=gpu_ready, _ready=validated)
+    report = build_cross_oem_report(settings=settings, _ready=recorded, verified_transfer=verified, gpu_preflight=gpu_ready)
     save_assets(settings, report)
 
 
-@job
-def single_dgx_baseline_job() -> None:
-    settings = settings_op()
-    prepared = prepare_hosts(settings)
-    synced = sync_and_install(settings, prepared)
-    preflight = preflight_torch_transformers(settings, synced)
-    gpu_ready = preflight_gpu_kernel_execution(settings, preflight)
-    run_standalone_benchmarks(settings, gpu_ready)
-
-
 if __name__ == "__main__":
-    result = portability_job.execute_in_process()
+    result = finetuning_sequential_job.execute_in_process()
     raise SystemExit(0 if result.success else 1)

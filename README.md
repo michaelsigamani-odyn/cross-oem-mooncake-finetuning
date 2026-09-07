@@ -63,7 +63,7 @@ git clone https://github.com/<your-org>/cross-vendor-mooncake-test.git
 cd cross-vendor-mooncake-test
 
 # 6. Run Dagster — the CLI entry point is provided by the installed package
-dagster dev -f dagster_basic_portability.py
+dagster dev -f finetuning_sequential.py
 ```
 
 **Expected log fragment:**
@@ -78,6 +78,5 @@ In a browser, go to: [http://127.0.0.1:3000](http://127.0.0.1:3000)
 Click launch runs to run the workflow:
 
 <img width="1713" height="935" alt="Screenshot 2026-09-01 at 20 41 11" src="https://github.com/user-attachments/assets/69d5e1fd-6519-4900-b193-25d0b216b93d" />
-
 
 

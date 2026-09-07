@@ -1,7 +1,0 @@
-{
-  "trial": "seed-17",
-  "seed": 17,
-  "status": "failed",
-  "error": "remote python on michael@odyn-dgx3 failed\nstdout=\nstderr=Read from remote host odyn-dgx3: Connection reset by peer\nclient_loop: send disconnect: Broken pipe\n",
-  "logs": []
-}

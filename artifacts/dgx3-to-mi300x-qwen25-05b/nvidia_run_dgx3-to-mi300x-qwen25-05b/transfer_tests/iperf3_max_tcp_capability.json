@@ -1,0 +1,11 @@
+{
+  "test": "iperf3",
+  "path": "Maximum TCP capability",
+  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",
+  "details": {
+    "success": false,
+    "error": "{\n\t\"start\":\t{\n\t\t\"connected\":\t[],\n\t\t\"version\":\t\"iperf 3.16\",\n\t\t\"system_info\":\t\"Linux odyn-dgx3 6.17.0-1029-nvidia #29-Ubuntu SMP PREEMPT_DYNAMIC Wed Jul  1 00:13:52 UTC 2026 aarch64\"\n\t},\n\t\"intervals\":\t[],\n\t\"end\":\t{\n\t},\n\t\"error\":\t\"unable to connect to server - server may have stopped running or use a different port, firewall issue, etc.: Resource temporarily unavailable\"\n}",
+    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+  }
+}

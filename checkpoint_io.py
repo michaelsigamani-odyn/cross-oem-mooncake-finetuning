@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 import argparse
+import hashlib
 import json
 
 
@@ -29,13 +30,14 @@ def list_files(checkpoint_dir: str) -> List[Path]:
 
 
 def entry(root: Path, path: Path) -> Dict[str, Any]:
-    return {"relative_path": str(path.relative_to(root)), "suffix": path.suffix}
+    payload = path.read_bytes()
+    return {"relative_path": str(path.relative_to(root)), "suffix": path.suffix, "size_bytes": path.stat().st_size, "sha256": hashlib.sha256(payload).hexdigest()}
 
 
 def manifest(checkpoint_dir: str) -> Dict[str, Any]:
     root = Path(checkpoint_dir)
     files = [entry(root, path) for path in list_files(checkpoint_dir)]
-    return {"checkpoint_dir": str(root), "file_count": len(files), "files": files}
+    return {"checkpoint_dir": str(root), "file_count": len(files), "total_bytes": sum(int(item.get("size_bytes", 0)) for item in files), "files": files}
 
 
 def read_manifest(path: str) -> Dict[str, Any]:

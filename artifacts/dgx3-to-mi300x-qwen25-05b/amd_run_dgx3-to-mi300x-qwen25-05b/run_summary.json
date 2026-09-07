@@ -1,0 +1,98 @@
+{
+  "saved_step": 10,
+  "resume_loaded_from_step": null,
+  "loss_before_migration": 3.151432752609253,
+  "loss_trace": [
+    {
+      "step": 1,
+      "loss": 3.4079389572143555
+    },
+    {
+      "step": 2,
+      "loss": 3.379634141921997
+    },
+    {
+      "step": 3,
+      "loss": 3.3431594371795654
+    },
+    {
+      "step": 4,
+      "loss": 3.2956812381744385
+    },
+    {
+      "step": 5,
+      "loss": 3.268167734146118
+    },
+    {
+      "step": 6,
+      "loss": 3.2238712310791016
+    },
+    {
+      "step": 7,
+      "loss": 3.1955807209014893
+    },
+    {
+      "step": 8,
+      "loss": 3.1818222999572754
+    },
+    {
+      "step": 9,
+      "loss": 3.160775661468506
+    },
+    {
+      "step": 10,
+      "loss": 3.151432752609253
+    }
+  ],
+  "first_logged_step": 1,
+  "last_logged_step": 10,
+  "optimizer_exp_avg_sq_norm": 0.00015510240389008471,
+  "optimizer_exp_avg_sq_norm_before_save": 0.00015510240389008471,
+  "optimizer_exp_avg_sq_norm_after_resume_load": null,
+  "learning_rate": 0.0,
+  "optimizer_learning_rate_before_save": 0.0,
+  "optimizer_learning_rate_after_resume_load": null,
+  "seed": 17,
+  "model_id": "Qwen/Qwen2.5-0.5B",
+  "dataset_path": "/home/michael/cross-vendor-mooncake-test/data/quant_mentor_500_alpaca.jsonl",
+  "hostname": "odyn-dgx3",
+  "python": "3.12.3",
+  "device": "NVIDIA GB10",
+  "vendor": "nvidia",
+  "gpu_architecture": "sm_121",
+  "torch": "2.13.0+cu130",
+  "torch_version": "2.13.0+cu130",
+  "resume_from": null,
+  "runtime_seconds": 1.7299296950222924,
+  "useful_training_tokens": 1280,
+  "tokens_per_second": 739.9144622368631,
+  "final_loss": 3.151432752609253,
+  "mean_gpu_utilization_percent": 22.0,
+  "peak_gpu_utilization_percent": 65.0,
+  "peak_accelerator_memory_bytes": 1460975104,
+  "mean_power_watts": 12.375,
+  "peak_power_watts": 15.36,
+  "min_power_watts": 10.8,
+  "gpu_energy_joules": 17.636948808665622,
+  "gpu_energy_kwh": 4.899152446851561e-06,
+  "tokens_per_joule": 72.5749115612953,
+  "energy_kwh_per_million_tokens": 0.0038274628491027822,
+  "power_sample_count": 6,
+  "power_telemetry_available": true,
+  "power_telemetry_source": "nvml",
+  "power_telemetry_reason": null,
+  "telemetry_source": "nvml",
+  "sampling_interval_seconds": 0.25,
+  "telemetry_duration_seconds": 1.7299296950222924,
+  "telemetry_sample_count": 6,
+  "raw_telemetry_sample_count": 6,
+  "telemetry_start_timestamp": "2026-09-07T10:15:59.264973+00:00",
+  "telemetry_end_timestamp": "2026-09-07T10:16:00.994927+00:00",
+  "gpu_runtime_verified": true,
+  "checkpoint_size_bytes": 18037069,
+  "checkpoint_save_seconds": 0.29651692404877394,
+  "checkpoint_load_seconds": null,
+  "resume_to_first_step_seconds": null,
+  "first_step_after_resume": null,
+  "max_sequence_length": 128
+}

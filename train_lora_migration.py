@@ -85,7 +85,7 @@ def parse_args() -> TrainConfig:
 
 def add_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--model-id", default="Qwen/Qwen2.5-1.5B")
-    parser.add_argument("--dataset-path", default="./data/story3_dataset.jsonl")
+    parser.add_argument("--dataset-path", default="./data/quant_mentor_500_alpaca.jsonl")
     parser.add_argument("--output-dir", default="./outputs")
     parser.add_argument("--resume-from", default=None)
     parser.add_argument("--stop-step", type=int, default=100)
@@ -260,6 +260,8 @@ def meta_payload(trainer: Trainer, cfg: TrainConfig, monitor: "GpuTelemetryMonit
     saved_step = int(state.global_step)
     useful_tokens = useful_training_tokens(cfg, saved_step)
     gpu = gpu_metrics(monitor, runtime_seconds)
+    gpu_energy_kwh = ratio(gpu.get("gpu_energy_joules"), 3_600_000.0)
+    energy_kwh_per_million_tokens = ratio((1_000_000.0 * gpu_energy_kwh) if gpu_energy_kwh is not None else None, useful_tokens)
     peak_mem = peak_memory_bytes(gpu.get("peak_sampled_memory_bytes"))
     gpu_runtime_verified = bool(cuda_available_flag() and trainer_device_name(trainer).startswith("cuda") and model_device_name(trainer).startswith("cuda"))
     return {
@@ -297,9 +299,9 @@ def meta_payload(trainer: Trainer, cfg: TrainConfig, monitor: "GpuTelemetryMonit
         "peak_power_watts": gpu.get("peak_power_watts"),
         "min_power_watts": gpu.get("min_power_watts"),
         "gpu_energy_joules": gpu.get("gpu_energy_joules"),
-        "gpu_energy_kwh": ratio(gpu.get("gpu_energy_joules"), 3_600_000.0),
+        "gpu_energy_kwh": gpu_energy_kwh,
         "tokens_per_joule": ratio(useful_tokens, gpu.get("gpu_energy_joules")),
-        "energy_kwh_per_million_tokens": ratio(1_000_000.0 * ratio(gpu.get("gpu_energy_joules"), 3_600_000.0), useful_tokens),
+        "energy_kwh_per_million_tokens": energy_kwh_per_million_tokens,
         "power_sample_count": gpu.get("power_sample_count"),
         "power_telemetry_available": gpu.get("power_telemetry_available"),
         "power_telemetry_source": gpu.get("power_telemetry_source"),

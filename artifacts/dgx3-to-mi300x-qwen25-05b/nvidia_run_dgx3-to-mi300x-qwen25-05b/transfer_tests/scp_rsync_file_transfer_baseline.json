@@ -1,0 +1,11 @@
+{
+  "test": "SCP/rsync",
+  "path": "File-transfer baseline",
+  "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",
+  "details": {
+    "success": false,
+    "error": "command failed: sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p \"$HOME/.ssh\" && chmod 700 \"$HOME/.ssh\" && touch \"$HOME/.ssh/known_hosts\" && chmod 600 \"$HOME/.ssh/known_hosts\" && (ssh-keygen -F runpod-mi300x-michael -f \"$HOME/.ssh/known_hosts\" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> \"$HOME/.ssh/known_hosts\")'\nexit=1\nstdout=\nstderr=getaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\n",
+    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+  }
+}

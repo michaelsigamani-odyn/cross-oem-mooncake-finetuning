@@ -1,0 +1,34 @@
+{
+  "source_saved_step": 10,
+  "resumed_saved_step": 30,
+  "resumed_first_logged_step": 1,
+  "first_step_after_handoff": 11,
+  "resume_from": "/home/michael/cross-vendor-mooncake-test/checkpoint-10",
+  "resume_loaded_from_step": 10,
+  "source_optimizer_exp_avg_sq_norm_before_save": 0.00015510240389008471,
+  "resumed_optimizer_exp_avg_sq_norm_after_resume_load": 0.00015510240527867564,
+  "optimizer_norm_delta": 1.3885909295238003e-12,
+  "source_learning_rate_before_save": 0.0,
+  "resumed_learning_rate_after_resume_load": 0.0,
+  "learning_rate_delta": 0.0,
+  "step_continuity_verified": true,
+  "optimizer_state_verified": true,
+  "learning_rate_continuity_verified": true,
+  "resume_continuity_verified": true,
+  "checkpoint_validation_result": "pass",
+  "continuity_policy": {
+    "step_rule": "first_step_after_handoff == source_saved_step + 1",
+    "optimizer_norm_delta_max": 0.0001,
+    "learning_rate_delta_max": 1e-12
+  },
+  "source_state_file_sizes": {
+    "optimizer.pt": 4406667,
+    "scheduler.pt": 1465,
+    "trainer_state.json": 2305
+  },
+  "resumed_state_file_sizes": {
+    "optimizer.pt": 4406667,
+    "scheduler.pt": 1465,
+    "trainer_state.json": 5598
+  }
+}

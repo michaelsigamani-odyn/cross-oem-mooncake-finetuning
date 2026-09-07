@@ -1,0 +1,49 @@
+{
+  "tests": [
+    {
+      "test": "iperf3",
+      "path": "Maximum TCP capability",
+      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/iperf3_max_tcp_capability.json",
+      "details": {
+        "success": false,
+        "error": "{\n\t\"start\":\t{\n\t\t\"connected\":\t[],\n\t\t\"version\":\t\"iperf 3.16\",\n\t\t\"system_info\":\t\"Linux odyn-dgx3 6.17.0-1029-nvidia #29-Ubuntu SMP PREEMPT_DYNAMIC Wed Jul  1 00:13:52 UTC 2026 aarch64\"\n\t},\n\t\"intervals\":\t[],\n\t\"end\":\t{\n\t},\n\t\"error\":\t\"unable to connect to server - server may have stopped running or use a different port, firewall issue, etc.: Resource temporarily unavailable\"\n}",
+        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+      }
+    },
+    {
+      "test": "SCP/rsync",
+      "path": "File-transfer baseline",
+      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/scp_rsync_file_transfer_baseline.json",
+      "details": {
+        "success": false,
+        "error": "command failed: sshpass -e ssh -o IdentitiesOnly=yes -o BatchMode=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o PreferredAuthentications=publickey,password,keyboard-interactive -o NumberOfPasswordPrompts=1 michael@odyn-dgx3 'mkdir -p \"$HOME/.ssh\" && chmod 700 \"$HOME/.ssh\" && touch \"$HOME/.ssh/known_hosts\" && chmod 600 \"$HOME/.ssh/known_hosts\" && (ssh-keygen -F runpod-mi300x-michael -f \"$HOME/.ssh/known_hosts\" >/dev/null || ssh-keyscan -H runpod-mi300x-michael >> \"$HOME/.ssh/known_hosts\")'\nexit=1\nstdout=\nstderr=getaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\ngetaddrinfo runpod-mi300x-michael: Temporary failure in name resolution\n",
+        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+      }
+    },
+    {
+      "test": "Mooncake TCP",
+      "path": "Mooncake application path",
+      "artifact_path": "~/cross-vendor-mooncake-test/nvidia_run_dgx3-to-mi300x-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",
+      "details": {
+        "backend": "scp",
+        "success": true,
+        "bytes_transferred": 18039793,
+        "elapsed_seconds": 14.265807749994565,
+        "throughput_bytes_per_second": 1264547.6033424656,
+        "manifest_path": "",
+        "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+        "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+      }
+    }
+  ],
+  "comparison": {
+    "mooncake_vs_iperf_percent": null,
+    "mooncake_vs_rsync_percent": null
+  },
+  "machines": {
+    "source_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10",
+    "target_machine": "AMD Radeon Graphics | 192.0 GB | ROCm 6.3.42134-a9a80e791 | gfx942"
+  }
+}

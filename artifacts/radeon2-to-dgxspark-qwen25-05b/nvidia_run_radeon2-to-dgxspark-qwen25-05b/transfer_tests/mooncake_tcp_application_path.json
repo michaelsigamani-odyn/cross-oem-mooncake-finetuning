@@ -1,0 +1,15 @@
+{
+  "test": "Mooncake TCP",
+  "path": "Mooncake application path",
+  "artifact_path": "/home/michael/cross-vendor-mooncake-test/nvidia_run_radeon2-to-dgxspark-qwen25-05b/transfer_tests/mooncake_tcp_application_path.json",
+  "details": {
+    "backend": "scp",
+    "success": true,
+    "bytes_transferred": 18039874,
+    "elapsed_seconds": 8.689091583975824,
+    "throughput_bytes_per_second": 2076151.8998451603,
+    "manifest_path": "",
+    "source_machine": "AMD Radeon 8060S Graphics | 64.0 GB | ROCm 7.16.26354 | gfx1151",
+    "target_machine": "NVIDIA GB10 | 121.7 GB | CUDA 13.0 | NVIDIA GB10"
+  }
+}

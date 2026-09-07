@@ -3,23 +3,23 @@
     "local_root_dir": "/Users/michaelsigamani/Documents/DevelopmentCode/2026-spring/cross-oem-mooncake-finetuning",
     "remote_root_dir": "~/cross-vendor-mooncake-test"
   },
-  "basic_portability": {
-    "source_host": "runpod-mi300x",
-    "target_host": "michael@odyn-dgx3",
+  "finetuning_sequential": {
+    "source_host": "michael@odyn-dgx3",
+    "target_host": "runpod-mi300x-michael",
     "model_id": "Qwen/Qwen2.5-0.5B",
     "checkpoint_step": 10,
     "final_step": 30,
-    "run_id": "mi300x-to-dgxspark-qwen25-05b",
+    "run_id": "dgx3-to-mi300x-qwen25-05b",
     "dataset_path": "data/quant_mentor_500_alpaca.jsonl",
     "source_data_parallel_size": 1,
-    "source_python_cmd": "/workspace/venvs/py312-rocm/bin/python",
-    "target_python_cmd": "/usr/bin/python3.12",
+    "source_python_cmd": "/usr/bin/python3.12",
+    "target_python_cmd": "/workspace/venvs/py312-rocm/bin/python",
     "host_python_cmd_overrides": {
       "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
       "michael@odyn-dgx3": "/usr/bin/python3.12",
-      "runpod-mi300x": "/workspace/venvs/py312-rocm/bin/python"
+      "runpod-mi300x-michael": "/workspace/venvs/py312-rocm/bin/python"
     },
-    "ssh_password": null,
+    "ssh_password": "michael",
     "transfer_backend": "scp",
     "asset_paths": [
       "data/quant_mentor_500_alpaca.jsonl"
@@ -33,16 +33,16 @@
       "chunk_mb": 64,
       "max_inflight": 2,
       "source": {
-        "server_name": "10.6.45.118:55001",
-        "control_host": "10.6.45.118",
-        "control_port": 56000,
-        "python_cmd": "/home/michael/torch-env/bin/python"
-      },
-      "destination": {
         "server_name": "10.6.45.106:55000",
         "control_host": "10.6.45.106",
         "control_port": 56001,
         "python_cmd": "/usr/bin/python3.12"
+      },
+      "destination": {
+        "server_name": "10.6.45.118:55001",
+        "control_host": "10.6.45.118",
+        "control_port": 56000,
+        "python_cmd": "/workspace/venvs/py312-rocm/bin/python"
       }
     },
     "min_extra_steps": 5,
@@ -126,7 +126,7 @@
       }
     },
     "mi300x": {
-      "hostname": "runpod-mi300x",
+      "hostname": "runpod-mi300x-michael",
       "vendor": "amd",
       "device_name": "AMD Instinct MI300X",
       "expected_gpu_architecture": "gfx942",
@@ -163,45 +163,5 @@
     "lora_dropout": 0.05,
     "telemetry_interval_seconds": 0.25,
     "model_id": "Qwen/Qwen2.5-0.5B"
-  },
-  "story3": {
-    "plan_path": "./experiments/story3_preregistration.json",
-    "venv_path": "~/cv-story3-venv",
-    "python_cmd": "python3.12",
-    "artifact_root": "./artifacts/story3",
-    "ssh_password": "michael",
-    "run_environments": [
-      "dev",
-      "stage",
-      "prod"
-    ],
-    "environments": {
-      "dev": {
-        "radeon_host": "michael@odyn-radeon2",
-        "spark_hosts": [
-          "michael@odyn-dgx3"
-        ]
-      },
-      "stage": {
-        "radeon_host": "michael@odyn-radeon2",
-        "spark_hosts": [
-          "michael@odyn-dgx1",
-          "michael@odyn-dgx3"
-        ]
-      },
-      "prod": {
-        "radeon_host": "michael@odyn-radeon2",
-        "spark_hosts": [
-          "a100-01",
-          "a100-02",
-          "a100-03",
-          "a100-04",
-          "a100-05",
-          "a100-06",
-          "a100-07",
-          "a100-08"
-        ]
-      }
-    }
   }
 }

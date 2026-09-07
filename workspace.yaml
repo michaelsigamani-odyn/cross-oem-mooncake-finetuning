@@ -1,7 +1,4 @@
 load_from:
   - python_file:
-      relative_path: dagster_basic_portability.py
-      location_name: basic_portability
-  - python_file:
-      relative_path: dagster_story3_failover.py
-      location_name: story3_failover
+      relative_path: definitions.py
+      location_name: finetuning_sequential
