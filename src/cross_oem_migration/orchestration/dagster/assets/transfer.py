@@ -1,9 +1,3 @@
-"""Transfer asset. Ports `copy_checkpoint` + `verify_transfer` (original
-lines 2829-2879): moves the checkpoint from source to target host via
-whichever TransferBackend is configured (scp or mooncake_tcp) and
-verifies it. Swapping backends is a one-line config change
-(configs/run.json `transfer_backend`), not a code change.
-"""
 from dataclasses import asdict
 from typing import Any, Dict
 
