@@ -7,6 +7,7 @@ This repository demonstrates a controlled cross-OEM training workflow:
 - transfer checkpoint artifacts,
 - resume on a different machine/vendor,
 - validate continuity with telemetry and summary checks.
+- So far mi300x, radeon, DGX-Spark connected via QSFP
 
 Current scope is intentionally sequential (single active training phase at a time). This is designed to prove portability and recovery semantics first; data-parallel or multi-job orchestration can be layered on top.
 
@@ -16,7 +17,7 @@ Current scope is intentionally sequential (single active training phase at a tim
 - SSH access to participating machines (key-based authentication preferred)
 - `conda` or another environment manager
 
-Optional but commonly needed:
+Optional:
 
 - `sshpass` (only if you must use password-based SSH)
 - vendor GPU telemetry libraries (`nvidia-ml-py` and/or AMD SMI bindings)
