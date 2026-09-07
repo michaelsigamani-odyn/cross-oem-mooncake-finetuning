@@ -5,6 +5,7 @@ host's preflight shows up as its own node in the Dagster asset graph
 anonymous step inside an opaque job run.
 """
 import json
+import shlex
 from typing import Any, Dict
 
 from dagster import AssetExecutionContext, MetadataValue, asset
@@ -19,7 +20,7 @@ def _run_preflight(settings, executor, hardware: HardwareResource, host: str) ->
     adapter: GpuVendorAdapter = hardware.adapter_for(vendor) if vendor != "unknown" else hardware.adapter_for("nvidia")
     python_cmd = settings.host_python_cmd_overrides.get(host) or (machine.python_cmd if machine else settings.source_python_cmd)
     script = adapter.preflight_script()
-    command = f"{python_cmd} -c {json.dumps(script)}"
+    command = f"{python_cmd} -c {shlex.quote(script)}"
     result = executor.run(command, host=host, retries=settings.command_retries, allow_failure=True,
                            timeout_seconds=180.0, operation=f"probe_kernel_preflight_{host}")
     if not result.ok:

@@ -19,6 +19,7 @@ from typing import Any, Dict, List
 from dagster import AssetCheckResult, AssetExecutionContext, MetadataValue, asset, asset_check
 
 from ....data.filesystem import LocalFilesystemArtifactStore, default_output_asset_paths
+from ....remote_paths import resolve_remote_root
 from ..resources import DataResource, ExecutorResource, SettingsResource
 from .reporting import cross_oem_report
 
@@ -41,12 +42,14 @@ def published_manifest(context: AssetExecutionContext, settings: SettingsResourc
     cfg = settings.get()
     exec_ = executor.get(cfg)
     store: LocalFilesystemArtifactStore = data.artifact_store(cfg, exec_)
+    source_root = resolve_remote_root(exec_, cfg.source_host, cfg.remote_root, cfg.command_retries)
+    target_root = resolve_remote_root(exec_, cfg.target_host, cfg.remote_root, cfg.command_retries)
 
     saved_assets = []
     for asset_path in _asset_paths(cfg):
-        local_path = store.save_from_host(cfg.target_host, f"{cfg.remote_root}/{asset_path}", asset_path)
+        local_path = store.save_from_host(cfg.target_host, f"{target_root}/{asset_path}", asset_path)
         if not local_path.exists():
-            local_path = store.save_from_host(cfg.source_host, f"{cfg.remote_root}/{asset_path}", asset_path)
+            local_path = store.save_from_host(cfg.source_host, f"{source_root}/{asset_path}", asset_path)
         data_type = _infer_data_type(local_path) if local_path.exists() else "missing"
         saved_assets.append({"asset_path": asset_path, "saved_path": str(local_path), "data_type": data_type})
 

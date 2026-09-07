@@ -61,7 +61,7 @@ class FineTuningWorkload(Workload):
             f"--telemetry-interval-seconds {spec.telemetry_interval_seconds}"
         )
         if spec.resume_from_checkpoint:
-            args += f" --resume-from-checkpoint {shlex.quote(spec.resume_from_checkpoint)}"
+            args += f" --resume-from {shlex.quote(spec.resume_from_checkpoint)}"
 
         if not spec.use_gpu:
             return f"CUDA_VISIBLE_DEVICES='' {shlex.quote(python_cmd)} {script} {args}"

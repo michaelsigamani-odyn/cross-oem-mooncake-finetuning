@@ -5,7 +5,7 @@
   },
   "finetuning_sequential": {
     "source_host": "michael@odyn-dgx3",
-    "target_host": "runpod-mi300x-michael",
+    "target_host": "runpod-mi300x",
     "model_id": "Qwen/Qwen2.5-0.5B",
     "checkpoint_step": 10,
     "final_step": 30,
@@ -17,7 +17,7 @@
     "host_python_cmd_overrides": {
       "michael@odyn-radeon2": "/home/michael/torch-env/bin/python",
       "michael@odyn-dgx3": "/usr/bin/python3.12",
-      "runpod-mi300x-michael": "/workspace/venvs/py312-rocm/bin/python"
+      "runpod-mi300x": "/workspace/venvs/py312-rocm/bin/python"
     },
     "transfer_backend": "scp",
     "asset_paths": [

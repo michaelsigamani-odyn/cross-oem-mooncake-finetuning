@@ -2,3 +2,4 @@ load_from:
   - python_module:
       module_name: cross_oem_migration.orchestration.dagster.definitions
       attribute: defs
+      working_directory: src

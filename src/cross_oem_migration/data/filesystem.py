@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List
 
 from ..execution.base import Executor
+from ..remote_paths import resolve_remote_root
 from .base import ArtifactStore, DatasetProvider
 
 
@@ -22,10 +23,11 @@ class LocalFilesystemDatasetProvider(DatasetProvider):
 
     def sync_to_host(self, dataset_path: str, host: str) -> str:
         local_path = self.local_path(dataset_path)
-        remote_path = f"{self._remote_root}/{dataset_path}"
+        remote_root = resolve_remote_root(self._executor, host, self._remote_root, self._retries)
+        remote_path = f"{remote_root}/{dataset_path}"
         if not local_path.exists():
             return remote_path  # assume already present remotely; nothing to push
-        parent = f"{self._remote_root}/{Path(dataset_path).parent}" if not local_path.is_dir() else f"{self._remote_root}/{dataset_path}"
+        parent = f"{remote_root}/{Path(dataset_path).parent}" if not local_path.is_dir() else f"{remote_root}/{dataset_path}"
         self._executor.run(f"mkdir -p {parent}", host=host, retries=self._retries)
         self._executor.copy(str(local_path), f"{host}:{parent}", recursive=True, retries=self._retries)
         return remote_path
@@ -65,18 +67,11 @@ def default_output_asset_paths(run_id: str, final_step: int, checkpoint_step: in
     as assets, regardless of which host produced them."""
     target_run = f"nvidia_run_{run_id}"
     source_run = f"amd_run_{run_id}"
-    transfer = f"{target_run}/transfer_tests"
     defaults = [
         f"{source_run}/run_summary.json",
-        f"{source_run}/gpu_telemetry_raw.json",
-        f"{target_run}/gpu_telemetry_raw.json",
         f"{target_run}/run_summary.json",
         f"{target_run}/resume_validation_proof.json",
         f"{target_run}/checkpoint-{final_step}/trainer_state.json",
         f"{source_run}/checkpoint-{checkpoint_step}/checkpoint_meta.json",
-        f"{transfer}/iperf3_max_tcp_capability.json",
-        f"{transfer}/scp_rsync_file_transfer_baseline.json",
-        f"{transfer}/mooncake_tcp_application_path.json",
-        f"{transfer}/transfer_test_matrix.json",
     ]
     return list(dict.fromkeys([*extra_asset_paths, *defaults]))

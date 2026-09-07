@@ -81,9 +81,11 @@ class SSHExecutor(Executor):
             elapsed = time.perf_counter() - start
             print(f"{_utc_now()} END {operation} duration={elapsed:.3f} returncode={proc.returncode}")
             result = ExecResult(shell_text, proc.returncode, proc.stdout, proc.stderr, elapsed)
-            if result.ok or allow_failure:
+            if result.ok:
                 return result
             last = result
+            if attempt == retries and allow_failure:
+                return result
             if attempt == retries:
                 raise RuntimeError(f"command failed: {shell_text}\nexit={result.returncode}\nstdout={result.stdout}\nstderr={result.stderr}")
             time.sleep(2)

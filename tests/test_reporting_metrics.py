@@ -49,3 +49,18 @@ def test_almost_equal_treats_none_as_only_equal_to_none():
     assert almost_equal(None, None) is True
     assert almost_equal(1.0, None) is False
     assert almost_equal(None, 1.0) is False
+
+
+def test_formula_validation_uses_runtime_seconds_when_training_runtime_missing():
+    source = {
+        "start_step": 0, "end_step": 10, "steps_executed": 10, "useful_training_tokens": 1000,
+        "training_runtime_seconds": None, "runtime_seconds": 10.0, "tokens_per_second": 100.0,
+        "gpu_energy_joules": 3600.0, "gpu_energy_kwh": 0.001, "tokens_per_joule": 1000 / 3600.0,
+        "electricity_price_per_kwh": 0.27, "energy_cost_gbp": 0.00027,
+        "energy_cost_per_million_tokens_gbp": (0.00027 / (1000 / 1_000_000.0)),
+    }
+    target = dict(source, start_step=10, end_step=20)
+    migration = {"migration_to_first_step_seconds": 2.0, "migration_overhead_percent": 2.0 / 20.0 * 100.0}
+    end_to_end = end_to_end_summary(source, target, migration)
+    result = formula_validation(source, target, migration, end_to_end)
+    assert result["passed"]

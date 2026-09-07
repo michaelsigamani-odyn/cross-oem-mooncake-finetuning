@@ -2,12 +2,15 @@ from .preflight import source_gpu_preflight, target_gpu_preflight
 from .published import published_manifest, saved_assets_exist_check, saved_assets_supported_type_check
 from .reporting import cross_oem_report, run_metrics_db
 from .resume import resume_validation, resumed_checkpoint
+from .runtime_sync import source_runtime_scripts_synced, target_runtime_scripts_synced
 from .training import source_checkpoint
 from .transfer import transferred_checkpoint
 
 ALL_ASSETS = [
     source_gpu_preflight,
     target_gpu_preflight,
+    source_runtime_scripts_synced,
+    target_runtime_scripts_synced,
     source_checkpoint,
     transferred_checkpoint,
     resumed_checkpoint,

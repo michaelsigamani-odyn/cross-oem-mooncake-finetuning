@@ -68,7 +68,7 @@
     }
   },
   "mi300x": {
-    "hostname": "runpod-mi300x-michael",
+    "hostname": "runpod-mi300x",
     "vendor": "amd",
     "device_name": "AMD Instinct MI300X",
     "expected_gpu_architecture": "gfx942",

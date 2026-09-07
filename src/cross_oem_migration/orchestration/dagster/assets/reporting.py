@@ -13,7 +13,8 @@ from typing import Any, Dict
 
 from dagster import AssetExecutionContext, MetadataValue, asset
 
-from ....reporting.metrics import as_float, end_to_end_summary, formula_validation, migration_to_first_step_seconds
+from ....remote_paths import resolve_remote_root
+from ....reporting.metrics import as_float, end_to_end_summary, formula_validation, migration_to_first_step_seconds, phase_runtime_seconds
 from ..resources import DataResource, ExecutorResource, SettingsResource
 from .resume import resume_validation
 
@@ -22,10 +23,12 @@ from .resume import resume_validation
 def cross_oem_report(context: AssetExecutionContext, settings: SettingsResource, executor: ExecutorResource) -> Dict[str, Any]:
     cfg = settings.get()
     exec_ = executor.get(cfg)
+    source_root = resolve_remote_root(exec_, cfg.source_host, cfg.remote_root, cfg.command_retries)
+    target_root = resolve_remote_root(exec_, cfg.target_host, cfg.remote_root, cfg.command_retries)
 
-    source = json.loads(exec_.run(f"cat {cfg.remote_root}/amd_run_{cfg.run_id}/run_summary.json", host=cfg.source_host).stdout)
-    target = json.loads(exec_.run(f"cat {cfg.remote_root}/nvidia_run_{cfg.run_id}/run_summary.json", host=cfg.target_host).stdout)
-    proof = json.loads(exec_.run(f"cat {cfg.remote_root}/nvidia_run_{cfg.run_id}/resume_validation_proof.json", host=cfg.target_host).stdout)
+    source = json.loads(exec_.run(f"cat {source_root}/amd_run_{cfg.run_id}/run_summary.json", host=cfg.source_host).stdout)
+    target = json.loads(exec_.run(f"cat {target_root}/nvidia_run_{cfg.run_id}/run_summary.json", host=cfg.target_host).stdout)
+    proof = json.loads(exec_.run(f"cat {target_root}/nvidia_run_{cfg.run_id}/resume_validation_proof.json", host=cfg.target_host).stdout)
 
     migration = {
         "checkpoint_save_seconds": source.get("checkpoint_save_seconds"),
@@ -33,7 +36,7 @@ def cross_oem_report(context: AssetExecutionContext, settings: SettingsResource,
         "resume_to_first_step_seconds": target.get("resume_to_first_step_seconds"),
     }
     migration["migration_to_first_step_seconds"] = migration_to_first_step_seconds(migration)
-    total_training = (as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)
+    total_training = (phase_runtime_seconds(source) or 0) + (phase_runtime_seconds(target) or 0)
     migration["migration_overhead_percent"] = (
         None if total_training <= 0 or migration["migration_to_first_step_seconds"] is None
         else migration["migration_to_first_step_seconds"] / total_training * 100.0

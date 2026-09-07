@@ -66,10 +66,15 @@ def migration_to_first_step_seconds(report: Dict[str, Any]) -> Optional[float]:
     return None if not values else float(sum(values))
 
 
+def phase_runtime_seconds(report: Dict[str, Any]) -> Optional[float]:
+    preferred = as_float(report.get("training_runtime_seconds"))
+    return preferred if preferred is not None else as_float(report.get("runtime_seconds"))
+
+
 def end_to_end_summary(source: Dict[str, Any], target: Dict[str, Any], migration: Dict[str, Any]) -> Dict[str, Any]:
     total_tokens = (as_int(source.get("useful_training_tokens")) or 0) + (as_int(target.get("useful_training_tokens")) or 0)
-    source_time = as_float(source.get("training_runtime_seconds")) or 0.0
-    target_time = as_float(target.get("training_runtime_seconds")) or 0.0
+    source_time = phase_runtime_seconds(source) or 0.0
+    target_time = phase_runtime_seconds(target) or 0.0
     migration_time = as_float(migration.get("migration_to_first_step_seconds")) or 0.0
     total_energy = (as_float(source.get("gpu_energy_joules")) or 0.0) + (as_float(target.get("gpu_energy_joules")) or 0.0)
     training_seconds = source_time + target_time
@@ -104,8 +109,8 @@ def formula_validation(source: Dict[str, Any], target: Dict[str, Any], migration
     source_tokens = as_int(source.get("useful_training_tokens")) or 0
     target_tokens = as_int(target.get("useful_training_tokens")) or 0
     add({"name": "end_to_end.total_useful_tokens", "passed": as_int(end_to_end.get("useful_training_tokens")) == (source_tokens + target_tokens)})
-    add({"name": "source.tokens_per_second", "passed": almost_equal(as_float(source.get("tokens_per_second")), safe_ratio(float(source_tokens), as_float(source.get("training_runtime_seconds"))))})
-    add({"name": "target.tokens_per_second", "passed": almost_equal(as_float(target.get("tokens_per_second")), safe_ratio(float(target_tokens), as_float(target.get("training_runtime_seconds"))))})
+    add({"name": "source.tokens_per_second", "passed": almost_equal(as_float(source.get("tokens_per_second")), safe_ratio(float(source_tokens), phase_runtime_seconds(source)))})
+    add({"name": "target.tokens_per_second", "passed": almost_equal(as_float(target.get("tokens_per_second")), safe_ratio(float(target_tokens), phase_runtime_seconds(target)))})
 
     source_tpj_expected = safe_ratio(float(source_tokens), as_float(source.get("gpu_energy_joules")))
     target_tpj_expected = safe_ratio(float(target_tokens), as_float(target.get("gpu_energy_joules")))
@@ -129,7 +134,7 @@ def formula_validation(source: Dict[str, Any], target: Dict[str, Any], migration
     add({"name": "source.energy_cost_per_million_tokens", "passed": True if not source_cost_checks else all(almost_equal(source_cost_actual, v) for v in source_cost_checks)})
     add({"name": "target.energy_cost_per_million_tokens", "passed": True if not target_cost_checks else all(almost_equal(target_cost_actual, v) for v in target_cost_checks)})
 
-    total_training_seconds = (as_float(source.get("training_runtime_seconds")) or 0) + (as_float(target.get("training_runtime_seconds")) or 0)
+    total_training_seconds = (phase_runtime_seconds(source) or 0) + (phase_runtime_seconds(target) or 0)
     expected_overhead_percent = (
         safe_ratio(as_float(migration.get("migration_to_first_step_seconds")), total_training_seconds) * 100.0
         if total_training_seconds > 0 else None
