@@ -1,12 +1,4 @@
-"""Pure metrics/validation math -- zero I/O, zero Dagster, zero subprocess.
-Ported unchanged from the original file (energy/cost helpers ~lines
-800-1330; cross-checked formula validation ~lines 2958-3070). This is
-where the report's numbers get *cross-checked against themselves*
-(e.g. "does tokens_per_joule actually equal tokens / energy_joules,
-recomputed independently?") -- the part of the pipeline most directly
-in service of "fair, truthful" reporting, so it's kept as a small,
-dependency-free, directly-unit-testable module.
-"""
+
 import math
 from typing import Any, Dict, List, Optional
 
