@@ -1478,7 +1478,13 @@ def prepare_hosts(context: OpExecutionContext, settings: PortabilitySettings) ->
 @op(ins={"settings": In(PortabilitySettings), "_ready": In(Nothing)}, out=Out(Nothing))
 def sync_and_install(context: OpExecutionContext, settings: PortabilitySettings) -> None:
     hosts = all_known_hosts(settings)
-    files = ["requirements.txt", "train_lora_migration.py", "validate_resume.py", "checkpoint_io.py", "mooncake_tcp_agent.py"]
+    files = [
+        "requirements.txt",
+        "scripts/finetuning/train_lora_migration.py",
+        "scripts/validation/validate_resume.py",
+        "scripts/validation/checkpoint_io.py",
+        "scripts/transfer/mooncake_tcp_agent.py",
+    ]
     for name in files:
         for host in hosts:
             run_shell(scp_cmd(settings, str(Path(settings.local_root) / name), f"{host}:{settings.remote_root}/"), settings.command_retries, env=sshpass_env(settings))
@@ -1703,7 +1709,7 @@ def transfer_checkpoint_mooncake(settings: PortabilitySettings, source: str, des
 
 
 def sync_mooncake_agent(settings: PortabilitySettings, host: str) -> None:
-    local_agent = str(Path(__file__).with_name("mooncake_tcp_agent.py"))
+    local_agent = str(Path(__file__).parent / "scripts" / "transfer" / "mooncake_tcp_agent.py")
     remote_parent = str(Path(settings.remote_root))
     run_shell(ssh_cmd(settings, host, f"mkdir -p {shlex.quote(remote_parent)}"), settings.command_retries, env=sshpass_env(settings))
     run_shell(scp_cmd(settings, local_agent, f"{host}:{settings.remote_root}/", recursive=False), settings.command_retries, env=sshpass_env(settings))
