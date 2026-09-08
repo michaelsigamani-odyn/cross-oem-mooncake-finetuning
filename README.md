@@ -1,4 +1,3 @@
-
 # Odyn Compute Profiler 
 
 This repository tries to demonstrate a repeatable cross-OEM workflow for any member of Odyn who wants to replicate results:
