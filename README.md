@@ -108,11 +108,3 @@ Suggested packages:
 - AMD: ROCm AMD SMI Python bindings
 
 For NVIDIA, sample NVML counters at a fixed interval and integrate power over time for energy. For AMD, use AMD SMI equivalents; API field names can differ between ROCm versions and should be verified on the target environment.
-
-## Things I was thinking to do. Give me suggestions if you feel like. Thanks.
-
-- Add a two-node A100 data-parallel stage for direct comparison with sequential resume.
-- Add disaggregated prefill/inference profiling.
-- Add structured profiling flows (including planned Vidur-based inference analysis).
-
-
